@@ -1,8 +1,17 @@
 import { Image } from 'expo-image';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { styled } from '@gluestack-style/react';
+import { View, Pressable, Text } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+const StyledView = styled(View, {});
+const StyledPressable = styled(Pressable, {});
+const StyledText = styled(Text, {});
 
 export function NavigationBar() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready
     console.log('Notifications pressed');
@@ -13,85 +22,94 @@ export function NavigationBar() {
     console.log('Logout pressed');
   };
 
+  const textColor = isDark ? '#ECEDEE' : '#11181C';
+  const backgroundColor = isDark ? '#151718' : '#FFFFFF';
+  const borderColor = isDark ? '#374151' : '#E5E7EB';
+
   return (
-    <View style={styles.container}>
+    <StyledView
+      sx={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: backgroundColor,
+        borderBottomWidth: 1,
+        borderBottomColor: borderColor,
+      }}
+    >
       {/* Logo */}
       <Image
         source={require('@/assets/images/syntheo.png')}
-        style={styles.logo}
+        style={{ width: 120, height: 40 }}
         contentFit="contain"
       />
 
       {/* Right side items */}
-      <View style={styles.rightContainer}>
+      <StyledView
+        sx={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 16,
+        }}
+      >
         {/* Notifications icon */}
-        <TouchableOpacity onPress={handleNotifications} style={styles.iconButton}>
+        <StyledPressable
+          onPress={handleNotifications}
+          style={{
+            padding: 8,
+          }}
+        >
           <MaterialIcons
             name="notifications"
             size={24}
-            color="#000000"
+            color={isDark ? '#9BA1A6' : '#687076'}
           />
-        </TouchableOpacity>
+        </StyledPressable>
 
         {/* User info */}
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>
+        <StyledView
+          sx={{
+            alignItems: 'flex-end',
+          }}
+        >
+          <StyledText
+            sx={{
+              fontSize: 14,
+              lineHeight: 18,
+              color: textColor,
+              fontWeight: '600',
+            }}
+          >
             Jan Janssen
-          </Text>
-          <Text style={styles.userRole}>
+          </StyledText>
+          <StyledText
+            sx={{
+              fontSize: 12,
+              lineHeight: 16,
+              color: textColor,
+              opacity: 0.6,
+            }}
+          >
             Administrator
-          </Text>
-        </View>
+          </StyledText>
+        </StyledView>
 
         {/* Logout icon */}
-        <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+        <StyledPressable
+          onPress={handleLogout}
+          style={{
+            padding: 8,
+          }}
+        >
           <MaterialIcons
             name="logout"
             size={24}
-            color="#000000"
+            color={isDark ? '#9BA1A6' : '#687076'}
           />
-        </TouchableOpacity>
-      </View>
-    </View>
+        </StyledPressable>
+      </StyledView>
+    </StyledView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  logo: {
-    width: 120,
-    height: 40,
-  },
-  rightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  iconButton: {
-    padding: 8,
-  },
-  userInfo: {
-    alignItems: 'flex-end',
-  },
-  userName: {
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#000000',
-    fontWeight: '600',
-  },
-  userRole: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#000000',
-    opacity: 0.6,
-  },
-});
