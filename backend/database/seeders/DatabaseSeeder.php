@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             FloorSeeder::class,
             UserSeeder::class,
             ResidentSeeder::class,
+            RoomSeeder::class,  // Toegevoegd - moet NA residents
             ContactSeeder::class,
             AllergySeeder::class,
             DietSeeder::class,
