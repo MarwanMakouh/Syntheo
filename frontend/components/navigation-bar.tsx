@@ -1,13 +1,8 @@
 import { Image } from 'expo-image';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { ThemedText } from '@/components/themed-text';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors } from '@/constants/theme';
+import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export function NavigationBar() {
-  const colorScheme = useColorScheme();
-
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready
     console.log('Notifications pressed');
@@ -19,10 +14,7 @@ export function NavigationBar() {
   };
 
   return (
-    <View style={[
-      styles.container,
-      { backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background }
-    ]}>
+    <View style={styles.container}>
       {/* Logo */}
       <Image
         source={require('@/assets/images/syntheo.png')}
@@ -34,29 +26,29 @@ export function NavigationBar() {
       <View style={styles.rightContainer}>
         {/* Notifications icon */}
         <TouchableOpacity onPress={handleNotifications} style={styles.iconButton}>
-          <IconSymbol
-            name="bell.fill"
+          <MaterialIcons
+            name="notifications"
             size={24}
-            color={colorScheme === 'dark' ? Colors.dark.icon : Colors.light.icon}
+            color="#000000"
           />
         </TouchableOpacity>
 
         {/* User info */}
         <View style={styles.userInfo}>
-          <ThemedText type="defaultSemiBold" style={styles.userName}>
+          <Text style={styles.userName}>
             Jan Janssen
-          </ThemedText>
-          <ThemedText style={styles.userRole}>
+          </Text>
+          <Text style={styles.userRole}>
             Administrator
-          </ThemedText>
+          </Text>
         </View>
 
         {/* Logout icon */}
         <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
-          <IconSymbol
-            name="rectangle.portrait.and.arrow.right"
+          <MaterialIcons
+            name="logout"
             size={24}
-            color={colorScheme === 'dark' ? Colors.dark.icon : Colors.light.icon}
+            color="#000000"
           />
         </TouchableOpacity>
       </View>
@@ -71,6 +63,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -92,10 +85,13 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     lineHeight: 18,
+    color: '#000000',
+    fontWeight: '600',
   },
   userRole: {
     fontSize: 12,
     lineHeight: 16,
+    color: '#000000',
     opacity: 0.6,
   },
 });
