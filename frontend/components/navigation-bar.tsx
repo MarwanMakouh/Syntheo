@@ -75,7 +75,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingLeft: 8,
+    paddingRight: 16,
     paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : 12,
     paddingBottom: 12,
     backgroundColor: '#ffffff',
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 160,
     height: 50,
-    left: -25
+    marginLeft: -25,
   },
   userInfoCentered: {
     position: 'absolute',
