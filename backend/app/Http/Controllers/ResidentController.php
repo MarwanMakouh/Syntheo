@@ -38,11 +38,27 @@ class ResidentController extends Controller
             });
         }
 
+        // Debug info (can be removed later)
+        $debug = null;
+        if ($request->has('debug')) {
+            $debug = [
+                'total_residents' => Resident::count(),
+                'total_rooms' => \App\Models\Room::count(),
+                'residents_with_rooms' => Resident::whereHas('room')->count(),
+                'filters_applied' => [
+                    'search' => $request->search ?? null,
+                    'room' => $request->room ?? null,
+                    'allergy' => $request->allergy ?? null,
+                ],
+            ];
+        }
+
         $residents = $query->get();
 
         return response()->json([
             'success' => true,
-            'data' => $residents
+            'data' => $residents,
+            'debug' => $debug
         ]);
     }
 
