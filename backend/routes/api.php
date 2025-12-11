@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ResidentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,4 +50,31 @@ Route::prefix('users')->group(function () {
 
     // Delete user
     Route::delete('/{id}', [UserController::class, 'destroy']);
+});
+
+// Resident Management Routes
+Route::prefix('residents')->group(function () {
+    // Get all residents (with optional filters: ?search=naam&room=101&allergy=pinda)
+    Route::get('/', [ResidentController::class, 'index']);
+
+    // Search residents by name
+    Route::get('/search', [ResidentController::class, 'search']);
+
+    // Filter residents by room number
+    Route::get('/room/{roomNumber}', [ResidentController::class, 'filterByRoom']);
+
+    // Filter residents by allergy
+    Route::get('/allergy/{allergySymptom}', [ResidentController::class, 'filterByAllergy']);
+
+    // Get specific resident with full details
+    Route::get('/{id}', [ResidentController::class, 'show']);
+
+    // Create new resident
+    Route::post('/', [ResidentController::class, 'store']);
+
+    // Update resident
+    Route::put('/{id}', [ResidentController::class, 'update']);
+
+    // Delete resident
+    Route::delete('/{id}', [ResidentController::class, 'destroy']);
 });
