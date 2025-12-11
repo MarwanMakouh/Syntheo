@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export function NavigationBar() {
@@ -22,19 +22,9 @@ export function NavigationBar() {
         contentFit="contain"
       />
 
-      {/* Right side items */}
-      <View style={styles.rightContainer}>
-        {/* Notifications icon */}
-        <TouchableOpacity onPress={handleNotifications} style={styles.iconButton}>
-          <MaterialIcons
-            name="notifications"
-            size={24}
-            color="#000000"
-          />
-        </TouchableOpacity>
-
-        {/* User info */}
-        <View style={styles.userInfo}>
+      {/* User info - centered on mobile */}
+      {Platform.OS !== 'web' && (
+        <View style={styles.userInfoCentered}>
           <Text style={styles.userName}>
             Jan Janssen
           </Text>
@@ -42,13 +32,37 @@ export function NavigationBar() {
             Administrator
           </Text>
         </View>
+      )}
+
+      {/* Right side items */}
+      <View style={styles.rightContainer}>
+        {/* User info - only on web */}
+        {Platform.OS === 'web' && (
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>
+              Jan Janssen
+            </Text>
+            <Text style={styles.userRole}>
+              Administrator
+            </Text>
+          </View>
+        )}
+
+        {/* Notifications icon */}
+        <TouchableOpacity onPress={handleNotifications} style={styles.iconButton}>
+          <MaterialIcons
+            name="notifications-active"
+            size={26}
+            color="#666666"
+          />
+        </TouchableOpacity>
 
         {/* Logout icon */}
         <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
           <MaterialIcons
-            name="logout"
-            size={24}
-            color="#000000"
+            name="exit-to-app"
+            size={26}
+            color="#666666"
           />
         </TouchableOpacity>
       </View>
@@ -62,14 +76,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : 12,
+    paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   logo: {
-    width: 120,
-    height: 40,
+    width: 160,
+    height: 50,
+    left: -25
+  },
+  userInfoCentered: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 15,
+    alignItems: 'center',
+    pointerEvents: 'none',
   },
   rightContainer: {
     flexDirection: 'row',
