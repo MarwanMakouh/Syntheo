@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id('resident_id');
             $table->string('name');
             $table->date('date_of_birth');
-            $table->string('room_number')->nullable();
             $table->string('photo_url')->nullable();
             $table->timestamps();
         });
