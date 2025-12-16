@@ -767,6 +767,11 @@ export const getUnreadAnnouncementsForUser = (userId) => {
   );
 };
 
+export const getRoomNumber = (residentId) => {
+  const room = rooms.find(r => r.resident_id === residentId);
+  return room ? room.room_id : null;
+};
+
 // Export all data
 export default {
   floors,
@@ -799,4 +804,5 @@ export default {
   getDietForResident,
   getPendingChangeRequests,
   getUnreadAnnouncementsForUser,
+  getRoomNumber,
 };

@@ -11,6 +11,7 @@ import {
   ActionSheetIOS,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   residents,
