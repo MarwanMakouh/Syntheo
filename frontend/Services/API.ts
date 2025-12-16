@@ -1,6 +1,13 @@
 // Dummy Data API voor Syntheo - Zorgapplicatie
 // Gebaseerd op ERD
 
+import type { Resident, Room } from '@/types/resident';
+import type { User } from '@/types/user';
+import type { Contact } from '@/types/contact';
+import type { Note } from '@/types/note';
+import type { MedicationLibrary, ResMedication, ResSchedule, MedicationRound } from '@/types/medication';
+import type { Diet, Allergy } from '@/types/diet';
+
 // FLOORS
 export const floors = [
   { floor_id: 1 },
@@ -9,13 +16,13 @@ export const floors = [
 ];
 
 // USERS - Verzorgenden/Verpleegkundigen
-export const users = [
+export const users: User[] = [
   {
     user_id: 1,
     email: 'jan.janssen@syntheo.nl',
     password: 'hashed_password_1',
     name: 'Jan Janssen',
-    role: 'Administrator',
+    role: 'Verpleger',
     floor_id: 1,
     created_at: '2024-01-15T08:00:00Z',
     updated_at: '2024-01-15T08:00:00Z',
@@ -53,7 +60,7 @@ export const users = [
 ];
 
 // RESIDENTS - Bewoners
-export const residents = [
+export const residents: Resident[] = [
   {
     resident_id: 1,
     name: 'Gerda van der Berg',
@@ -105,7 +112,7 @@ export const residents = [
 ];
 
 // ROOMS - Kamers
-export const rooms = [
+export const rooms: Room[] = [
   { room_id: 101, floor_id: 1, resident_id: 1 },
   { room_id: 102, floor_id: 1, resident_id: 2 },
   { room_id: 103, floor_id: 1, resident_id: null }, // Lege kamer
@@ -117,7 +124,7 @@ export const rooms = [
 ];
 
 // CONTACTS - Contactpersonen
-export const contacts = [
+export const contacts: Contact[] = [
   {
     contact_id: 1,
     resident_id: 1,
@@ -166,7 +173,7 @@ export const contacts = [
 ];
 
 // ALLERGIES - Allergieën
-export const allergies = [
+export const allergies: Allergy[] = [
   {
     allergy_id: 1,
     resident_id: 1,
@@ -186,6 +193,7 @@ export const allergies = [
     resident_id: 3,
     symptom: 'Lactose',
     severity: 'Laag',
+    notes: 'Spijsverteringsproblemen',
     created_at: '2024-01-15T10:00:00Z',
   },
   {
@@ -198,7 +206,7 @@ export const allergies = [
 ];
 
 // DIETS - Diëten
-export const diets = [
+export const diets: Diet[] = [
   {
     diet_id: 1,
     diet_type: 'Diabetisch',
@@ -226,11 +234,22 @@ export const diets = [
     resident_id: 3,
     description: 'Geen zuivelproducten met lactose',
     created_at: '2024-01-15T10:00:00Z',
+    preferences: {
+      likes: ['Pap', 'Aardappelpuree'],
+      dislikes: ['Rauwe groenten'],
+    },
+  },
+  {
+    diet_id: 5,
+    diet_type: 'Zachte voeding',
+    resident_id: 3,
+    description: 'Zacht en gemakkelijk te kauwen voedsel',
+    created_at: '2024-01-15T10:00:00Z',
   },
 ];
 
 // MEDICATION_LIBRARY - Medicatie bibliotheek
-export const medicationLibrary = [
+export const medicationLibrary: MedicationLibrary[] = [
   {
     medication_id: 1,
     name: 'Paracetamol 500mg',
@@ -270,7 +289,7 @@ export const medicationLibrary = [
 ];
 
 // RES_MEDICATION - Medicatie van bewoners
-export const resMedication = [
+export const resMedication: ResMedication[] = [
   {
     res_medication_id: 1,
     medication_id: 2,
@@ -329,7 +348,7 @@ export const resMedication = [
 
 // RES_SCHEDULE - Medicatie schema's
 // time_of_day values: 'Ochtend', 'Middag', 'Avond', 'Nacht'
-export const resSchedules = [
+export const resSchedules: ResSchedule[] = [
   {
     schedule_id: 1,
     res_medication_id: 1,
@@ -389,7 +408,7 @@ export const resSchedules = [
 ];
 
 // MEDICATION_ROUND - Medicatie rondes
-export const medicationRounds = [
+export const medicationRounds: MedicationRound[] = [
   {
     round_id: 1,
     res_medication_id: 1,
@@ -453,7 +472,7 @@ export const medicationRounds = [
 ];
 
 // NOTES - Notities/Meldingen
-export const notes = [
+export const notes: Note[] = [
   {
     note_id: 1,
     resident_id: 1,
@@ -698,21 +717,21 @@ export const auditLogs = [
 ];
 
 // Helper functies om data op te halen
-export const getResidentById = (id) => {
+export const getResidentById = (id: number): Resident | undefined => {
   return residents.find(r => r.resident_id === id);
 };
 
-export const getUserById = (id) => {
+export const getUserById = (id: number): User | undefined => {
   return users.find(u => u.user_id === id);
 };
 
-export const getResidentsByFloor = (floorId) => {
+export const getResidentsByFloor = (floorId: number): Resident[] => {
   const roomsOnFloor = rooms.filter(r => r.floor_id === floorId);
-  const residentIds = roomsOnFloor.map(r => r.resident_id).filter(id => id !== null);
+  const residentIds = roomsOnFloor.map(r => r.resident_id).filter((id): id is number => id !== null);
   return residents.filter(r => residentIds.includes(r.resident_id));
 };
 
-export const getMedicationForResident = (residentId) => {
+export const getMedicationForResident = (residentId: number) => {
   const resMeds = resMedication.filter(rm => rm.resident_id === residentId && rm.is_active);
   return resMeds.map(rm => {
     const med = medicationLibrary.find(m => m.medication_id === rm.medication_id);
@@ -725,7 +744,7 @@ export const getMedicationForResident = (residentId) => {
   });
 };
 
-export const getNotesForResident = (residentId) => {
+export const getNotesForResident = (residentId: number) => {
   return notes.filter(n => n.resident_id === residentId);
 };
 
@@ -743,15 +762,15 @@ export const getTodaysMedicationRounds = () => {
   });
 };
 
-export const getContactsForResident = (residentId) => {
+export const getContactsForResident = (residentId: number): Contact[] => {
   return contacts.filter(c => c.resident_id === residentId);
 };
 
-export const getAllergiesForResident = (residentId) => {
+export const getAllergiesForResident = (residentId: number) => {
   return allergies.filter(a => a.resident_id === residentId);
 };
 
-export const getDietForResident = (residentId) => {
+export const getDietForResident = (residentId: number) => {
   return diets.find(d => d.resident_id === residentId);
 };
 
@@ -759,7 +778,7 @@ export const getPendingChangeRequests = () => {
   return changeRequests.filter(cr => cr.status === 'In behandeling');
 };
 
-export const getUnreadAnnouncementsForUser = (userId) => {
+export const getUnreadAnnouncementsForUser = (userId: number) => {
   const unreadRecipients = announcementRecipients.filter(
     ar => ar.user_id === userId && !ar.is_read
   );
@@ -768,8 +787,13 @@ export const getUnreadAnnouncementsForUser = (userId) => {
   );
 };
 
+export const getRoomNumber = (residentId: number): number | null => {
+  const room = rooms.find(r => r.resident_id === residentId);
+  return room ? room.room_id : null;
+};
+
 // Get residents with medications for specific dagdeel
-export const getResidentsWithMedicationForDagdeel = (dagdeel) => {
+export const getResidentsWithMedicationForDagdeel = (dagdeel: string) => {
   // Get all schedules for this dagdeel
   const schedulesForDagdeel = resSchedules.filter(s => s.time_of_day === dagdeel);
 
@@ -806,7 +830,7 @@ export const getResidentsWithMedicationForDagdeel = (dagdeel) => {
 };
 
 // Get medication rounds by dagdeel for today
-export const getMedicationRoundsByDagdeel = (dagdeel, date = new Date()) => {
+export const getMedicationRoundsByDagdeel = (dagdeel: string, date = new Date()) => {
   const today = date.toISOString().split('T')[0];
 
   // Get schedules for this dagdeel
@@ -856,6 +880,7 @@ export default {
   getDietForResident,
   getPendingChangeRequests,
   getUnreadAnnouncementsForUser,
+  getRoomNumber,
   getResidentsWithMedicationForDagdeel,
   getMedicationRoundsByDagdeel,
 };

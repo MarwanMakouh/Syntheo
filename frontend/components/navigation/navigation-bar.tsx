@@ -1,8 +1,19 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter, useSegments } from 'expo-router';
+import { users } from '@/Services';
+
+// Simuleer ingelogde user (Jan Janssen)
+const CURRENT_USER = users[0]; // Jan Janssen, verpleger
 
 export function NavigationBar() {
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Check if we're on a detail page (e.g., /bewoners/[id])
+  const isDetailPage = segments.length > 2 && segments[segments.length - 1].startsWith('[');
+
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready
     console.log('Notifications pressed');
@@ -13,23 +24,34 @@ export function NavigationBar() {
     console.log('Logout pressed');
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <Image
-        source={require('@/assets/images/syntheo.png')}
-        style={styles.logo}
-        contentFit="contain"
-      />
+      {/* Back button or Logo */}
+      {isDetailPage ? (
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#00A86B" />
+          <Text style={styles.backText}>Terug</Text>
+        </TouchableOpacity>
+      ) : (
+        <Image
+          source={require('@/assets/images/syntheo.png')}
+          style={styles.logo}
+          contentFit="contain"
+        />
+      )}
 
       {/* User info - centered on mobile */}
       {Platform.OS !== 'web' && (
         <View style={styles.userInfoCentered}>
           <Text style={styles.userName}>
-            Jan Janssen
+            {CURRENT_USER.name}
           </Text>
           <Text style={styles.userRole}>
-            Administrator
+            {CURRENT_USER.role}
           </Text>
         </View>
       )}
@@ -40,10 +62,10 @@ export function NavigationBar() {
         {Platform.OS === 'web' && (
           <View style={styles.userInfo}>
             <Text style={styles.userName}>
-              Jan Janssen
+              {CURRENT_USER.name}
             </Text>
             <Text style={styles.userRole}>
-              Administrator
+              {CURRENT_USER.role}
             </Text>
           </View>
         )}
@@ -86,7 +108,18 @@ const styles = StyleSheet.create({
   logo: {
     width: 160,
     height: 50,
-    marginLeft: -251,
+    marginLeft: -25,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 8,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#00A86B',
+    marginLeft: 8,
+    fontWeight: '500',
   },
   userInfoCentered: {
     position: 'absolute',

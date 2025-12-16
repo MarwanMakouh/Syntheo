@@ -3,7 +3,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { NavigationBar } from '@/components/navigation-bar';
+import { NavigationBar } from '@/components';
 
 export default function TabLayout() {
   return (
@@ -30,6 +30,7 @@ export default function TabLayout() {
         name="bewoners"
         options={{
           title: 'Bewoners',
+          href: '/(tabs)/bewoners',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="people" size={size} color={color} />
           ),
@@ -39,6 +40,7 @@ export default function TabLayout() {
         name="medicatieronde"
         options={{
           title: 'Medicatie',
+          href: '/(tabs)/medicatieronde',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="medical-services" size={size} color={color} />
           ),
@@ -48,6 +50,7 @@ export default function TabLayout() {
         name="meldingen"
         options={{
           title: 'Meldingen',
+          href: '/(tabs)/meldingen',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="notifications" size={size} color={color} />
           ),
