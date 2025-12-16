@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  ActionSheetIOS,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -20,6 +21,12 @@ import {
 
 // Simuleer ingelogde user (Jan Janssen)
 const CURRENT_USER = users[0]; // Jan Janssen, floor_id: 1
+
+const FLOOR_OPTIONS = [
+  { label: 'Verdieping 1', value: 1 },
+  { label: 'Verdieping 2', value: 2 },
+  { label: 'Verdieping 3', value: 3 },
+];
 
 export default function BewonersScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +62,26 @@ export default function BewonersScreen() {
 
     return filtered;
   }, [selectedFloor, searchQuery]);
+
+  // Handle floor selection for iOS
+  const handleFloorPress = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Annuleren', ...FLOOR_OPTIONS.map(f => f.label)],
+        cancelButtonIndex: 0,
+      },
+      (buttonIndex) => {
+        if (buttonIndex > 0) {
+          setSelectedFloor(FLOOR_OPTIONS[buttonIndex - 1].value);
+        }
+      }
+    );
+  };
+
+  const getFloorLabel = () => {
+    const floor = FLOOR_OPTIONS.find(f => f.value === selectedFloor);
+    return floor ? floor.label : 'Verdieping 1';
+  };
 
   const renderResidentCard = ({ item }: { item: any }) => {
     const age = calculateAge(item.date_of_birth);
@@ -104,21 +131,30 @@ export default function BewonersScreen() {
       </View>
 
       {/* Floor Filter */}
-      <View style={styles.filterContainer}>
-        <MaterialIcons name="filter-list" size={20} color="#666666" />
-        <Text style={styles.filterLabel}>Verdieping:</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={selectedFloor}
-            onValueChange={(value) => setSelectedFloor(value)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Verdieping 1" value={1} />
-            <Picker.Item label="Verdieping 2" value={2} />
-            <Picker.Item label="Verdieping 3" value={3} />
-          </Picker>
+      {Platform.OS === 'ios' ? (
+        <TouchableOpacity style={styles.filterContainer} onPress={handleFloorPress}>
+          <MaterialIcons name="filter-list" size={20} color="#666666" />
+          <Text style={styles.filterLabel}>Verdieping:</Text>
+          <Text style={styles.filterValue}>{getFloorLabel()}</Text>
+          <MaterialIcons name="arrow-drop-down" size={24} color="#666666" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.filterContainer}>
+          <MaterialIcons name="filter-list" size={20} color="#666666" />
+          <Text style={styles.filterLabel}>Verdieping:</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedFloor}
+              onValueChange={(value) => setSelectedFloor(value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Verdieping 1" value={1} />
+              <Picker.Item label="Verdieping 2" value={2} />
+              <Picker.Item label="Verdieping 3" value={3} />
+            </Picker>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Results count */}
       <Text style={styles.resultCount}>
@@ -181,6 +217,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 8,
     paddingLeft: 12,
+    paddingRight: Platform.OS === 'ios' ? 12 : 0,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 0,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -197,6 +235,13 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginLeft: 8,
     fontWeight: '500',
+  },
+  filterValue: {
+    flex: 1,
+    fontSize: 14,
+    color: '#000000',
+    marginLeft: 8,
+    fontWeight: '600',
   },
   pickerContainer: {
     flex: 1,

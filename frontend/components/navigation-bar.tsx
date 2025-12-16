@@ -44,10 +44,10 @@ export function NavigationBar() {
         {Platform.OS === 'web' && (
           <View style={styles.userInfo}>
             <Text style={styles.userName}>
-              Jan Janssen
+              {CURRENT_USER.name}
             </Text>
             <Text style={styles.userRole}>
-              Administrator
+              {CURRENT_USER.role}
             </Text>
           </View>
         )}
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 160,
     height: 50,
-    marginLeft: -251,
+    marginLeft: -25,
   },
   userInfoCentered: {
     position: 'absolute',
