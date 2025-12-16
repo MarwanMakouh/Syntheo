@@ -3,7 +3,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { NavigationBar } from '@/components/navigation-bar';
+import { NavigationBar } from '@/components';
 
 export default function TabLayout() {
   return (
