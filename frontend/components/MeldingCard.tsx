@@ -6,7 +6,7 @@ interface MeldingCardProps {
   timeAgo: string;
   urgency: 'Hoog' | 'Matig' | 'Laag';
   status: 'open' | 'in_behandeling' | 'afgehandeld';
-  onView?: () => void;
+  onPress?: () => void;
 }
 
 export function MeldingCard({
@@ -15,7 +15,7 @@ export function MeldingCard({
   timeAgo,
   urgency,
   status,
-  onView,
+  onPress,
 }: MeldingCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -57,7 +57,7 @@ export function MeldingCard({
   };
 
   return (
-    <View style={styles.meldingCard}>
+    <TouchableOpacity style={styles.meldingCard} onPress={onPress} activeOpacity={0.7}>
       {/* Left colored indicator */}
       <View
         style={[
@@ -83,27 +83,22 @@ export function MeldingCard({
         {/* Description */}
         <Text style={styles.meldingDescription}>{description}</Text>
 
-        {/* Bottom row with time and actions */}
+        {/* Bottom row with time and status */}
         <View style={styles.meldingFooter}>
           <Text style={styles.meldingTime}>{timeAgo}</Text>
-          <View style={styles.meldingActions}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(status) }
-              ]}
-            >
-              <Text style={styles.statusBadgeText}>
-                {getStatusText(status)}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.viewButton} onPress={onView}>
-              <Text style={styles.viewButtonText}>Bekijken</Text>
-            </TouchableOpacity>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(status) }
+            ]}
+          >
+            <Text style={styles.statusBadgeText}>
+              {getStatusText(status)}
+            </Text>
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -173,11 +168,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
   },
-  meldingActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -186,17 +176,6 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '600',
-  },
-  viewButton: {
-    backgroundColor: '#5B47FB',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  viewButtonText: {
-    color: '#FFFFFF',
-    fontSize: 13,
     fontWeight: '600',
   },
 });

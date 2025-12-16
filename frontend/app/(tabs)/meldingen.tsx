@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { MeldingenHeader } from '@/components/MeldingenHeader';
 import { MeldingenFilterBar } from '@/components/MeldingenFilterBar';
 import { MeldingCard } from '@/components/MeldingCard';
-import { notes, getResidentById } from '@/Services/API';
+import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
+import { notes, getResidentById, getUserById } from '@/Services/API';
 
 // Helper function to format time ago
 const getTimeAgo = (dateString: string) => {
@@ -21,6 +23,17 @@ const getTimeAgo = (dateString: string) => {
   }
 };
 
+// Format timestamp for modal
+const formatTimestamp = (dateString: string) => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day}-${month}-${year}, ${hours}:${minutes}`;
+};
+
 // Get status for each note
 const getStatus = (note: any): 'open' | 'in_behandeling' | 'afgehandeld' => {
   if (note.is_resolved) {
@@ -33,13 +46,53 @@ const getStatus = (note: any): 'open' | 'in_behandeling' | 'afgehandeld' => {
   return 'open';
 };
 
+// Map status to display text
+const getStatusDisplayText = (status: 'open' | 'in_behandeling' | 'afgehandeld'): string => {
+  switch (status) {
+    case 'open':
+      return 'Open';
+    case 'in_behandeling':
+      return 'Behandeling';
+    case 'afgehandeld':
+      return 'Afgehandeld';
+    default:
+      return 'Open';
+  }
+};
+
 export default function MeldingenScreen() {
+  const [selectedMelding, setSelectedMelding] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
   const handleNewMelding = () => {
     console.log('Create new melding');
   };
 
-  const handleViewMelding = (noteId: number) => {
-    console.log('View melding:', noteId);
+  const handleOpenMelding = (note: any) => {
+    const resident = getResidentById(note.resident_id);
+    const author = getUserById(note.author_id);
+    const status = getStatus(note);
+
+    setSelectedMelding({
+      residentName: resident?.name || 'Onbekend',
+      category: note.category,
+      urgency: note.urgency,
+      reportedBy: author?.name || 'Onbekend',
+      timestamp: formatTimestamp(note.created_at),
+      description: note.content,
+      status: getStatusDisplayText(status),
+    });
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedMelding(null);
+  };
+
+  const handleSaveMelding = (status: string, notes: string) => {
+    console.log('Save melding with status:', status, 'and notes:', notes);
+    // Here you would update the melding in your backend/state
   };
 
   return (
@@ -61,11 +114,21 @@ export default function MeldingenScreen() {
               timeAgo={getTimeAgo(note.created_at)}
               urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
               status={status}
-              onView={() => handleViewMelding(note.note_id)}
+              onPress={() => handleOpenMelding(note)}
             />
           );
         })}
       </ScrollView>
+
+      {/* Details Modal */}
+      {selectedMelding && (
+        <MeldingDetailsModal
+          visible={modalVisible}
+          onClose={handleCloseModal}
+          melding={selectedMelding}
+          onSave={handleSaveMelding}
+        />
+      )}
     </View>
   );
 }
