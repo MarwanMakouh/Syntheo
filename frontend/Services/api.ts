@@ -5,6 +5,7 @@ import type { Resident, Room } from '@/types/resident';
 import type { User } from '@/types/user';
 import type { Contact } from '@/types/contact';
 import type { Note } from '@/types/note';
+import type { MedicationLibrary, ResMedication, ResSchedule, MedicationRound } from '@/types/medication';
 
 // FLOORS
 export const floors = [
@@ -235,7 +236,7 @@ export const diets = [
 ];
 
 // MEDICATION_LIBRARY - Medicatie bibliotheek
-export const medicationLibrary = [
+export const medicationLibrary: MedicationLibrary[] = [
   {
     medication_id: 1,
     name: 'Paracetamol 500mg',
@@ -275,7 +276,7 @@ export const medicationLibrary = [
 ];
 
 // RES_MEDICATION - Medicatie van bewoners
-export const resMedication = [
+export const resMedication: ResMedication[] = [
   {
     res_medication_id: 1,
     medication_id: 2,
@@ -333,7 +334,7 @@ export const resMedication = [
 ];
 
 // RES_SCHEDULE - Medicatie schema's
-export const resSchedules = [
+export const resSchedules: ResSchedule[] = [
   {
     schedule_id: 1,
     res_medication_id: 1,
@@ -393,7 +394,7 @@ export const resSchedules = [
 ];
 
 // MEDICATION_ROUND - Medicatie rondes
-export const medicationRounds = [
+export const medicationRounds: MedicationRound[] = [
   {
     round_id: 1,
     res_medication_id: 1,

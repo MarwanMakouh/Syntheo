@@ -11,3 +11,5 @@ export * from './bewoners/bewoner-detail-header';
 export * from './bewoners/bewoner-tabs';
 export * from './bewoners/notitie-card';
 export * from './bewoners/nieuwe-notitie-modal';
+export * from './bewoners/medicatie-schema';
+export * from './bewoners/medicatie-historiek';

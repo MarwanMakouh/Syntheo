@@ -16,6 +16,8 @@ import {
   BewonerTabs,
   NotitieCard,
   NieuweNotitieModal,
+  MedicatieSchema,
+  MedicatieHistoriek,
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
@@ -23,6 +25,8 @@ import {
   getResidentById,
   getContactsForResident,
   getNotesForResident,
+  getMedicationForResident,
+  medicationRounds,
   rooms,
   users,
 } from '@/services';
@@ -36,6 +40,61 @@ export default function BewonerInfoScreen() {
   const roomData = rooms.find(r => r.resident_id === Number(id));
   const contacts = getContactsForResident(Number(id));
   const notes = getNotesForResident(Number(id));
+  const medications = getMedicationForResident(Number(id));
+
+  // Generate 7-day history
+  const generateHistoriek = () => {
+    const historiek = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+
+      // Check medication rounds for this date
+      const dayRounds = medicationRounds.filter(round =>
+        round.scheduled_time?.startsWith(dateString) &&
+        round.status === 'Gegeven'
+      );
+
+      const ochtend = dayRounds.some(round => {
+        if (!round.scheduled_time) return false;
+        const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
+        return hour >= 6 && hour < 10;
+      });
+
+      const middag = dayRounds.some(round => {
+        if (!round.scheduled_time) return false;
+        const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
+        return hour >= 10 && hour < 14;
+      });
+
+      const avond = dayRounds.some(round => {
+        if (!round.scheduled_time) return false;
+        const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
+        return hour >= 18 && hour < 22;
+      });
+
+      const nacht = dayRounds.some(round => {
+        if (!round.scheduled_time) return false;
+        const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
+        return hour >= 22 || hour < 6;
+      });
+
+      historiek.push({
+        date: dateString,
+        ochtend,
+        middag,
+        avond,
+        nacht,
+      });
+    }
+
+    return historiek;
+  };
+
+  const medicatieHistoriek = generateHistoriek();
 
   if (!resident) {
     return (
@@ -135,9 +194,10 @@ export default function BewonerInfoScreen() {
         );
       case 'Medicatie':
         return (
-          <View style={styles.contentContainer}>
-            <Text style={styles.placeholderText}>Medicatie komt binnenkort...</Text>
-          </View>
+          <ScrollView style={styles.medicatieContainer}>
+            <MedicatieSchema medications={medications} />
+            <MedicatieHistoriek historiek={medicatieHistoriek} />
+          </ScrollView>
         );
       case 'Dieet':
         return (
@@ -274,5 +334,9 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#999999',
+  },
+  medicatieContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
 });
