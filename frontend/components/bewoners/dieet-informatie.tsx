@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { DieetBewerkenModal } from './dieet-bewerken-modal';
 import type { Diet, Allergy } from '@/types';
 
 interface DieetInformatieProps {
   allergies: Allergy[];
   diets: Diet[];
-  onEdit?: () => void;
+  onSaveChanges?: (data: any) => void;
 }
 
-export function DieetInformatie({ allergies, diets, onEdit }: DieetInformatieProps) {
+export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInformatieProps) {
   const [selectedDietType, setSelectedDietType] = useState(diets[0]?.diet_type || '');
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     if (diets.length > 0 && !selectedDietType) {
@@ -20,13 +22,28 @@ export function DieetInformatie({ allergies, diets, onEdit }: DieetInformatiePro
 
   const selectedDiet = diets.find(d => d.diet_type === selectedDietType);
 
+  const handleSaveChanges = (data: any) => {
+    if (onSaveChanges) {
+      onSaveChanges(data);
+    }
+  };
+
+  // Prepare initial data for modal
+  const initialData = {
+    allergies: allergies.map(a => a.symptom).join(', '),
+    dietTypes: diets.map(d => d.diet_type).join(', '),
+    likes: selectedDiet?.preferences?.likes?.join(', ') || '',
+    dislikes: selectedDiet?.preferences?.dislikes?.join(', ') || '',
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Edit Button */}
-      <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-        <MaterialIcons name="edit" size={20} color="#FFFFFF" />
-        <Text style={styles.editButtonText}>Dieetinformatie Bewerken</Text>
-      </TouchableOpacity>
+    <>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Edit Button */}
+        <TouchableOpacity style={styles.editButton} onPress={() => setShowEditModal(true)}>
+          <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+          <Text style={styles.editButtonText}>Dieetinformatie Bewerken</Text>
+        </TouchableOpacity>
 
       {/* Allergieën */}
       {allergies.length > 0 && (
@@ -99,6 +116,14 @@ export function DieetInformatie({ allergies, diets, onEdit }: DieetInformatiePro
         </View>
       )}
     </ScrollView>
+
+      <DieetBewerkenModal
+        visible={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleSaveChanges}
+        initialData={initialData}
+      />
+    </>
   );
 }
 
