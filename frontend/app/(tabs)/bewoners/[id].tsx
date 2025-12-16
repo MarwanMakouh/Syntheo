@@ -4,12 +4,10 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   Platform,
   Linking,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useLocalSearchParams } from 'expo-router';
 import {
   ContactCard,
   BewonerDetailHeader,
@@ -25,7 +23,6 @@ import {
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('Info');
 
   const resident = getResidentById(Number(id));
@@ -113,17 +110,6 @@ export default function BewonerInfoScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header met terug knop */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#00A86B" />
-          <Text style={styles.backText}>Terug naar Dashboard</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView style={styles.scrollView}>
         {/* Bewoner Header */}
         <BewonerDetailHeader
@@ -149,23 +135,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingTop: Platform.OS === 'ios' ? 70 : Platform.OS === 'android' ? 60 : 20,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backText: {
-    fontSize: 16,
-    color: '#00A86B',
-    marginLeft: 8,
   },
   scrollView: {
     flex: 1,
