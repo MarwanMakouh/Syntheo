@@ -94,27 +94,53 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
       )}
 
       {/* Voorkeuren */}
-      {selectedDiet?.preferences && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Voorkeuren</Text>
+      {(() => {
+        // Collect all preferences from all diets
+        const allLikes: string[] = [];
+        const allDislikes: string[] = [];
 
-          <View style={styles.preferencesContainer}>
-            <View style={styles.preferenceColumn}>
-              <Text style={styles.preferenceLabel}>Houdt van</Text>
-              {selectedDiet.preferences.likes?.map((item, index) => (
-                <Text key={index} style={styles.preferenceItem}>{item}</Text>
-              ))}
-            </View>
+        diets.forEach(diet => {
+          if (diet.preferences?.likes) {
+            allLikes.push(...diet.preferences.likes);
+          }
+          if (diet.preferences?.dislikes) {
+            allDislikes.push(...diet.preferences.dislikes);
+          }
+        });
 
-            <View style={styles.preferenceColumn}>
-              <Text style={styles.preferenceLabel}>Houdt niet van</Text>
-              {selectedDiet.preferences.dislikes?.map((item, index) => (
-                <Text key={index} style={styles.preferenceItem}>{item}</Text>
-              ))}
+        if (allLikes.length > 0 || allDislikes.length > 0) {
+          return (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Voorkeuren</Text>
+
+              <View style={styles.preferencesContainer}>
+                <View style={styles.preferenceColumn}>
+                  <Text style={styles.preferenceLabel}>Houdt van</Text>
+                  {allLikes.length > 0 ? (
+                    allLikes.map((item, index) => (
+                      <Text key={index} style={styles.preferenceItem}>{item}</Text>
+                    ))
+                  ) : (
+                    <Text style={styles.emptyPreference}>-</Text>
+                  )}
+                </View>
+
+                <View style={styles.preferenceColumn}>
+                  <Text style={styles.preferenceLabel}>Houdt niet van</Text>
+                  {allDislikes.length > 0 ? (
+                    allDislikes.map((item, index) => (
+                      <Text key={index} style={styles.preferenceItem}>{item}</Text>
+                    ))
+                  ) : (
+                    <Text style={styles.emptyPreference}>-</Text>
+                  )}
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
-      )}
+          );
+        }
+        return null;
+      })()}
     </ScrollView>
 
       <DieetBewerkenModal
@@ -224,5 +250,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333333',
     marginBottom: 4,
+  },
+  emptyPreference: {
+    fontSize: 14,
+    color: '#999999',
+    fontStyle: 'italic',
   },
 });

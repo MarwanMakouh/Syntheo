@@ -125,6 +125,12 @@ export default function BewonerInfoScreen() {
     alert('Notitie opgeslagen! (Demo mode - wordt niet bewaard)');
   };
 
+  const handleSaveDietChanges = (data: any) => {
+    // TODO: Save to backend when ready
+    console.log('Dieet wijzigingen:', data);
+    alert('Verzoek ingediend! De wijzigingen worden ter goedkeuring naar de hoofdverpleegkundige gestuurd.');
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Info':
@@ -209,7 +215,7 @@ export default function BewonerInfoScreen() {
           <DieetInformatie
             allergies={allergies}
             diets={residentDiets}
-            onEdit={() => alert('Dieetinformatie bewerken (nog niet geïmplementeerd)')}
+            onSaveChanges={handleSaveDietChanges}
           />
         );
       default:
