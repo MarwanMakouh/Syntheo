@@ -13,3 +13,4 @@ export * from './bewoners/notitie-card';
 export * from './bewoners/nieuwe-notitie-modal';
 export * from './bewoners/medicatie-schema';
 export * from './bewoners/medicatie-historiek';
+export * from './bewoners/dieet-informatie';

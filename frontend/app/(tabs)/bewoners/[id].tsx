@@ -18,6 +18,7 @@ import {
   NieuweNotitieModal,
   MedicatieSchema,
   MedicatieHistoriek,
+  DieetInformatie,
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
@@ -26,6 +27,8 @@ import {
   getContactsForResident,
   getNotesForResident,
   getMedicationForResident,
+  getAllergiesForResident,
+  diets,
   medicationRounds,
   rooms,
   users,
@@ -41,6 +44,8 @@ export default function BewonerInfoScreen() {
   const contacts = getContactsForResident(Number(id));
   const notes = getNotesForResident(Number(id));
   const medications = getMedicationForResident(Number(id));
+  const allergies = getAllergiesForResident(Number(id));
+  const residentDiets = diets.filter(d => d.resident_id === Number(id));
 
   // Generate 7-day history
   const generateHistoriek = () => {
@@ -201,9 +206,11 @@ export default function BewonerInfoScreen() {
         );
       case 'Dieet':
         return (
-          <View style={styles.contentContainer}>
-            <Text style={styles.placeholderText}>Dieet komt binnenkort...</Text>
-          </View>
+          <DieetInformatie
+            allergies={allergies}
+            diets={residentDiets}
+            onEdit={() => alert('Dieetinformatie bewerken (nog niet geïmplementeerd)')}
+          />
         );
       default:
         return null;

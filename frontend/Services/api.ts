@@ -6,6 +6,7 @@ import type { User } from '@/types/user';
 import type { Contact } from '@/types/contact';
 import type { Note } from '@/types/note';
 import type { MedicationLibrary, ResMedication, ResSchedule, MedicationRound } from '@/types/medication';
+import type { Diet, Allergy } from '@/types/diet';
 
 // FLOORS
 export const floors = [
@@ -172,7 +173,7 @@ export const contacts: Contact[] = [
 ];
 
 // ALLERGIES - Allergieën
-export const allergies = [
+export const allergies: Allergy[] = [
   {
     allergy_id: 1,
     resident_id: 1,
@@ -192,6 +193,7 @@ export const allergies = [
     resident_id: 3,
     symptom: 'Lactose',
     severity: 'Laag',
+    notes: 'Spijsverteringsproblemen',
     created_at: '2024-01-15T10:00:00Z',
   },
   {
@@ -204,7 +206,7 @@ export const allergies = [
 ];
 
 // DIETS - Diëten
-export const diets = [
+export const diets: Diet[] = [
   {
     diet_id: 1,
     diet_type: 'Diabetisch',
@@ -231,6 +233,17 @@ export const diets = [
     diet_type: 'Lactosevrij',
     resident_id: 3,
     description: 'Geen zuivelproducten met lactose',
+    created_at: '2024-01-15T10:00:00Z',
+    preferences: {
+      likes: ['Pap', 'Aardappelpuree'],
+      dislikes: ['Rauwe groenten'],
+    },
+  },
+  {
+    diet_id: 5,
+    diet_type: 'Zachte voeding',
+    resident_id: 3,
+    description: 'Zacht en gemakkelijk te kauwen voedsel',
     created_at: '2024-01-15T10:00:00Z',
   },
 ];
