@@ -1,6 +1,10 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { users } from '@/Services/API';
+
+// Simuleer ingelogde user (Jan Janssen)
+const CURRENT_USER = users[0]; // Jan Janssen, verpleger
 
 export function NavigationBar() {
   const handleNotifications = () => {
@@ -26,10 +30,10 @@ export function NavigationBar() {
       {Platform.OS !== 'web' && (
         <View style={styles.userInfoCentered}>
           <Text style={styles.userName}>
-            Jan Janssen
+            {CURRENT_USER.name}
           </Text>
           <Text style={styles.userRole}>
-            Administrator
+            {CURRENT_USER.role}
           </Text>
         </View>
       )}

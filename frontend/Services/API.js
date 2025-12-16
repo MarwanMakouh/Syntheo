@@ -15,7 +15,7 @@ export const users = [
     email: 'jan.janssen@syntheo.nl',
     password: 'hashed_password_1',
     name: 'Jan Janssen',
-    role: 'Administrator',
+    role: 'Verpleger',
     floor_id: 1,
     created_at: '2024-01-15T08:00:00Z',
     updated_at: '2024-01-15T08:00:00Z',
