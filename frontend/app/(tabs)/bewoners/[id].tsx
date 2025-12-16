@@ -32,7 +32,7 @@ import {
   medicationRounds,
   rooms,
   users,
-} from '@/services';
+} from '@/Services';
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();

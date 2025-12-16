@@ -12,7 +12,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SearchBar, BewonerCard } from '@/components';
-import { users, getResidentsByFloor, getRoomNumber } from '@/services';
+import { users, getResidentsByFloor, getRoomNumber } from '@/Services';
 
 // Simuleer ingelogde user (Jan Janssen)
 const CURRENT_USER = users[0]; // Jan Janssen, floor_id: 1
