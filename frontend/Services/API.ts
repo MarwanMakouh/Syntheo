@@ -347,13 +347,14 @@ export const resMedication: ResMedication[] = [
 ];
 
 // RES_SCHEDULE - Medicatie schema's
+// time_of_day values: 'Ochtend', 'Middag', 'Avond', 'Nacht'
 export const resSchedules: ResSchedule[] = [
   {
     schedule_id: 1,
     res_medication_id: 1,
     dosage: '1 tablet',
     instructions: 'Bij het ontbijt innemen',
-    time_of_day: '08:00',
+    time_of_day: 'Ochtend',
     day_of_week: null, // Dagelijks
   },
   {
@@ -361,7 +362,7 @@ export const resSchedules: ResSchedule[] = [
     res_medication_id: 1,
     dosage: '1 tablet',
     instructions: 'Bij het avondeten innemen',
-    time_of_day: '18:00',
+    time_of_day: 'Avond',
     day_of_week: null,
   },
   {
@@ -369,7 +370,7 @@ export const resSchedules: ResSchedule[] = [
     res_medication_id: 2,
     dosage: '1 tablet',
     instructions: 'Zo nodig bij pijn, max 4x per dag',
-    time_of_day: '09:00',
+    time_of_day: 'Ochtend',
     day_of_week: null,
   },
   {
@@ -377,7 +378,7 @@ export const resSchedules: ResSchedule[] = [
     res_medication_id: 3,
     dosage: '1 tablet',
     instructions: 'Voor het slapen gaan',
-    time_of_day: '21:00',
+    time_of_day: 'Nacht',
     day_of_week: null,
   },
   {
@@ -385,7 +386,7 @@ export const resSchedules: ResSchedule[] = [
     res_medication_id: 4,
     dosage: '1 tablet',
     instructions: 'Bij het ontbijt',
-    time_of_day: '08:00',
+    time_of_day: 'Ochtend',
     day_of_week: null,
   },
   {
@@ -393,7 +394,7 @@ export const resSchedules: ResSchedule[] = [
     res_medication_id: 5,
     dosage: '1 tablet',
     instructions: 'Voor het ontbijt op nuchtere maag',
-    time_of_day: '07:30',
+    time_of_day: 'Ochtend',
     day_of_week: null,
   },
   {
@@ -401,7 +402,7 @@ export const resSchedules: ResSchedule[] = [
     res_medication_id: 6,
     dosage: '1 tablet',
     instructions: 'Elke dag op zelfde tijdstip',
-    time_of_day: '18:00',
+    time_of_day: 'Avond',
     day_of_week: null,
   },
 ];
@@ -791,6 +792,62 @@ export const getRoomNumber = (residentId: number): number | null => {
   return room ? room.room_id : null;
 };
 
+// Get residents with medications for specific dagdeel
+export const getResidentsWithMedicationForDagdeel = (dagdeel: string) => {
+  // Get all schedules for this dagdeel
+  const schedulesForDagdeel = resSchedules.filter(s => s.time_of_day === dagdeel);
+
+  // Get unique resident IDs from these schedules via res_medication
+  const resMedIds = schedulesForDagdeel.map(s => s.res_medication_id);
+  const relevantResMeds = resMedication.filter(rm =>
+    resMedIds.includes(rm.res_medication_id) && rm.is_active
+  );
+  const residentIds = [...new Set(relevantResMeds.map(rm => rm.resident_id))];
+
+  // Get resident details with room numbers
+  return residentIds.map(residentId => {
+    const resident = residents.find(r => r.resident_id === residentId);
+    const room = rooms.find(r => r.resident_id === residentId);
+
+    // Get medications for this resident and dagdeel
+    const residentMeds = relevantResMeds.filter(rm => rm.resident_id === residentId);
+    const medications = residentMeds.map(rm => {
+      const med = medicationLibrary.find(m => m.medication_id === rm.medication_id);
+      const schedules = schedulesForDagdeel.filter(s => s.res_medication_id === rm.res_medication_id);
+      return {
+        ...rm,
+        medication: med,
+        schedules: schedules,
+      };
+    });
+
+    return {
+      ...resident,
+      room_id: room ? room.room_id : null,
+      medications: medications,
+    };
+  });
+};
+
+// Get medication rounds by dagdeel for today
+export const getMedicationRoundsByDagdeel = (dagdeel: string, date = new Date()) => {
+  const today = date.toISOString().split('T')[0];
+
+  // Get schedules for this dagdeel
+  const schedulesForDagdeel = resSchedules.filter(s => s.time_of_day === dagdeel);
+  const scheduleIds = schedulesForDagdeel.map(s => s.schedule_id);
+
+  // Get medication rounds for these schedules today
+  return medicationRounds.filter(mr => {
+    if (!scheduleIds.includes(mr.schedule_id)) return false;
+
+    if (mr.given_at) {
+      return mr.given_at.startsWith(today);
+    }
+    return mr.status === 'Gepland';
+  });
+};
+
 // Export all data
 export default {
   floors,
@@ -824,4 +881,6 @@ export default {
   getPendingChangeRequests,
   getUnreadAnnouncementsForUser,
   getRoomNumber,
+  getResidentsWithMedicationForDagdeel,
+  getMedicationRoundsByDagdeel,
 };
