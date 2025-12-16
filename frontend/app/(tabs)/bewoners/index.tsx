@@ -109,7 +109,7 @@ export default function BewonersScreen() {
           <BewonerCard
             resident={item}
             roomNumber={getRoomNumber(item.resident_id)}
-            onPress={() => router.push(`/bewoners/${item.resident_id}`)}
+            onPress={() => router.push(`/(tabs)/bewoners/${item.resident_id}` as any)}
           />
         )}
         keyExtractor={(item) => item.resident_id.toString()}

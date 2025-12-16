@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { users } from '@/Services/API';
+import { users } from '@/services';
 
 // Simuleer ingelogde user (Jan Janssen)
 const CURRENT_USER = users[0]; // Jan Janssen, verpleger

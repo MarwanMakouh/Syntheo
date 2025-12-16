@@ -715,7 +715,7 @@ export const getResidentsByFloor = (floorId: number): Resident[] => {
   return residents.filter(r => residentIds.includes(r.resident_id));
 };
 
-export const getMedicationForResident = (residentId) => {
+export const getMedicationForResident = (residentId: number) => {
   const resMeds = resMedication.filter(rm => rm.resident_id === residentId && rm.is_active);
   return resMeds.map(rm => {
     const med = medicationLibrary.find(m => m.medication_id === rm.medication_id);
@@ -728,7 +728,7 @@ export const getMedicationForResident = (residentId) => {
   });
 };
 
-export const getNotesForResident = (residentId) => {
+export const getNotesForResident = (residentId: number) => {
   return notes.filter(n => n.resident_id === residentId);
 };
 
@@ -750,11 +750,11 @@ export const getContactsForResident = (residentId: number): Contact[] => {
   return contacts.filter(c => c.resident_id === residentId);
 };
 
-export const getAllergiesForResident = (residentId) => {
+export const getAllergiesForResident = (residentId: number) => {
   return allergies.filter(a => a.resident_id === residentId);
 };
 
-export const getDietForResident = (residentId) => {
+export const getDietForResident = (residentId: number) => {
   return diets.find(d => d.resident_id === residentId);
 };
 
@@ -762,7 +762,7 @@ export const getPendingChangeRequests = () => {
   return changeRequests.filter(cr => cr.status === 'In behandeling');
 };
 
-export const getUnreadAnnouncementsForUser = (userId) => {
+export const getUnreadAnnouncementsForUser = (userId: number) => {
   const unreadRecipients = announcementRecipients.filter(
     ar => ar.user_id === userId && !ar.is_read
   );
