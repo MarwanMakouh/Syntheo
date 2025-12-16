@@ -10,3 +10,4 @@ export * from './bewoners/contact-card';
 export * from './bewoners/bewoner-detail-header';
 export * from './bewoners/bewoner-tabs';
 export * from './bewoners/notitie-card';
+export * from './bewoners/nieuwe-notitie-modal';

@@ -15,6 +15,7 @@ import {
   BewonerDetailHeader,
   BewonerTabs,
   NotitieCard,
+  NieuweNotitieModal,
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
@@ -29,6 +30,7 @@ import {
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('Info');
+  const [showNewNoteModal, setShowNewNoteModal] = useState(false);
 
   const resident = getResidentById(Number(id));
   const roomData = rooms.find(r => r.resident_id === Number(id));
@@ -46,6 +48,17 @@ export default function BewonerInfoScreen() {
   const handleCall = (phone: string) => {
     const phoneNumber = phone.replace(/\s/g, '');
     Linking.openURL(`tel:${phoneNumber}`);
+  };
+
+  const handleSaveNote = (notitie: {
+    type: string;
+    content: string;
+    urgency: 'Laag' | 'Matig' | 'Hoog';
+  }) => {
+    // TODO: Save to backend when ready
+    console.log('Nieuwe notitie:', notitie);
+    setShowNewNoteModal(false);
+    alert('Notitie opgeslagen! (Demo mode - wordt niet bewaard)');
   };
 
   const renderTabContent = () => {
@@ -94,7 +107,10 @@ export default function BewonerInfoScreen() {
       case 'Notities':
         return (
           <View style={styles.notitiesContainer}>
-            <TouchableOpacity style={styles.newNoteButton}>
+            <TouchableOpacity
+              style={styles.newNoteButton}
+              onPress={() => setShowNewNoteModal(true)}
+            >
               <MaterialIcons name="add" size={20} color="#FFFFFF" />
               <Text style={styles.newNoteButtonText}>Nieuwe Notitie</Text>
             </TouchableOpacity>
@@ -153,6 +169,13 @@ export default function BewonerInfoScreen() {
         {/* Tab Content */}
         {renderTabContent()}
       </ScrollView>
+
+      {/* Nieuwe Notitie Modal */}
+      <NieuweNotitieModal
+        visible={showNewNoteModal}
+        onClose={() => setShowNewNoteModal(false)}
+        onSave={handleSaveNote}
+      />
     </View>
   );
 }
