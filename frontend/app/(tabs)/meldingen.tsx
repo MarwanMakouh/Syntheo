@@ -90,8 +90,8 @@ export default function MeldingenScreen() {
     setSelectedMelding(null);
   };
 
-  const handleSaveMelding = (status: string, notes: string) => {
-    console.log('Save melding with status:', status, 'and notes:', notes);
+  const handleSaveMelding = (status: string) => {
+    console.log('Save melding with status:', status);
     // Here you would update the melding in your backend/state
   };
 
