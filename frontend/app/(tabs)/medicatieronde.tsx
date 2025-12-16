@@ -26,7 +26,7 @@ const getCurrentDagdeel = (): string => {
 };
 
 export default function MedicatierondeScreen() {
-  const [selectedDagdeel, setSelectedDagdeel] = useState(getCurrentDagdeel());
+    const [selectedDagdeel, setSelectedDagdeel] = useState(getCurrentDagdeel());
   const [residents, setResidents] = useState<any[]>([]);
   const [residentStates, setResidentStates] = useState<ResidentStates>({});
   const [modalState, setModalState] = useState<{
@@ -262,7 +262,7 @@ export default function MedicatierondeScreen() {
                 style={styles.modalButtonSecondary}
                 onPress={handleModalGoBack}
               >
-                <Text style={styles.modalButtonSecondaryText}>Terug gaan</Text>
+                <Text style={styles.modalButtonSecondaryText}>Terug</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

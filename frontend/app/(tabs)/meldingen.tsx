@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { MeldingenHeader } from '@/components/MeldingenHeader';
-import { MeldingenFilterBar } from '@/components/MeldingenFilterBar';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { notes, getResidentById, getUserById } from '@/Services/API';
@@ -97,8 +97,14 @@ export default function MeldingenScreen() {
 
   return (
     <View style={styles.container}>
-      <MeldingenHeader onNewMelding={handleNewMelding} />
-      <MeldingenFilterBar />
+      {/* Header with Filter and New Button */}
+      <View style={styles.header}>
+        <MeldingenFilterDropdown />
+        <TouchableOpacity style={styles.newButton} onPress={handleNewMelding}>
+          <MaterialIcons name="add" size={20} color="#FFFFFF" />
+          <Text style={styles.newButtonText}>Nieuwe Melding</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Meldingen List */}
       <ScrollView style={styles.meldingenList}>
@@ -137,6 +143,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    gap: 16,
+    zIndex: 1000,
+  },
+  newButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#5B47FB',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  newButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   meldingenList: {
     flex: 1,
