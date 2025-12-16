@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DagdeelDropdown } from '@/components/DagdeelDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
-import { getResidentsWithMedicationForDagdeel } from '@/services/API';
+import { getResidentsWithMedicationForDagdeel } from '@/Services/API';
 
 interface ResidentState {
   isExpanded: boolean;
