@@ -139,18 +139,13 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 60,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
+    marginBottom: 24,
   },
   closeButton: {
     padding: 4,
@@ -219,16 +214,6 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     fontSize: 16,
     color: '#000000',
-  },
-  notitiesInput: {
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 14,
-    color: '#000000',
-    height: 150,
   },
   actions: {
     flexDirection: 'row',
