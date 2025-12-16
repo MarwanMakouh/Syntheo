@@ -30,6 +30,7 @@ const FLOOR_OPTIONS = [
 ];
 
 export default function BewonersScreen() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFloor, setSelectedFloor] = useState(CURRENT_USER.floor_id);
 
@@ -89,7 +90,10 @@ export default function BewonersScreen() {
     const roomNumber = getRoomNumber(item.resident_id);
 
     return (
-      <TouchableOpacity style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push(`/bewoner/${item.resident_id}`)}
+      >
         <Image
           source={{ uri: item.photo_url }}
           style={styles.avatar}

@@ -19,7 +19,7 @@ import {
 
 type TabType = 'Info' | 'Notities' | 'Medicatie' | 'Dieet';
 
-export default function Bewoner DetailScreen() {
+export default function BewonerDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('Info');
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#ffffff',
-    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : 20,
+    paddingTop: Platform.OS === 'ios' ? 70 : Platform.OS === 'android' ? 60 : 20,
     paddingBottom: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
