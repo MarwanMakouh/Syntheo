@@ -457,7 +457,7 @@ export const medicationRounds = [
 ];
 
 // NOTES - Notities/Meldingen
-export const notes = [
+export const notes: Note[] = [
   {
     note_id: 1,
     resident_id: 1,
