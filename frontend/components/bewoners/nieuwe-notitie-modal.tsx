@@ -9,7 +9,6 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 interface NieuweNotitieModalProps {
   visible: boolean;
@@ -121,12 +120,6 @@ export function NieuweNotitieModal({ visible, onClose, onSave }: NieuweNotitieMo
               ))}
             </View>
           </View>
-
-          {/* Foto's Toevoegen */}
-          <TouchableOpacity style={styles.photoButton}>
-            <MaterialIcons name="photo-camera" size={20} color="#666666" />
-            <Text style={styles.photoButtonText}>Foto's Toevoegen</Text>
-          </TouchableOpacity>
         </ScrollView>
 
         {/* Action Buttons */}
@@ -221,22 +214,6 @@ const styles = StyleSheet.create({
   urgencyButtonTextActive: {
     color: '#10B981',
     fontWeight: '600',
-  },
-  photoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    gap: 8,
-  },
-  photoButtonText: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
   },
   actionContainer: {
     flexDirection: 'row',
