@@ -14,8 +14,7 @@ interface ResidentMedicationCardProps {
   isExpanded: boolean;
   checkedMedications: Set<number>;
   completedAt: Date | null;
-  onStart: () => void;
-  onClose: () => void;
+  onToggle: () => void;
   onSave: () => void;
   onToggleMedication: (scheduleId: number) => void;
 }
@@ -26,8 +25,7 @@ export function ResidentMedicationCard({
   isExpanded,
   checkedMedications,
   completedAt,
-  onStart,
-  onClose,
+  onToggle,
   onSave,
   onToggleMedication,
 }: ResidentMedicationCardProps) {
@@ -43,8 +41,19 @@ export function ResidentMedicationCard({
     });
   };
 
+  const handleHeaderPress = () => {
+    if (status !== 'completed') {
+      onToggle();
+    }
+  };
+
   const renderHeader = () => (
-    <View style={styles.header}>
+    <TouchableOpacity
+      style={styles.header}
+      onPress={handleHeaderPress}
+      disabled={status === 'completed'}
+      activeOpacity={status === 'completed' ? 1 : 0.7}
+    >
       <View style={styles.headerLeft}>
         <StatusIndicator status={status} />
         <View style={styles.headerText}>
@@ -57,25 +66,15 @@ export function ResidentMedicationCard({
         </View>
       </View>
 
-      <View style={styles.headerRight}>
-        {status === 'completed' && completedAt ? (
-          <View style={styles.completedBadge}>
-            <MaterialIcons name="check-circle" size={20} color="#34C759" />
-            <Text style={styles.completedText}>
-              Klaar {formatTime(completedAt)}
-            </Text>
-          </View>
-        ) : status === 'not-started' ? (
-          <TouchableOpacity style={styles.startButton} onPress={onStart}>
-            <Text style={styles.startButtonText}>Start</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Sluit</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+      {status === 'completed' && completedAt && (
+        <View style={styles.completedBadge}>
+          <MaterialIcons name="check-circle" size={20} color="#34C759" />
+          <Text style={styles.completedText}>
+            Klaar {formatTime(completedAt)}
+          </Text>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 
   const renderMedicationList = () => {
@@ -145,33 +144,6 @@ const styles = StyleSheet.create({
     color: '#000000',
     opacity: 0.6,
     marginTop: 2,
-  },
-  headerRight: {
-    marginLeft: 12,
-  },
-  startButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#007AFF',
-    borderRadius: 6,
-  },
-  startButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  closeButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  closeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
   },
   completedBadge: {
     flexDirection: 'row',
