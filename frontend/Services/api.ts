@@ -4,6 +4,7 @@
 import type { Resident, Room } from '@/types/resident';
 import type { User } from '@/types/user';
 import type { Contact } from '@/types/contact';
+import type { Note } from '@/types/note';
 
 // FLOORS
 export const floors = [

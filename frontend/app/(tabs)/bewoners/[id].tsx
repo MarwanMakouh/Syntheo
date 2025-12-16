@@ -4,21 +4,26 @@ import {
   View,
   Text,
   ScrollView,
+  TouchableOpacity,
   Platform,
   Linking,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   ContactCard,
   BewonerDetailHeader,
   BewonerTabs,
+  NotitieCard,
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
 import {
   getResidentById,
   getContactsForResident,
+  getNotesForResident,
   rooms,
+  users,
 } from '@/services';
 
 export default function BewonerInfoScreen() {
@@ -28,6 +33,7 @@ export default function BewonerInfoScreen() {
   const resident = getResidentById(Number(id));
   const roomData = rooms.find(r => r.resident_id === Number(id));
   const contacts = getContactsForResident(Number(id));
+  const notes = getNotesForResident(Number(id));
 
   if (!resident) {
     return (
@@ -87,8 +93,28 @@ export default function BewonerInfoScreen() {
         );
       case 'Notities':
         return (
-          <View style={styles.contentContainer}>
-            <Text style={styles.placeholderText}>Notities komen binnenkort...</Text>
+          <View style={styles.notitiesContainer}>
+            <TouchableOpacity style={styles.newNoteButton}>
+              <MaterialIcons name="add" size={20} color="#FFFFFF" />
+              <Text style={styles.newNoteButtonText}>Nieuwe Notitie</Text>
+            </TouchableOpacity>
+
+            {notes.length > 0 ? (
+              notes.map((note) => {
+                const author = users.find(u => u.user_id === note.author_id);
+                return (
+                  <NotitieCard
+                    key={note.note_id}
+                    note={note}
+                    authorName={author?.name || 'Onbekend'}
+                  />
+                );
+              })
+            ) : (
+              <View style={styles.emptyNotities}>
+                <Text style={styles.emptyText}>Geen notities gevonden</Text>
+              </View>
+            )}
           </View>
         );
       case 'Medicatie':
@@ -189,5 +215,41 @@ const styles = StyleSheet.create({
     color: '#999999',
     textAlign: 'center',
     paddingVertical: 40,
+  },
+  notitiesContainer: {
+    padding: 16,
+    ...Platform.select({
+      web: {
+        maxWidth: 800,
+        alignSelf: 'center',
+        width: '100%',
+      },
+    }),
+  },
+  newNoteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+  },
+  newNoteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  emptyNotities: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999999',
   },
 });
