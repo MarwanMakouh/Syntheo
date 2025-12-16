@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 160,
     height: 50,
-    marginLeft: -25,
+    marginLeft: -251,
   },
   userInfoCentered: {
     position: 'absolute',
