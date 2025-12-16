@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DieetBewerkenModal } from './dieet-bewerken-modal';
@@ -11,16 +11,7 @@ interface DieetInformatieProps {
 }
 
 export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInformatieProps) {
-  const [selectedDietType, setSelectedDietType] = useState(diets[0]?.diet_type || '');
   const [showEditModal, setShowEditModal] = useState(false);
-
-  useEffect(() => {
-    if (diets.length > 0 && !selectedDietType) {
-      setSelectedDietType(diets[0].diet_type);
-    }
-  }, [diets, selectedDietType]);
-
-  const selectedDiet = diets.find(d => d.diet_type === selectedDietType);
 
   const handleSaveChanges = (data: any) => {
     if (onSaveChanges) {
@@ -29,11 +20,22 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
   };
 
   // Prepare initial data for modal
+  const allLikes: string[] = [];
+  const allDislikes: string[] = [];
+  diets.forEach(diet => {
+    if (diet.preferences?.likes) {
+      allLikes.push(...diet.preferences.likes);
+    }
+    if (diet.preferences?.dislikes) {
+      allDislikes.push(...diet.preferences.dislikes);
+    }
+  });
+
   const initialData = {
     allergies: allergies.map(a => a.symptom).join(', '),
     dietTypes: diets.map(d => d.diet_type).join(', '),
-    likes: selectedDiet?.preferences?.likes?.join(', ') || '',
-    dislikes: selectedDiet?.preferences?.dislikes?.join(', ') || '',
+    likes: allLikes.join(', '),
+    dislikes: allDislikes.join(', '),
   };
 
   return (
@@ -71,23 +73,14 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
 
           <View style={styles.dietTypesContainer}>
             {diets.map((diet) => (
-              <TouchableOpacity
+              <View
                 key={diet.diet_id}
-                style={[
-                  styles.dietTypeButton,
-                  selectedDietType === diet.diet_type && styles.dietTypeButtonActive,
-                ]}
-                onPress={() => setSelectedDietType(diet.diet_type)}
+                style={styles.dietTypeButton}
               >
-                <Text
-                  style={[
-                    styles.dietTypeText,
-                    selectedDietType === diet.diet_type && styles.dietTypeTextActive,
-                  ]}
-                >
+                <Text style={styles.dietTypeText}>
                   {diet.diet_type}
                 </Text>
-              </TouchableOpacity>
+              </View>
             ))}
           </View>
         </View>
@@ -221,21 +214,14 @@ const styles = StyleSheet.create({
     borderColor: '#FCA5A5',
     backgroundColor: '#FFFFFF',
   },
-  dietTypeButtonActive: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#EF4444',
-  },
   dietTypeText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#EF4444',
   },
-  dietTypeTextActive: {
-    fontWeight: '700',
-  },
   preferencesContainer: {
     flexDirection: 'row',
-    gap: 40,
+    gap: 60,
   },
   preferenceColumn: {
     flex: 1,
@@ -244,12 +230,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#000000',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   preferenceItem: {
     fontSize: 14,
     color: '#333333',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   emptyPreference: {
     fontSize: 14,
