@@ -1,4 +1,5 @@
 import { View, StyleSheet } from 'react-native';
+import { Colors, BorderRadius } from '@/constants';
 
 interface StatusIndicatorProps {
   status: 'not-started' | 'in-progress' | 'completed';
@@ -8,13 +9,13 @@ export function StatusIndicator({ status }: StatusIndicatorProps) {
   const getStatusColor = () => {
     switch (status) {
       case 'not-started':
-        return '#666666'; // Gray
+        return Colors.textSecondary;
       case 'in-progress':
-        return '#007AFF'; // Blue
+        return Colors.primary;
       case 'completed':
-        return '#34C759'; // Green
+        return Colors.successAlt;
       default:
-        return '#666666';
+        return Colors.textSecondary;
     }
   };
 
@@ -27,6 +28,6 @@ const styles = StyleSheet.create({
   indicator: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: BorderRadius.sm,
   },
 });

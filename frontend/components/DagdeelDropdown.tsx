@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Shadows } from '@/constants';
 
 interface DagdeelDropdownProps {
   value: string;
@@ -29,7 +30,7 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
           <MaterialIcons
             name={isOpen ? "arrow-drop-up" : "arrow-drop-down"}
             size={24}
-            color="#666666"
+            color={Colors.iconDefault}
           />
         </TouchableOpacity>
 
@@ -54,7 +55,7 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
                     {option}
                   </Text>
                   {value === option && (
-                    <MaterialIcons name="check" size={20} color="#007AFF" />
+                    <MaterialIcons name="check" size={20} color={Colors.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -70,12 +71,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.lg,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
   },
   dropdownWrapper: {
     flex: 1,
@@ -86,31 +87,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    backgroundColor: '#ffffff',
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
   },
   dropdownButtonText: {
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   dropdownList: {
     position: 'absolute',
     top: 52,
     left: 0,
     right: 0,
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    ...Shadows.dropdown,
     maxHeight: 200,
     zIndex: 1001,
   },
@@ -121,20 +118,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.divider,
   },
   dropdownItemSelected: {
-    backgroundColor: '#f5f9ff',
+    backgroundColor: Colors.selectedBackground,
   },
   dropdownItemText: {
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   dropdownItemTextSelected: {
-    fontWeight: '600',
-    color: '#007AFF',
+    fontWeight: FontWeight.semibold,
+    color: Colors.primary,
   },
 });

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize } from '@/constants';
 
 interface MedicationCheckboxProps {
   medication: {
@@ -22,7 +23,7 @@ export function MedicationCheckbox({ medication, checked, onToggle }: Medication
     <TouchableOpacity style={styles.container} onPress={onToggle}>
       <View style={styles.checkbox}>
         {checked && (
-          <MaterialIcons name="check" size={18} color="#007AFF" />
+          <MaterialIcons name="check" size={18} color={Colors.primary} />
         )}
       </View>
       <Text style={styles.text}>
@@ -37,21 +38,21 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: Spacing.md,
   },
   checkbox: {
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: '#007AFF',
-    borderRadius: 4,
-    marginRight: 12,
+    borderColor: Colors.primary,
+    borderRadius: BorderRadius.xs,
+    marginRight: Spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    fontSize: 14,
-    color: '#000000',
+    fontSize: FontSize.md,
+    color: Colors.textPrimary,
     flex: 1,
   },
 });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Shadows } from '@/constants';
 
 interface MeldingenFilterDropdownProps {
   onFilterChange?: (filterType: string, value: string) => void;
@@ -51,7 +52,7 @@ export function MeldingenFilterDropdown({ onFilterChange }: MeldingenFilterDropd
           <MaterialIcons
             name={isOpen ? "arrow-drop-up" : "arrow-drop-down"}
             size={24}
-            color="#666666"
+            color={Colors.iconDefault}
           />
         </TouchableOpacity>
 
@@ -83,7 +84,7 @@ export function MeldingenFilterDropdown({ onFilterChange }: MeldingenFilterDropd
                       {option.label}
                     </Text>
                     {selectedFilter === option.label && (
-                      <MaterialIcons name="check" size={20} color="#5B47FB" />
+                      <MaterialIcons name="check" size={20} color={Colors.secondary} />
                     )}
                   </TouchableOpacity>
                 );
@@ -109,31 +110,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    borderColor: Colors.borderMedium,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
   },
   dropdownButtonText: {
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   dropdownList: {
     position: 'absolute',
     top: 52,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    borderColor: Colors.borderMedium,
+    borderRadius: BorderRadius.md,
+    ...Shadows.dropdown,
     maxHeight: 500,
     zIndex: 1001,
     minWidth: 250,
@@ -145,25 +142,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing['2xl'],
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: Colors.divider,
   },
   dropdownItemSelected: {
-    backgroundColor: '#F5F5FF',
+    backgroundColor: Colors.selectedBackgroundPurple,
   },
   dropdownItemText: {
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   dropdownItemTextSelected: {
-    fontWeight: '600',
-    color: '#5B47FB',
+    fontWeight: FontWeight.semibold,
+    color: Colors.secondary,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 4,
+    backgroundColor: Colors.borderLight,
+    marginVertical: Spacing.xs,
   },
 });
