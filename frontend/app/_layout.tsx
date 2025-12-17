@@ -20,6 +20,8 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="role-selection" />
           <Stack.Screen name="dashboard" />
+          <Stack.Screen name="wijzigingsverzoeken" />
+          <Stack.Screen name="wijzigingsverzoek-detail" />
           <Stack.Screen name="(tabs)" />
         </Stack>
         <StatusBar style="auto" />
