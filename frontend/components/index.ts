@@ -4,6 +4,9 @@ export * from './navigation/navigation-bar';
 // UI Components
 export * from './ui/search-bar';
 
+// Announcement Components
+export * from './announcement-create-modal';
+
 // Bewoners Components
 export * from './bewoners/bewoner-card';
 export * from './bewoners/contact-card';
