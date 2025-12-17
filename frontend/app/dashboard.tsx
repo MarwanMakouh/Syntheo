@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, Shadows, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
+import { AnnouncementCreateModal } from '@/components/announcement-create-modal';
 import {
   residents,
   notes,
@@ -24,6 +25,7 @@ import { formatDate } from '@/utils/date';
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -131,7 +133,19 @@ export default function DashboardScreen() {
     console.log(`Action pressed: ${actionTitle}`);
     if (actionTitle === 'Wijzigingsverzoeken') {
       router.push('/wijzigingsverzoeken');
+    } else if (actionTitle === 'Aankondiging Maken') {
+      setAnnouncementModalVisible(true);
     }
+  };
+
+  const handleSendAnnouncement = (announcement: {
+    title: string;
+    message: string;
+    recipients: string;
+  }) => {
+    console.log('Aankondiging verzonden:', announcement);
+    // TODO: Implement API call to send announcement
+    alert(`Aankondiging "${announcement.title}" verzonden naar ${announcement.recipients}`);
   };
 
   const handleViewResident = (residentId: number) => {
@@ -235,6 +249,13 @@ export default function DashboardScreen() {
         )}
       </ScrollView>
       </View>
+
+      {/* Aankondiging Modal */}
+      <AnnouncementCreateModal
+        visible={announcementModalVisible}
+        onClose={() => setAnnouncementModalVisible(false)}
+        onSend={handleSendAnnouncement}
+      />
     </SafeAreaView>
   );
 }
