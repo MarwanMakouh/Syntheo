@@ -46,7 +46,13 @@ export default function RoleSelectionScreen() {
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
-    router.replace('/(tabs)/bewoners');
+
+    // Navigate to the appropriate screen based on role
+    if (role === 'Hoofdverpleegster') {
+      router.replace('/dashboard');
+    } else {
+      router.replace('/(tabs)/bewoners');
+    }
   };
 
   return (

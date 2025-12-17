@@ -8,5 +8,10 @@ export default function Index() {
     return <Redirect href="/role-selection" />;
   }
 
+  // Hoofdverpleegster gets dashboard, others get bewoners
+  if (selectedRole === 'Hoofdverpleegster') {
+    return <Redirect href="/dashboard" />;
+  }
+
   return <Redirect href="/(tabs)/bewoners" />;
 }
