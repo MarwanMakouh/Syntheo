@@ -1,8 +1,20 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter, useSegments } from 'expo-router';
+import { users } from '@/Services';
+import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
+
+// Simuleer ingelogde user (Jan Janssen)
+const CURRENT_USER = users[0]; // Jan Janssen, verpleger
 
 export function NavigationBar() {
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Check if we're on a detail page (e.g., /bewoners/[id])
+  const isDetailPage = segments.length > 2 && segments[segments.length - 1].startsWith('[');
+
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready
     console.log('Notifications pressed');
@@ -13,23 +25,34 @@ export function NavigationBar() {
     console.log('Logout pressed');
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <Image
-        source={require('@/assets/images/syntheo.png')}
-        style={styles.logo}
-        contentFit="contain"
-      />
+      {/* Back button or Logo */}
+      {isDetailPage ? (
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color={Colors.navAccent} />
+          <Text style={styles.backText}>Terug</Text>
+        </TouchableOpacity>
+      ) : (
+        <Image
+          source={require('@/assets/images/syntheo.png')}
+          style={styles.logo}
+          contentFit="contain"
+        />
+      )}
 
       {/* User info - centered on mobile */}
       {Platform.OS !== 'web' && (
         <View style={styles.userInfoCentered}>
           <Text style={styles.userName}>
-            Jan Janssen
+            {CURRENT_USER.name}
           </Text>
           <Text style={styles.userRole}>
-            Administrator
+            {CURRENT_USER.role}
           </Text>
         </View>
       )}
@@ -40,10 +63,10 @@ export function NavigationBar() {
         {Platform.OS === 'web' && (
           <View style={styles.userInfo}>
             <Text style={styles.userName}>
-              Jan Janssen
+              {CURRENT_USER.name}
             </Text>
             <Text style={styles.userRole}>
-              Administrator
+              {CURRENT_USER.role}
             </Text>
           </View>
         )}
@@ -53,7 +76,7 @@ export function NavigationBar() {
           <MaterialIcons
             name="notifications-active"
             size={26}
-            color="#666666"
+            color={Colors.iconDefault}
           />
         </TouchableOpacity>
 
@@ -62,7 +85,7 @@ export function NavigationBar() {
           <MaterialIcons
             name="exit-to-app"
             size={26}
-            color="#666666"
+            color={Colors.iconDefault}
           />
         </TouchableOpacity>
       </View>
@@ -75,18 +98,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingLeft: 8,
-    paddingRight: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : 12,
-    paddingBottom: 12,
-    backgroundColor: '#ffffff',
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.xl,
+    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : Spacing.lg,
+    paddingBottom: Spacing.lg,
+    backgroundColor: Colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   logo: {
     width: 160,
     height: 50,
-    marginLeft: -251,
+    marginLeft: -25,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: Spacing.md,
+  },
+  backText: {
+    fontSize: FontSize.lg,
+    color: Colors.navAccent,
+    marginLeft: Spacing.md,
+    fontWeight: FontWeight.medium,
   },
   userInfoCentered: {
     position: 'absolute',
@@ -99,24 +133,24 @@ const styles = StyleSheet.create({
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.xl,
   },
   iconButton: {
-    padding: 8,
+    padding: Spacing.md,
   },
   userInfo: {
     alignItems: 'flex-end',
   },
   userName: {
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#000000',
-    fontWeight: '600',
+    fontSize: FontSize.md,
+    lineHeight: LineHeight.normal,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.semibold,
   },
   userRole: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#000000',
+    fontSize: FontSize.xs,
+    lineHeight: LineHeight.tight,
+    color: Colors.textPrimary,
     opacity: 0.6,
   },
 });
