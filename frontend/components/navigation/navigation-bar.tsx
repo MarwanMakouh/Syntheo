@@ -14,8 +14,11 @@ export function NavigationBar() {
   const segments = useSegments();
   const { selectedRole, clearRole } = useRole();
 
-  // Check if we're on a detail page (e.g., /bewoners/[id])
-  const isDetailPage = segments.length > 2 && segments[segments.length - 1].startsWith('[');
+  // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
+  const isDetailPage =
+    (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
+    segments.includes('wijzigingsverzoeken') ||
+    segments.includes('wijzigingsverzoek-detail');
 
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready

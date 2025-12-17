@@ -129,13 +129,12 @@ export default function DashboardScreen() {
 
   const handleActionPress = (actionTitle: string) => {
     console.log(`Action pressed: ${actionTitle}`);
+    if (actionTitle === 'Wijzigingsverzoeken') {
+      router.push('/wijzigingsverzoeken');
+    }
   };
 
   const handleViewResident = (residentId: number) => {
-    router.push(`/(tabs)/bewoners/${residentId}`);
-  };
-
-  const handleViewNotes = (residentId: number) => {
     router.push(`/(tabs)/bewoners/${residentId}`);
   };
 
@@ -228,12 +227,6 @@ export default function DashboardScreen() {
                     onPress={() => handleViewResident(resident.id)}
                   >
                     <Text style={styles.actionButtonText}>Bekijk</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleViewNotes(resident.id)}
-                  >
-                    <Text style={styles.actionButtonText}>Bekijk Notities</Text>
                   </TouchableOpacity>
                 </View>
               </View>
