@@ -86,7 +86,6 @@ export function AnnouncementCreateModal({
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Aankondiging Maken</Text>
           <TouchableOpacity
             style={styles.closeButton}
             onPress={handleClose}
@@ -179,23 +178,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     paddingHorizontal: Spacing['2xl'],
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: Spacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    position: 'relative',
-  },
-  headerTitle: {
-    fontSize: FontSize['2xl'],
-    fontWeight: FontWeight.bold,
-    color: Colors.textPrimary,
   },
   closeButton: {
-    position: 'absolute',
-    right: Spacing['2xl'],
-    top: Platform.OS === 'ios' ? 60 : 40,
     padding: Spacing.xs,
   },
   scrollView: {
