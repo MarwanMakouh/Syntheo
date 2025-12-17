@@ -100,6 +100,12 @@ export const Colors = {
   urgencyLow: palette.gray600,
   urgencyLowBg: palette.gray75,
 
+  // Dashboard stats
+  statsUrgent: palette.red500,
+  statsAttention: palette.orange600,
+  statsStable: palette.green500,
+  statsCompliance: palette.green500,
+
   // Alert/Allergy backgrounds
   alertBackground: palette.red100,
   alertBorder: palette.red200,

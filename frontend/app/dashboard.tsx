@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors, Spacing, Typography, Shadows, BorderRadius } from '@/constants';
+import { Colors, Spacing, Typography, Shadows, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import {
   residents,
@@ -54,29 +54,25 @@ export default function DashboardScreen() {
         id: 1,
         number: stats.urgent.toString(),
         label: 'Urgent',
-        backgroundColor: '#FEE2E2',
-        textColor: '#DC2626',
+        textColor: Colors.statsUrgent,
       },
       {
         id: 2,
         number: stats.attention.toString(),
         label: 'Aandacht',
-        backgroundColor: '#FFF4E6',
-        textColor: '#D97706',
+        textColor: Colors.statsAttention,
       },
       {
         id: 3,
         number: stats.stable.toString(),
         label: 'Stabiel',
-        backgroundColor: '#D1FAE5',
-        textColor: '#10B981',
+        textColor: Colors.statsStable,
       },
       {
         id: 4,
         number: `${stats.compliance}%`,
         label: 'Med. Naleving',
-        backgroundColor: '#D1FAE5',
-        textColor: '#10B981',
+        textColor: Colors.statsCompliance,
       },
     ],
     [stats]
@@ -157,13 +153,7 @@ export default function DashboardScreen() {
         {/* Status Cards */}
         <View style={styles.statusCardsContainer}>
           {dynamicStatusCards.map((card) => (
-            <View
-              key={card.id}
-              style={[
-                styles.statusCard,
-                { backgroundColor: card.backgroundColor },
-              ]}
-            >
+            <View key={card.id} style={styles.statusCard}>
               <Text style={[styles.statusNumber, { color: card.textColor }]}>
                 {card.number}
               </Text>
@@ -190,7 +180,7 @@ export default function DashboardScreen() {
         )}
 
         {/* Action Cards */}
-        <View style={styles.actionCardsContainer}>
+        <View style={styles.actionCardsGrid}>
           {actionCards.map((card) => (
             <TouchableOpacity
               key={card.id}
@@ -198,13 +188,12 @@ export default function DashboardScreen() {
               onPress={() => handleActionPress(card.title)}
               activeOpacity={0.7}
             >
-              <MaterialIcons
-                name={card.icon as any}
-                size={32}
-                color={card.color}
-                style={styles.actionIcon}
-              />
-              <View style={styles.actionTextContainer}>
+              <View style={styles.actionCardContent}>
+                <MaterialIcons
+                  name={card.icon as any}
+                  size={40}
+                  color={card.color}
+                />
                 <Text style={styles.actionTitle}>{card.title}</Text>
                 <Text style={styles.actionSubtitle}>{card.subtitle}</Text>
               </View>
@@ -260,18 +249,19 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundTertiary,
   },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundTertiary,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.xl,
+    paddingTop: Spacing['2xl'],
     paddingBottom: Spacing['3xl'],
     ...Platform.select({
       web: {
-        maxWidth: 1200,
+        maxWidth: 1400,
         marginHorizontal: 'auto',
         width: '100%',
       },
@@ -279,15 +269,17 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     ...Typography.h1,
+    fontSize: FontSize['3xl'],
     color: Colors.textPrimary,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing['2xl'],
+    fontWeight: FontWeight.semibold,
   },
 
   // Status Cards
   statusCardsContainer: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.xl,
+    gap: Spacing.lg,
+    marginBottom: Spacing['2xl'],
     ...Platform.select({
       default: {
         flexWrap: 'wrap',
@@ -296,30 +288,36 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     flex: 1,
-    minWidth: 150,
-    padding: Spacing.lg,
+    minWidth: 160,
+    padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
-    ...Shadows.card,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   statusNumber: {
     ...Typography.h1,
-    fontSize: 36,
+    fontSize: FontSize['4xl'],
     marginBottom: Spacing.xs,
   },
   statusLabel: {
     ...Typography.body,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
   },
 
   // Alert Banner
   alertBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.urgencyMediumBg,
-    padding: Spacing.lg,
+    backgroundColor: Colors.background,
+    padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.warningAlt,
   },
   alertIcon: {
     marginRight: Spacing.md,
@@ -331,39 +329,34 @@ const styles = StyleSheet.create({
   },
 
   // Action Cards
-  actionCardsContainer: {
+  actionCardsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.lg,
-    marginBottom: Spacing.xl,
-    ...Platform.select({
-      web: {
-        flexDirection: 'row',
-      },
-    }),
+    marginBottom: Spacing['2xl'],
   },
   actionCard: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.backgroundSecondary,
-    padding: Spacing.lg,
+    minWidth: 280,
+    backgroundColor: Colors.background,
+    padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
-    ...Shadows.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  actionIcon: {
-    marginRight: Spacing.md,
-  },
-  actionTextContainer: {
-    flex: 1,
+  actionCardContent: {
+    alignItems: 'flex-start',
   },
   actionTitle: {
     ...Typography.h3,
-    fontSize: 16,
+    fontSize: FontSize.lg,
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   actionSubtitle: {
     ...Typography.body,
-    fontSize: 14,
+    fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
 
@@ -390,14 +383,15 @@ const styles = StyleSheet.create({
   },
   urgentTitle: {
     ...Typography.h2,
-    fontSize: 20,
+    fontSize: FontSize['2xl'],
     color: Colors.textPrimary,
   },
   residentCard: {
-    backgroundColor: Colors.backgroundSecondary,
-    padding: Spacing.lg,
+    backgroundColor: Colors.background,
+    padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
-    ...Shadows.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
     marginBottom: Spacing.md,
   },
   residentInfo: {
@@ -405,19 +399,19 @@ const styles = StyleSheet.create({
   },
   residentName: {
     ...Typography.h3,
-    fontSize: 16,
+    fontSize: FontSize.lg,
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   residentIncident: {
     ...Typography.body,
-    fontSize: 14,
+    fontSize: FontSize.md,
     color: Colors.error,
     marginBottom: Spacing.xs,
   },
   residentNotes: {
     ...Typography.body,
-    fontSize: 14,
+    fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
   residentActions: {
@@ -434,8 +428,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   actionButtonText: {
-    ...Typography.button,
-    fontSize: 14,
+    ...Typography.buttonMedium,
+    fontSize: FontSize.md,
     color: Colors.textPrimary,
   },
 });
