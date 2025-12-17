@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import type { Note } from '@/types';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 
 interface NotitieCardProps {
   note: Note;
@@ -19,13 +20,13 @@ export function NotitieCard({ note, authorName }: NotitieCardProps) {
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
       case 'Hoog':
-        return '#FFF4E6'; // Licht oranje
+        return Colors.urgencyHighBg;
       case 'Matig':
-        return '#FFF9E6'; // Licht geel
+        return Colors.urgencyMediumBg;
       case 'Laag':
-        return '#F0F0F0'; // Licht grijs
+        return Colors.urgencyLowBg;
       default:
-        return '#FFFFFF';
+        return Colors.background;
     }
   };
 
@@ -45,13 +46,13 @@ export function NotitieCard({ note, authorName }: NotitieCardProps) {
   const getUrgencyTextColor = (urgency: string) => {
     switch (urgency) {
       case 'Hoog':
-        return '#D97706'; // Oranje
+        return Colors.warningAlt;
       case 'Matig':
-        return '#CA8A04'; // Geel
+        return '#CA8A04';
       case 'Laag':
-        return '#666666'; // Grijs
+        return Colors.textSecondary;
       default:
-        return '#000000';
+        return Colors.textPrimary;
     }
   };
 
@@ -83,63 +84,63 @@ export function NotitieCard({ note, authorName }: NotitieCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.borderLight,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.md,
   },
   urgencyLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
     letterSpacing: 0.5,
   },
   category: {
-    fontSize: 12,
-    color: '#666666',
-    fontWeight: '500',
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    fontWeight: FontWeight.medium,
   },
   meta: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: Spacing.lg,
   },
   dateTime: {
-    fontSize: 14,
-    color: '#000000',
-    fontWeight: '600',
+    fontSize: FontSize.md,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.semibold,
   },
   separator: {
-    fontSize: 14,
-    color: '#999999',
-    marginHorizontal: 8,
+    fontSize: FontSize.md,
+    color: Colors.textMuted,
+    marginHorizontal: Spacing.md,
   },
   author: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
   content: {
-    fontSize: 14,
-    color: '#333333',
-    lineHeight: 20,
+    fontSize: FontSize.md,
+    color: Colors.textBody,
+    lineHeight: LineHeight.relaxed,
   },
   resolvedBadge: {
-    marginTop: 12,
+    marginTop: Spacing.lg,
     alignSelf: 'flex-start',
-    backgroundColor: '#10B981',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: Colors.success,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.lg,
   },
   resolvedText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: FontSize.xs,
+    color: Colors.textOnPrimary,
+    fontWeight: FontWeight.semibold,
   },
 });

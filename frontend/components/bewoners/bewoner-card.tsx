@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { Resident } from '@/types';
 import { calculateAge } from '@/utils';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface BewonerCardProps {
   resident: Resident;
@@ -21,17 +22,17 @@ export function BewonerCard({ resident, roomNumber, onPress }: BewonerCardProps)
       <View style={styles.cardContent}>
         <Text style={styles.residentName}>{resident.name}</Text>
         <View style={styles.infoRow}>
-          <MaterialIcons name="cake" size={16} color="#666666" />
+          <MaterialIcons name="cake" size={16} color={Colors.iconDefault} />
           <Text style={styles.infoText}>{age} jaar</Text>
         </View>
         {roomNumber && (
           <View style={styles.infoRow}>
-            <MaterialIcons name="door-front" size={16} color="#666666" />
+            <MaterialIcons name="door-front" size={16} color={Colors.iconDefault} />
             <Text style={styles.infoText}>Kamer {roomNumber}</Text>
           </View>
         )}
       </View>
-      <MaterialIcons name="chevron-right" size={24} color="#cccccc" />
+      <MaterialIcons name="chevron-right" size={24} color={Colors.iconMuted} />
     </TouchableOpacity>
   );
 }
@@ -40,37 +41,37 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    backgroundColor: Colors.background,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.border,
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: Colors.border,
   },
   cardContent: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: Spacing.xl,
   },
   residentName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   infoText: {
-    fontSize: 14,
-    color: '#666666',
-    marginLeft: 6,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.sm,
   },
 });

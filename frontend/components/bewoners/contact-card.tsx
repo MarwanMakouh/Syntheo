@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { Contact } from '@/types';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface ContactCardProps {
   contact: Contact;
@@ -11,7 +12,7 @@ export function ContactCard({ contact, onCall }: ContactCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.icon}>
-        <MaterialIcons name="person" size={20} color="#666666" />
+        <MaterialIcons name="person" size={20} color={Colors.iconDefault} />
       </View>
       <View style={styles.info}>
         <Text style={styles.name}>{contact.name}</Text>
@@ -21,7 +22,7 @@ export function ContactCard({ contact, onCall }: ContactCardProps) {
         style={styles.phoneButton}
         onPress={() => onCall(contact.phone)}
       >
-        <MaterialIcons name="phone" size={20} color="#666666" />
+        <MaterialIcons name="phone" size={20} color={Colors.iconDefault} />
         <Text style={styles.phoneText}>{contact.phone}</Text>
       </TouchableOpacity>
     </View>
@@ -32,43 +33,43 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.divider,
   },
   icon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: Spacing.lg,
   },
   info: {
     flex: 1,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
     marginBottom: 2,
   },
   relation: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
   phoneButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
   },
   phoneText: {
-    fontSize: 14,
-    color: '#666666',
-    marginLeft: 6,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.sm,
   },
 });
