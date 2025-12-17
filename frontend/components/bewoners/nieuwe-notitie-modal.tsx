@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface NieuweNotitieModalProps {
   visible: boolean;
@@ -73,7 +74,7 @@ export function NieuweNotitieModal({ visible, onClose, onSave }: NieuweNotitieMo
               value={type}
               onChangeText={setType}
               placeholder="Bijv. Gezondheid, Gedrag, Medicatie..."
-              placeholderTextColor="#999999"
+              placeholderTextColor={Colors.textMuted}
             />
           </View>
 
@@ -85,7 +86,7 @@ export function NieuweNotitieModal({ visible, onClose, onSave }: NieuweNotitieMo
               value={content}
               onChangeText={setContent}
               placeholder="Voer uw notitie hier in..."
-              placeholderTextColor="#999999"
+              placeholderTextColor={Colors.textMuted}
               multiline
               numberOfLines={6}
               textAlignVertical="top"
@@ -139,113 +140,113 @@ export function NieuweNotitieModal({ visible, onClose, onSave }: NieuweNotitieMo
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: Spacing['2xl'],
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 24,
+    fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing['3xl'],
   },
   fieldContainer: {
-    marginBottom: 24,
+    marginBottom: Spacing['3xl'],
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 8,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.background,
   },
   textArea: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.background,
     minHeight: 120,
   },
   charCount: {
-    fontSize: 12,
-    color: '#666666',
-    marginTop: 4,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   urgencyContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.lg,
   },
   urgencyButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: Spacing.lg,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
   urgencyButtonActive: {
-    borderColor: '#10B981',
+    borderColor: Colors.success,
     backgroundColor: '#F0FDF4',
   },
   urgencyButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.textSecondary,
   },
   urgencyButtonTextActive: {
-    color: '#10B981',
-    fontWeight: '600',
+    color: Colors.success,
+    fontWeight: FontWeight.semibold,
   },
   actionContainer: {
     flexDirection: 'row',
-    padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-    gap: 12,
+    padding: Spacing['2xl'],
+    paddingBottom: Platform.OS === 'ios' ? 40 : Spacing['2xl'],
+    gap: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
     backgroundColor: '#E5E5E5',
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666666',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textSecondary,
   },
   saveButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: Colors.success,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textOnPrimary,
   },
 });

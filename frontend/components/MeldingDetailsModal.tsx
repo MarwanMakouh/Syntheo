@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 
 interface MeldingDetailsModalProps {
   visible: boolean;
@@ -42,7 +43,7 @@ export function MeldingDetailsModal({ visible, onClose, melding, onSave }: Meldi
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <MaterialIcons name="close" size={28} color="#000000" />
+              <MaterialIcons name="close" size={28} color={Colors.textPrimary} />
             </TouchableOpacity>
           </View>
 
@@ -94,7 +95,7 @@ export function MeldingDetailsModal({ visible, onClose, melding, onSave }: Meldi
                 onPress={() => setStatusDropdownOpen(!statusDropdownOpen)}
               >
                 <Text style={styles.dropdownText}>{status}</Text>
-                <MaterialIcons name="arrow-drop-down" size={24} color="#000000" />
+                <MaterialIcons name="arrow-drop-down" size={24} color={Colors.textPrimary} />
               </TouchableOpacity>
 
               {statusDropdownOpen && (
@@ -134,25 +135,25 @@ export function MeldingDetailsModal({ visible, onClose, melding, onSave }: Meldi
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing['2xl'],
     paddingTop: 60,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing['3xl'],
   },
   closeButton: {
-    padding: 4,
+    padding: Spacing.xs,
   },
   grid: {
-    gap: 24,
-    marginBottom: 32,
+    gap: Spacing['3xl'],
+    marginBottom: Spacing['5xl'],
   },
   field: {
     width: '48%',
@@ -161,87 +162,87 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
+    fontSize: FontSize.md,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.md,
   },
   value: {
-    fontSize: 16,
-    color: '#000000',
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.medium,
   },
   descriptionBox: {
-    backgroundColor: '#F9FAFB',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: Colors.backgroundTertiary,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.borderLight,
   },
   descriptionText: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
+    fontSize: FontSize.md,
+    color: Colors.textBody,
+    lineHeight: LineHeight.relaxed,
   },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
+    borderColor: Colors.borderMedium,
+    borderRadius: BorderRadius.md,
   },
   dropdownText: {
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   dropdownList: {
-    marginTop: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    marginTop: Spacing.md,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: Colors.borderMedium,
     overflow: 'hidden',
   },
   dropdownItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.borderLight,
   },
   dropdownItemText: {
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   actions: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 32,
+    gap: Spacing.lg,
+    marginBottom: Spacing['5xl'],
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 14,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
+    backgroundColor: Colors.borderLight,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textBody,
   },
   saveButton: {
     flex: 1,
     paddingVertical: 14,
-    backgroundColor: '#5B47FB',
-    borderRadius: 8,
+    backgroundColor: Colors.secondary,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textOnPrimary,
   },
 });

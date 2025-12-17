@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
 
 export type TabType = 'Info' | 'Notities' | 'Medicatie' | 'Dieet';
 
@@ -38,27 +39,27 @@ export function BewonerTabs({ activeTab, onTabChange }: BewonerTabsProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#00A86B',
+    borderBottomColor: Colors.navAccent,
   },
   tabText: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    fontWeight: FontWeight.medium,
   },
   activeTabText: {
-    color: '#00A86B',
-    fontWeight: '600',
+    color: Colors.navAccent,
+    fontWeight: FontWeight.semibold,
   },
 });

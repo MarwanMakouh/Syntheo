@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StatusIndicator } from './StatusIndicator';
 import { MedicationCheckbox } from './MedicationCheckbox';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 
 interface ResidentMedicationCardProps {
   resident: {
@@ -68,7 +69,7 @@ export function ResidentMedicationCard({
 
       {status === 'completed' && completedAt && (
         <View style={styles.completedBadge}>
-          <MaterialIcons name="check-circle" size={20} color="#34C759" />
+          <MaterialIcons name="check-circle" size={20} color={Colors.successAlt} />
           <Text style={styles.completedText}>
             Klaar {formatTime(completedAt)}
           </Text>
@@ -110,18 +111,18 @@ export function ResidentMedicationCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginBottom: 12,
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
     overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: Spacing.xl,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -129,48 +130,48 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerText: {
-    marginLeft: 12,
+    marginLeft: Spacing.lg,
     flex: 1,
   },
   headerTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 18,
-    color: '#000000',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    lineHeight: LineHeight.normal,
+    color: Colors.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#000000',
+    fontSize: FontSize.xs,
+    lineHeight: LineHeight.tight,
+    color: Colors.textPrimary,
     opacity: 0.6,
     marginTop: 2,
   },
   completedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: Spacing.sm,
   },
   completedText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#34C759',
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
+    color: Colors.successAlt,
   },
   medicationList: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: Colors.border,
   },
   saveButton: {
-    marginTop: 16,
-    paddingVertical: 12,
-    backgroundColor: '#007AFF',
-    borderRadius: 6,
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.sm,
     alignItems: 'center',
   },
   saveButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textOnPrimary,
   },
 });

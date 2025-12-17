@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight, Shadows } from '@/constants';
 
 interface MeldingCardProps {
   residentName: string;
@@ -20,13 +21,13 @@ export function MeldingCard({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return '#EF4444';
+        return Colors.error;
       case 'in_behandeling':
-        return '#F97316';
+        return Colors.warning;
       case 'afgehandeld':
-        return '#10B981';
+        return Colors.success;
       default:
-        return '#6B7280';
+        return Colors.textTertiary;
     }
   };
 
@@ -46,13 +47,13 @@ export function MeldingCard({
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
       case 'Hoog':
-        return '#EF4444';
+        return Colors.error;
       case 'Matig':
-        return '#F97316';
+        return Colors.warning;
       case 'Laag':
-        return '#6B7280';
+        return Colors.textTertiary;
       default:
-        return '#6B7280';
+        return Colors.textTertiary;
     }
   };
 
@@ -105,28 +106,24 @@ export function MeldingCard({
 const styles = StyleSheet.create({
   meldingCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.xl,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    ...Shadows.card,
   },
   statusIndicator: {
     width: 6,
   },
   meldingContent: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.xl,
   },
   meldingInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   urgencyDot: {
     width: 12,
@@ -138,44 +135,44 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: Colors.error,
   },
   urgencyDotOrange: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#F97316',
+    backgroundColor: Colors.warning,
   },
   meldingName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
     flex: 1,
   },
   meldingDescription: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: FontSize.md,
+    color: Colors.textBody,
+    lineHeight: LineHeight.relaxed,
+    marginBottom: Spacing.lg,
   },
   meldingFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.md,
   },
   meldingTime: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: FontSize.xs,
+    color: Colors.textTertiary,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.xl,
   },
   statusBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
   },
 });

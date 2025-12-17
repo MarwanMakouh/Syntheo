@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface MedicationItem {
   medication?: {
@@ -42,7 +43,7 @@ export function MedicatieSchema({ medications }: MedicatieSchemaProps) {
   if (medications.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <MaterialIcons name="medication" size={64} color="#cccccc" />
+        <MaterialIcons name="medication" size={64} color={Colors.iconMuted} />
         <Text style={styles.emptyText}>Geen medicatie gevonden</Text>
       </View>
     );
@@ -80,41 +81,41 @@ export function MedicatieSchema({ medications }: MedicatieSchemaProps) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 16,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xl,
   },
   medicationCard: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: Colors.backgroundTertiary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   timeGroup: {
-    marginBottom: 16,
+    marginBottom: Spacing.xl,
   },
   timeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 8,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
   medicationItem: {
-    paddingLeft: 16,
-    marginBottom: 4,
+    paddingLeft: Spacing.xl,
+    marginBottom: Spacing.xs,
   },
   medicationName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333333',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textBody,
   },
   dosage: {
-    fontSize: 13,
-    color: '#666666',
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   emptyContainer: {
@@ -123,8 +124,8 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999999',
-    marginTop: 16,
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
+    marginTop: Spacing.xl,
   },
 });

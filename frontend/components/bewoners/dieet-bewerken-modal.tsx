@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 
 interface DieetBewerkenModalProps {
   visible: boolean;
@@ -75,7 +76,7 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
           {/* Allergieën */}
           <View style={styles.fieldContainer}>
             <View style={styles.labelRow}>
-              <MaterialIcons name="warning" size={18} color="#EF4444" />
+              <MaterialIcons name="warning" size={18} color={Colors.error} />
               <Text style={styles.label}>Allergieën</Text>
             </View>
             <TextInput
@@ -83,7 +84,7 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
               value={allergies}
               onChangeText={setAllergies}
               placeholder="Bijv. Lactose, Noten, Gluten..."
-              placeholderTextColor="#999999"
+              placeholderTextColor={Colors.textMuted}
             />
           </View>
 
@@ -95,7 +96,7 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
               value={dietTypes}
               onChangeText={setDietTypes}
               placeholder="Bijv. Lactosevrij, Zachte voeding..."
-              placeholderTextColor="#999999"
+              placeholderTextColor={Colors.textMuted}
             />
           </View>
 
@@ -111,7 +112,7 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
                   value={likes}
                   onChangeText={setLikes}
                   placeholder="Bijv. Pap, Aardappelpuree..."
-                  placeholderTextColor="#999999"
+                  placeholderTextColor={Colors.textMuted}
                   multiline
                 />
               </View>
@@ -123,7 +124,7 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
                   value={dislikes}
                   onChangeText={setDislikes}
                   placeholder="Bijv. Rauwe groenten..."
-                  placeholderTextColor="#999999"
+                  placeholderTextColor={Colors.textMuted}
                   multiline
                 />
               </View>
@@ -182,124 +183,124 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: Spacing['2xl'],
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
   fieldContainer: {
-    marginBottom: 24,
+    marginBottom: Spacing['3xl'],
   },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.md,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginLeft: 4,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginLeft: Spacing.xs,
   },
   input: {
     borderWidth: 2,
     borderColor: '#FCD34D',
     backgroundColor: '#FFFBEB',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#000000',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
   },
   preferencesRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: Spacing.xl,
   },
   preferenceColumn: {
     flex: 1,
   },
   preferenceLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
-    marginBottom: 8,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
   },
   urgencyContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.lg,
   },
   urgencyButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: Spacing.lg,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
   urgencyButtonActive: {
-    borderColor: '#F97316',
+    borderColor: Colors.warning,
     backgroundColor: '#FFF7ED',
   },
   urgencyButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.textSecondary,
   },
   urgencyButtonTextActive: {
-    color: '#F97316',
-    fontWeight: '600',
+    color: Colors.warning,
+    fontWeight: FontWeight.semibold,
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: '#D1FAE5',
-    borderRadius: 8,
-    padding: 12,
-    gap: 8,
-    marginTop: 8,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    marginTop: Spacing.md,
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: FontSize.sm,
     color: '#059669',
-    lineHeight: 18,
+    lineHeight: LineHeight.normal,
   },
   actionContainer: {
     flexDirection: 'row',
-    padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-    gap: 12,
+    padding: Spacing['2xl'],
+    paddingBottom: Platform.OS === 'ios' ? 40 : Spacing['2xl'],
+    gap: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
     backgroundColor: '#E5E5E5',
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666666',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textSecondary,
   },
   saveButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: Colors.success,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textOnPrimary,
   },
 });

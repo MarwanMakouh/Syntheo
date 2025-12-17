@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-nati
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DieetBewerkenModal } from './dieet-bewerken-modal';
 import type { Diet, Allergy } from '@/types';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface DieetInformatieProps {
   allergies: Allergy[];
@@ -43,7 +44,7 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {/* Edit Button */}
         <TouchableOpacity style={styles.editButton} onPress={() => setShowEditModal(true)}>
-          <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+          <MaterialIcons name="edit" size={20} color={Colors.textOnPrimary} />
           <Text style={styles.editButtonText}>Dieetinformatie Bewerken</Text>
         </TouchableOpacity>
 
@@ -51,7 +52,7 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
       {allergies.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MaterialIcons name="warning" size={20} color="#EF4444" />
+            <MaterialIcons name="warning" size={20} color={Colors.error} />
             <Text style={styles.sectionTitle}>Allergieën</Text>
           </View>
 
@@ -149,75 +150,75 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
   content: {
-    padding: 16,
+    padding: Spacing.xl,
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 24,
+    backgroundColor: Colors.success,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing['2xl'],
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing['3xl'],
     alignSelf: 'flex-start',
   },
   editButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    marginLeft: Spacing.md,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Spacing['3xl'],
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    marginLeft: 8,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginLeft: Spacing.md,
   },
   allergyCard: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+    backgroundColor: Colors.alertBackground,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   allergySymptom: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#DC2626',
-    marginBottom: 4,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.errorDark,
+    marginBottom: Spacing.xs,
   },
   allergyNotes: {
-    fontSize: 13,
-    color: '#DC2626',
+    fontSize: FontSize.sm,
+    color: Colors.errorDark,
   },
   dietTypesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: Spacing.md,
   },
   dietTypeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
-    backgroundColor: '#FFFFFF',
+    borderColor: Colors.alertBorder,
+    backgroundColor: Colors.background,
   },
   dietTypeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#EF4444',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.error,
   },
   preferencesContainer: {
     flexDirection: 'row',
@@ -227,19 +228,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   preferenceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 12,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.lg,
   },
   preferenceItem: {
-    fontSize: 14,
-    color: '#333333',
-    marginBottom: 8,
+    fontSize: FontSize.md,
+    color: Colors.textBody,
+    marginBottom: Spacing.md,
   },
   emptyPreference: {
-    fontSize: 14,
-    color: '#999999',
+    fontSize: FontSize.md,
+    color: Colors.textMuted,
     fontStyle: 'italic',
   },
 });

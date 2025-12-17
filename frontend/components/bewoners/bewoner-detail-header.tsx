@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text } from 'react-native';
 import type { Resident } from '@/types';
 import { getInitials } from '@/utils';
+import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
 
 interface BewonerDetailHeaderProps {
   resident: Resident;
@@ -28,36 +29,36 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 20,
+    backgroundColor: Colors.background,
+    padding: Spacing['2xl'],
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   avatar: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#666666',
+    fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.semibold,
+    color: Colors.textSecondary,
   },
   info: {
-    marginLeft: 16,
+    marginLeft: Spacing.xl,
     flex: 1,
   },
   name: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 4,
+    fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
   details: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
 });

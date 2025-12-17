@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
 import { users } from '@/Services';
+import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
 
 // Simuleer ingelogde user (Jan Janssen)
 const CURRENT_USER = users[0]; // Jan Janssen, verpleger
@@ -33,7 +34,7 @@ export function NavigationBar() {
       {/* Back button or Logo */}
       {isDetailPage ? (
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#00A86B" />
+          <MaterialIcons name="arrow-back" size={24} color={Colors.navAccent} />
           <Text style={styles.backText}>Terug</Text>
         </TouchableOpacity>
       ) : (
@@ -75,7 +76,7 @@ export function NavigationBar() {
           <MaterialIcons
             name="notifications-active"
             size={26}
-            color="#666666"
+            color={Colors.iconDefault}
           />
         </TouchableOpacity>
 
@@ -84,7 +85,7 @@ export function NavigationBar() {
           <MaterialIcons
             name="exit-to-app"
             size={26}
-            color="#666666"
+            color={Colors.iconDefault}
           />
         </TouchableOpacity>
       </View>
@@ -97,13 +98,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingLeft: 8,
-    paddingRight: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : 12,
-    paddingBottom: 12,
-    backgroundColor: '#ffffff',
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.xl,
+    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 40 : Spacing.lg,
+    paddingBottom: Spacing.lg,
+    backgroundColor: Colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   logo: {
     width: 160,
@@ -113,13 +114,13 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 8,
+    paddingLeft: Spacing.md,
   },
   backText: {
-    fontSize: 16,
-    color: '#00A86B',
-    marginLeft: 8,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    color: Colors.navAccent,
+    marginLeft: Spacing.md,
+    fontWeight: FontWeight.medium,
   },
   userInfoCentered: {
     position: 'absolute',
@@ -132,24 +133,24 @@ const styles = StyleSheet.create({
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.xl,
   },
   iconButton: {
-    padding: 8,
+    padding: Spacing.md,
   },
   userInfo: {
     alignItems: 'flex-end',
   },
   userName: {
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#000000',
-    fontWeight: '600',
+    fontSize: FontSize.md,
+    lineHeight: LineHeight.normal,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.semibold,
   },
   userRole: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#000000',
+    fontSize: FontSize.xs,
+    lineHeight: LineHeight.tight,
+    color: Colors.textPrimary,
     opacity: 0.6,
   },
 });

@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface HistoriekItem {
   date: string;
@@ -54,28 +55,28 @@ export function MedicatieHistoriek({ historiek }: MedicatieHistoriekProps) {
               </View>
               <View style={styles.cell}>
                 {item.ochtend ? (
-                  <MaterialIcons name="check" size={20} color="#10B981" />
+                  <MaterialIcons name="check" size={20} color={Colors.success} />
                 ) : (
                   <Text style={styles.emptyText}>—</Text>
                 )}
               </View>
               <View style={styles.cell}>
                 {item.middag ? (
-                  <MaterialIcons name="check" size={20} color="#10B981" />
+                  <MaterialIcons name="check" size={20} color={Colors.success} />
                 ) : (
                   <Text style={styles.emptyText}>—</Text>
                 )}
               </View>
               <View style={styles.cell}>
                 {item.avond ? (
-                  <MaterialIcons name="check" size={20} color="#10B981" />
+                  <MaterialIcons name="check" size={20} color={Colors.success} />
                 ) : (
                   <Text style={styles.emptyText}>—</Text>
                 )}
               </View>
               <View style={styles.cell}>
                 {item.nacht ? (
-                  <MaterialIcons name="check" size={20} color="#10B981" />
+                  <MaterialIcons name="check" size={20} color={Colors.success} />
                 ) : (
                   <Text style={styles.emptyText}>—</Text>
                 )}
@@ -90,56 +91,56 @@ export function MedicatieHistoriek({ historiek }: MedicatieHistoriekProps) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 16,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xl,
   },
   table: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.border,
     overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: '#F9F9F9',
+    backgroundColor: Colors.backgroundTertiary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: Colors.border,
   },
   dataRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: Colors.border,
   },
   cell: {
     width: 100,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerCell: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.lg,
   },
   dateColumn: {
     width: 80,
   },
   headerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
   },
   cellText: {
-    fontSize: 14,
-    color: '#333333',
+    fontSize: FontSize.md,
+    color: Colors.textBody,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#CCCCCC',
+    fontSize: FontSize.lg,
+    color: Colors.iconMuted,
   },
 });
