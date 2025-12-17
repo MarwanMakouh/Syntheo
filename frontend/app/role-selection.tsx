@@ -1,0 +1,166 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRole } from '@/contexts/RoleContext';
+import { Colors, Spacing, Typography, Shadows, BorderRadius } from '@/constants';
+import type { RoleOption, UserRole } from '@/types/user';
+
+const roleOptions: RoleOption[] = [
+  {
+    id: 'Verpleegster',
+    title: 'Verpleegster',
+    description: 'Toegang tot bewoners, medicatie en meldingen',
+    icon: 'local-hospital',
+  },
+  {
+    id: 'Hoofdverpleegster',
+    title: 'Hoofdverpleegster',
+    description: 'Volledige toegang en goedkeuringen',
+    icon: 'admin-panel-settings',
+  },
+  {
+    id: 'Beheerder',
+    title: 'Beheerder',
+    description: 'Systeem beheer en configuratie',
+    icon: 'settings',
+  },
+  {
+    id: 'Keukenpersoneel',
+    title: 'Keukenpersoneel',
+    description: 'Toegang tot dieet en voedingsinformatie',
+    icon: 'restaurant',
+  },
+];
+
+export default function RoleSelectionScreen() {
+  const router = useRouter();
+  const { setSelectedRole } = useRole();
+
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    router.replace('/(tabs)/bewoners');
+  };
+
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Welkom bij Syntheo</Text>
+          <Text style={styles.subtitle}>Selecteer uw rol om te beginnen</Text>
+        </View>
+
+        <View style={styles.roleGrid}>
+          {roleOptions.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={styles.roleCard}
+              onPress={() => handleRoleSelect(option.id)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.iconContainer}>
+                <MaterialIcons
+                  name={option.icon as any}
+                  size={48}
+                  color={Colors.primary}
+                />
+              </View>
+              <Text style={styles.roleTitle}>{option.title}</Text>
+              <Text style={styles.roleDescription}>{option.description}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing['3xl'],
+    ...Platform.select({
+      web: {
+        maxWidth: 800,
+        marginHorizontal: 'auto',
+        width: '100%',
+      },
+    }),
+  },
+  header: {
+    marginBottom: Spacing['3xl'],
+    alignItems: 'center',
+  },
+  title: {
+    ...Typography.h1,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  roleGrid: {
+    gap: Spacing.lg,
+    ...Platform.select({
+      web: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+      },
+    }),
+  },
+  roleCard: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    ...Shadows.card,
+    ...Platform.select({
+      web: {
+        width: '48%',
+        minWidth: 280,
+      },
+      default: {
+        width: '100%',
+      },
+    }),
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.selectedBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  roleTitle: {
+    ...Typography.h3,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    textAlign: 'center',
+  },
+  roleDescription: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+});
