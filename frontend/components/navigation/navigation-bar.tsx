@@ -18,7 +18,8 @@ export function NavigationBar() {
   const isDetailPage =
     (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
     segments.includes('wijzigingsverzoeken') ||
-    segments.includes('wijzigingsverzoek-detail');
+    segments.includes('wijzigingsverzoek-detail') ||
+    segments.includes('kamerbeheer');
 
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready

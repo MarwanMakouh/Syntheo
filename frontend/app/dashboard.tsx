@@ -134,6 +134,8 @@ export default function DashboardScreen() {
       router.push('/wijzigingsverzoeken');
     } else if (actionTitle === 'Aankondiging Maken') {
       setAnnouncementModalVisible(true);
+    } else if (actionTitle === 'Kamerbeheer') {
+      router.push('/kamerbeheer');
     }
   };
 
