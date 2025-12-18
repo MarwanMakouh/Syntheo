@@ -2,12 +2,12 @@ import { StyleSheet, View, Text } from 'react-native';
 import type { Note } from '@/types';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 
-interface NotitieCardProps {
+interface MeldingCardProps {
   note: Note;
   authorName: string;
 }
 
-export function NotitieCard({ note, authorName }: NotitieCardProps) {
+export function MeldingCard({ note, authorName }: MeldingCardProps) {
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');

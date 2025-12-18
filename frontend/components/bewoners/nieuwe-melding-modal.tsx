@@ -11,15 +11,21 @@ import {
 } from 'react-native';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
-interface NieuweNotitieModalProps {
+interface NieuweMeldingModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (notitie: {
+  onSave: (melding: {
     type: string;
     content: string;
     urgency: 'Laag' | 'Matig' | 'Hoog';
   }) => void;
 }
+
+const TYPE_OPTIONS = [
+  { value: 'Algemeen', label: 'Algemeen' },
+  { value: 'Medisch', label: 'Medisch' },
+  { value: 'Incident', label: 'Incident' },
+] as const;
 
 const URGENCY_OPTIONS = [
   { value: 'Laag', label: 'Normaal' },
@@ -27,28 +33,28 @@ const URGENCY_OPTIONS = [
   { value: 'Hoog', label: 'Urgent' },
 ] as const;
 
-export function NieuweNotitieModal({ visible, onClose, onSave }: NieuweNotitieModalProps) {
-  const [type, setType] = useState('');
+export function NieuweMeldingModal({ visible, onClose, onSave }: NieuweMeldingModalProps) {
+  const [type, setType] = useState<'Algemeen' | 'Medisch' | 'Incident'>('Algemeen');
   const [content, setContent] = useState('');
   const [urgency, setUrgency] = useState<'Laag' | 'Matig' | 'Hoog'>('Laag');
 
   const handleSave = () => {
     if (content.trim().length < 10) {
-      alert('Notitie moet minimaal 10 karakters bevatten');
+      alert('Melding moet minimaal 10 karakters bevatten');
       return;
     }
 
     onSave({ type, content, urgency });
 
     // Reset form
-    setType('');
+    setType('Algemeen');
     setContent('');
     setUrgency('Laag');
   };
 
   const handleClose = () => {
     // Reset form
-    setType('');
+    setType('Algemeen');
     setContent('');
     setUrgency('Laag');
     onClose();
@@ -64,28 +70,42 @@ export function NieuweNotitieModal({ visible, onClose, onSave }: NieuweNotitieMo
       <View style={styles.container}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
-          <Text style={styles.title}>Nieuwe Notitie</Text>
+          <Text style={styles.title}>Nieuwe Melding</Text>
 
           {/* Type */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Type</Text>
-            <TextInput
-              style={styles.input}
-              value={type}
-              onChangeText={setType}
-              placeholder="Bijv. Gezondheid, Gedrag, Medicatie..."
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={styles.typeContainer}>
+              {TYPE_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.typeButton,
+                    type === option.value && styles.typeButtonActive,
+                  ]}
+                  onPress={() => setType(option.value)}
+                >
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      type === option.value && styles.typeButtonTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
-          {/* Notitie */}
+          {/* Melding */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Notitie (minimum 10 karakters)</Text>
+            <Text style={styles.label}>Melding (minimum 10 karakters)</Text>
             <TextInput
               style={styles.textArea}
               value={content}
               onChangeText={setContent}
-              placeholder="Voer uw notitie hier in..."
+              placeholder="Voer uw melding hier in..."
               placeholderTextColor={Colors.textMuted}
               multiline
               numberOfLines={6}
@@ -164,15 +184,31 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
-  input: {
-    borderWidth: 1,
+  typeContainer: {
+    flexDirection: 'row',
+    gap: Spacing.lg,
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: Spacing.lg,
+    borderWidth: 2,
     borderColor: Colors.border,
     borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
-    fontSize: FontSize.lg,
-    color: Colors.textPrimary,
+    alignItems: 'center',
     backgroundColor: Colors.background,
+  },
+  typeButtonActive: {
+    borderColor: Colors.success,
+    backgroundColor: '#F0FDF4',
+  },
+  typeButtonText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.textSecondary,
+  },
+  typeButtonTextActive: {
+    color: Colors.success,
+    fontWeight: FontWeight.semibold,
   },
   textArea: {
     borderWidth: 1,

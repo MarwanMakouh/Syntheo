@@ -14,8 +14,8 @@ import {
   ContactCard,
   BewonerDetailHeader,
   BewonerTabs,
-  NotitieCard,
-  NieuweNotitieModal,
+  MeldingCard,
+  NieuweMeldingModal,
   MedicatieSchema,
   MedicatieHistoriek,
   DieetInformatie,
@@ -114,15 +114,15 @@ export default function BewonerInfoScreen() {
     Linking.openURL(`tel:${phoneNumber}`);
   };
 
-  const handleSaveNote = (notitie: {
+  const handleSaveNote = (melding: {
     type: string;
     content: string;
     urgency: 'Laag' | 'Matig' | 'Hoog';
   }) => {
     // TODO: Save to backend when ready
-    console.log('Nieuwe notitie:', notitie);
+    console.log('Nieuwe melding:', melding);
     setShowNewNoteModal(false);
-    alert('Notitie opgeslagen! (Demo mode - wordt niet bewaard)');
+    alert('Melding opgeslagen! (Demo mode - wordt niet bewaard)');
   };
 
   const handleSaveDietChanges = (data: any) => {
@@ -174,22 +174,22 @@ export default function BewonerInfoScreen() {
             </View>
           </View>
         );
-      case 'Notities':
+      case 'Meldingen':
         return (
-          <View style={styles.notitiesContainer}>
+          <View style={styles.meldingenContainer}>
             <TouchableOpacity
               style={styles.newNoteButton}
               onPress={() => setShowNewNoteModal(true)}
             >
               <MaterialIcons name="add" size={20} color="#FFFFFF" />
-              <Text style={styles.newNoteButtonText}>Nieuwe Notitie</Text>
+              <Text style={styles.newNoteButtonText}>Nieuwe Melding</Text>
             </TouchableOpacity>
 
             {notes.length > 0 ? (
               notes.map((note) => {
                 const author = users.find(u => u.user_id === note.author_id);
                 return (
-                  <NotitieCard
+                  <MeldingCard
                     key={note.note_id}
                     note={note}
                     authorName={author?.name || 'Onbekend'}
@@ -197,8 +197,8 @@ export default function BewonerInfoScreen() {
                 );
               })
             ) : (
-              <View style={styles.emptyNotities}>
-                <Text style={styles.emptyText}>Geen notities gevonden</Text>
+              <View style={styles.emptyMeldingen}>
+                <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
               </View>
             )}
           </View>
@@ -243,8 +243,8 @@ export default function BewonerInfoScreen() {
         {renderTabContent()}
       </ScrollView>
 
-      {/* Nieuwe Notitie Modal */}
-      <NieuweNotitieModal
+      {/* Nieuwe Melding Modal */}
+      <NieuweMeldingModal
         visible={showNewNoteModal}
         onClose={() => setShowNewNoteModal(false)}
         onSave={handleSaveNote}
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 40,
   },
-  notitiesContainer: {
+  meldingenContainer: {
     padding: 16,
     ...Platform.select({
       web: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  emptyNotities: {
+  emptyMeldingen: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
