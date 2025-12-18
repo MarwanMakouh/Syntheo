@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SearchBar, BewonerCard } from '@/components';
 import { users, getResidentsByFloor, getRoomNumber } from '@/Services';
+import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Simuleer ingelogde user (Jan Janssen)
 const CURRENT_USER = users[0]; // Jan Janssen, floor_id: 1
@@ -116,7 +117,7 @@ export default function BewonersScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <MaterialIcons name="person-off" size={64} color="#cccccc" />
+            <MaterialIcons name="person-off" size={64} color={Colors.iconMuted} />
             <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
           </View>
         }
@@ -128,10 +129,10 @@ export default function BewonersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroundSecondary,
   },
   searchContainer: {
-    margin: 16,
+    margin: Layout.screenPadding,
     ...Platform.select({
       web: {
         maxWidth: 600,
@@ -143,15 +144,15 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingLeft: 12,
-    paddingRight: Platform.OS === 'ios' ? 12 : 0,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 0,
-    borderRadius: 12,
+    backgroundColor: Colors.background,
+    marginHorizontal: Layout.screenPadding,
+    marginBottom: Spacing.md,
+    paddingLeft: Spacing.lg,
+    paddingRight: Platform.OS === 'ios' ? Spacing.lg : 0,
+    paddingVertical: Platform.OS === 'ios' ? Spacing.lg : 0,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.border,
     ...Platform.select({
       web: {
         maxWidth: 600,
@@ -161,16 +162,16 @@ const styles = StyleSheet.create({
     }),
   },
   filterLabel: {
-    fontSize: 14,
-    color: '#666666',
-    marginLeft: 8,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.md,
     fontWeight: '500',
   },
   filterValue: {
     flex: 1,
-    fontSize: 14,
-    color: '#000000',
-    marginLeft: 8,
+    fontSize: FontSize.md,
+    color: Colors.textPrimary,
+    marginLeft: Spacing.md,
     fontWeight: '600',
   },
   pickerContainer: {
@@ -180,10 +181,10 @@ const styles = StyleSheet.create({
     height: 50,
   },
   resultCount: {
-    fontSize: 14,
-    color: '#666666',
-    marginHorizontal: 16,
-    marginBottom: 8,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginHorizontal: Layout.screenPadding,
+    marginBottom: Spacing.md,
     ...Platform.select({
       web: {
         maxWidth: 600,
@@ -193,8 +194,8 @@ const styles = StyleSheet.create({
     }),
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: Layout.screenPadding,
+    paddingBottom: Layout.screenPadding,
     ...Platform.select({
       web: {
         maxWidth: 600,
@@ -209,8 +210,8 @@ const styles = StyleSheet.create({
     paddingVertical: 64,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999999',
-    marginTop: 16,
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
+    marginTop: Layout.screenPadding,
   },
 });

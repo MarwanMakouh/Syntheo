@@ -6,6 +6,7 @@ import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
 import { notes, getResidentById, getUserById, residents } from '@/Services/API';
+import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Helper function to format time ago
 const getTimeAgo = (dateString: string) => {
@@ -164,38 +165,38 @@ export default function MeldingenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.backgroundSecondary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Layout.screenPaddingLarge,
+    paddingTop: Layout.screenPadding,
+    paddingBottom: Layout.screenPadding,
+    backgroundColor: Colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    gap: 16,
+    borderBottomColor: Colors.borderLight,
+    gap: Layout.screenPadding,
     zIndex: 1000,
   },
   newButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#5B47FB',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    backgroundColor: Colors.success,
+    paddingHorizontal: Layout.screenPadding,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
   },
   newButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
   },
   meldingenList: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: Layout.screenPaddingLarge,
+    paddingTop: Layout.screenPadding,
   },
 });

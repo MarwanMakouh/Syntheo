@@ -33,6 +33,7 @@ import {
   rooms,
   users,
 } from '@/Services';
+import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
@@ -257,16 +258,16 @@ export default function BewonerInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroundSecondary,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    backgroundColor: '#ffffff',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
+    backgroundColor: Colors.background,
+    margin: Layout.screenPadding,
+    padding: Layout.screenPaddingLarge,
+    borderRadius: BorderRadius.lg,
     ...Platform.select({
       web: {
         maxWidth: 800,
@@ -287,34 +288,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 12,
-    color: '#666666',
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   infoValue: {
-    fontSize: 16,
-    color: '#000000',
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.medium,
   },
   section: {
     marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 16,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Layout.screenPadding,
   },
   placeholderText: {
-    fontSize: 16,
-    color: '#999999',
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
     textAlign: 'center',
     paddingVertical: 40,
   },
   meldingenContainer: {
-    padding: 16,
+    padding: Layout.screenPadding,
     ...Platform.select({
       web: {
         maxWidth: 800,
@@ -327,30 +328,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 16,
+    backgroundColor: Colors.success,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Layout.screenPaddingLarge,
+    borderRadius: BorderRadius.md,
+    marginBottom: Layout.screenPadding,
     alignSelf: 'flex-start',
   },
   newNoteButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    marginLeft: Spacing.md,
   },
   emptyMeldingen: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: Spacing['6xl'],
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999999',
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
   },
   medicatieContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
 });
