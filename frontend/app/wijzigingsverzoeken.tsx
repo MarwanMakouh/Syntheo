@@ -95,6 +95,7 @@ export default function WijzigingsverzookenScreen() {
                 style={[
                   styles.requestCard,
                   request.status === 'In behandeling' && styles.requestCardPending,
+                  request.status !== 'In behandeling' && styles.requestCardProcessed,
                 ]}
                 onPress={() => handleRequestPress(request.request_id)}
                 activeOpacity={0.7}
@@ -120,21 +121,61 @@ export default function WijzigingsverzookenScreen() {
                 <View style={styles.requestContent}>
                   {/* Header Row */}
                   <View style={styles.requestHeader}>
-                    <Text style={styles.residentName}>{resident?.name || 'Onbekend'}</Text>
-                    <MaterialIcons name="chevron-right" size={24} color={Colors.textSecondary} />
+                    <Text style={[
+                      styles.residentName,
+                      request.status !== 'In behandeling' && styles.textProcessed
+                    ]}>
+                      {resident?.name || 'Onbekend'}
+                    </Text>
+                    <View style={styles.headerRight}>
+                      {request.status !== 'In behandeling' && (
+                        <View style={[
+                          styles.statusBadge,
+                          request.status === 'Goedgekeurd' && styles.statusBadgeApproved,
+                          request.status === 'Afgekeurd' && styles.statusBadgeRejected,
+                        ]}>
+                          <Text style={[
+                            styles.statusText,
+                            request.status === 'Goedgekeurd' && styles.statusTextApproved,
+                            request.status === 'Afgekeurd' && styles.statusTextRejected,
+                          ]}>
+                            {request.status}
+                          </Text>
+                        </View>
+                      )}
+                      <MaterialIcons
+                        name="chevron-right"
+                        size={24}
+                        color={request.status !== 'In behandeling' ? Colors.iconMuted : Colors.textSecondary}
+                      />
+                    </View>
                   </View>
 
                   {/* Info Row */}
                   <View style={styles.infoSection}>
                     <View style={styles.infoItem}>
-                      <MaterialIcons name="person" size={16} color={Colors.textSecondary} />
-                      <Text style={styles.infoText}>
+                      <MaterialIcons
+                        name="person"
+                        size={16}
+                        color={request.status !== 'In behandeling' ? Colors.iconMuted : Colors.textSecondary}
+                      />
+                      <Text style={[
+                        styles.infoText,
+                        request.status !== 'In behandeling' && styles.textProcessed
+                      ]}>
                         Door: {requester?.name || 'Onbekend'}
                       </Text>
                     </View>
                     <View style={styles.infoItem}>
-                      <MaterialIcons name="access-time" size={16} color={Colors.textSecondary} />
-                      <Text style={styles.infoText}>
+                      <MaterialIcons
+                        name="access-time"
+                        size={16}
+                        color={request.status !== 'In behandeling' ? Colors.iconMuted : Colors.textSecondary}
+                      />
+                      <Text style={[
+                        styles.infoText,
+                        request.status !== 'In behandeling' && styles.textProcessed
+                      ]}>
                         {formatDate(request.created_at, 'dd-MM, HH:mm')}
                       </Text>
                     </View>
@@ -142,8 +183,16 @@ export default function WijzigingsverzookenScreen() {
 
                   {/* Changes Summary */}
                   <View style={styles.changesRow}>
-                    <Text style={styles.changesLabel}>Wijzigingen:</Text>
-                    <Text style={styles.changesText} numberOfLines={1}>
+                    <Text style={[
+                      styles.changesLabel,
+                      request.status !== 'In behandeling' && styles.textProcessed
+                    ]}>
+                      Wijzigingen:
+                    </Text>
+                    <Text style={[
+                      styles.changesText,
+                      request.status !== 'In behandeling' && styles.textProcessed
+                    ]} numberOfLines={1}>
                       {changesText || 'Geen details'}
                     </Text>
                   </View>
@@ -203,6 +252,10 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: Colors.warning,
   },
+  requestCardProcessed: {
+    backgroundColor: Colors.backgroundSecondary,
+    opacity: 0.75,
+  },
   urgencyBadge: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
@@ -223,11 +276,40 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
   residentName: {
     ...Typography.h3,
     fontSize: FontSize.lg,
     color: Colors.textPrimary,
     fontWeight: FontWeight.semibold,
+  },
+  textProcessed: {
+    color: Colors.textMuted,
+  },
+  statusBadge: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.sm,
+  },
+  statusBadgeApproved: {
+    backgroundColor: '#d1fae5',
+  },
+  statusBadgeRejected: {
+    backgroundColor: '#fee2e2',
+  },
+  statusText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
+  },
+  statusTextApproved: {
+    color: '#065f46',
+  },
+  statusTextRejected: {
+    color: '#991b1b',
   },
 
   // Info Section
