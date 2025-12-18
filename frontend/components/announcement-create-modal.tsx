@@ -18,21 +18,31 @@ interface AnnouncementCreateModalProps {
   onSend: (announcement: {
     title: string;
     message: string;
-    recipients: RecipientType;
+    recipientCategory: RecipientCategory;
+    recipientDetails?: string;
   }) => void;
 }
 
-type RecipientType =
-  | 'Individuele verpleegkundigen'
-  | 'Verdieping 2'
-  | 'Afdeling'
-  | 'Iedereen';
+type RecipientCategory = 'Verdieping' | 'Individuele mensen' | 'Iedereen' | 'Afdeling';
 
-const RECIPIENT_OPTIONS: RecipientType[] = [
-  'Individuele verpleegkundigen',
-  'Verdieping 2',
-  'Afdeling',
+const RECIPIENT_CATEGORIES: RecipientCategory[] = [
   'Iedereen',
+  'Verdieping',
+  'Afdeling',
+  'Individuele mensen',
+];
+
+const FLOORS = ['Verdieping 1', 'Verdieping 2', 'Verdieping 3', 'Verdieping 4'];
+
+const DEPARTMENTS = ['Keuken', 'Admin', 'Verplegers'];
+
+// Dit zou later uit een API of database kunnen komen
+const INDIVIDUALS = [
+  'Jan de Vries',
+  'Maria Jansen',
+  'Piet Bakker',
+  'Anna Vermeulen',
+  'Kees van Dam',
 ];
 
 export function AnnouncementCreateModal({
@@ -42,7 +52,36 @@ export function AnnouncementCreateModal({
 }: AnnouncementCreateModalProps) {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [selectedRecipient, setSelectedRecipient] = useState<RecipientType>('Iedereen');
+  const [selectedCategory, setSelectedCategory] = useState<RecipientCategory>('Iedereen');
+  const [selectedDetails, setSelectedDetails] = useState<string>('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
+
+  const handleCategoryChange = (category: RecipientCategory) => {
+    setSelectedCategory(category);
+    setSelectedDetails('');
+    setShowCategoryDropdown(false);
+  };
+
+  const handleDetailsChange = (details: string) => {
+    setSelectedDetails(details);
+    setShowDetailsDropdown(false);
+  };
+
+  const getDetailsOptions = (): string[] => {
+    switch (selectedCategory) {
+      case 'Verdieping':
+        return FLOORS;
+      case 'Afdeling':
+        return DEPARTMENTS;
+      case 'Individuele mensen':
+        return INDIVIDUALS;
+      default:
+        return [];
+    }
+  };
+
+  const needsDetailsSelection = selectedCategory !== 'Iedereen';
 
   const handleSend = () => {
     if (title.trim().length === 0) {
@@ -55,16 +94,23 @@ export function AnnouncementCreateModal({
       return;
     }
 
+    if (needsDetailsSelection && !selectedDetails) {
+      alert(`Selecteer een ${selectedCategory.toLowerCase()}`);
+      return;
+    }
+
     onSend({
       title: title.trim(),
       message: message.trim(),
-      recipients: selectedRecipient
+      recipientCategory: selectedCategory,
+      recipientDetails: selectedDetails || undefined,
     });
 
     // Reset form
     setTitle('');
     setMessage('');
-    setSelectedRecipient('Iedereen');
+    setSelectedCategory('Iedereen');
+    setSelectedDetails('');
     onClose();
   };
 
@@ -72,7 +118,10 @@ export function AnnouncementCreateModal({
     // Reset form
     setTitle('');
     setMessage('');
-    setSelectedRecipient('Iedereen');
+    setSelectedCategory('Iedereen');
+    setSelectedDetails('');
+    setShowCategoryDropdown(false);
+    setShowDetailsDropdown(false);
     onClose();
   };
 
@@ -127,27 +176,99 @@ export function AnnouncementCreateModal({
             />
           </View>
 
-          {/* Ontvangers */}
+          {/* Ontvangers Categorie */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Ontvangers</Text>
-            <View style={styles.recipientsContainer}>
-              {RECIPIENT_OPTIONS.map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.radioOption}
-                  onPress={() => setSelectedRecipient(option)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.radioButton}>
-                    {selectedRecipient === option ? (
-                      <View style={styles.radioButtonSelected} />
-                    ) : null}
-                  </View>
-                  <Text style={styles.radioLabel}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Text style={styles.label}>Ontvangers Type</Text>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.dropdownText}>{selectedCategory}</Text>
+              <Ionicons
+                name={showCategoryDropdown ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={Colors.textSecondary}
+              />
+            </TouchableOpacity>
+            {showCategoryDropdown && (
+              <View style={styles.dropdownMenu}>
+                {RECIPIENT_CATEGORIES.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    style={[
+                      styles.dropdownItem,
+                      selectedCategory === category && styles.dropdownItemSelected,
+                    ]}
+                    onPress={() => handleCategoryChange(category)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        selectedCategory === category && styles.dropdownItemTextSelected,
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                    {selectedCategory === category && (
+                      <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
+
+          {/* Details Dropdown - alleen tonen als niet "Iedereen" */}
+          {needsDetailsSelection && (
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>
+                Selecteer {selectedCategory === 'Individuele mensen' ? 'Persoon' : selectedCategory}
+              </Text>
+              <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowDetailsDropdown(!showDetailsDropdown)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.dropdownText, !selectedDetails && styles.placeholderText]}>
+                  {selectedDetails || `Kies ${selectedCategory.toLowerCase()}...`}
+                </Text>
+                <Ionicons
+                  name={showDetailsDropdown ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+              {showDetailsDropdown && (
+                <View style={styles.dropdownMenu}>
+                  {getDetailsOptions().map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={[
+                        styles.dropdownItem,
+                        selectedDetails === option && styles.dropdownItemSelected,
+                      ]}
+                      onPress={() => handleDetailsChange(option)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownItemText,
+                          selectedDetails === option && styles.dropdownItemTextSelected,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                      {selectedDetails === option && (
+                        <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
         </ScrollView>
 
         {/* Action Buttons */}
@@ -224,37 +345,57 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     minHeight: 150,
   },
-  recipientsContainer: {
-    gap: Spacing.lg,
-  },
-  radioOption: {
+  dropdown: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.background,
   },
-  radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    marginRight: Spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonSelected: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.primary,
-  },
-  radioLabel: {
+  dropdownText: {
     fontSize: FontSize.lg,
     color: Colors.textPrimary,
     fontWeight: FontWeight.medium,
+  },
+  placeholderText: {
+    color: Colors.textMuted,
+  },
+  dropdownMenu: {
+    marginTop: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  dropdownItemText: {
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.medium,
+  },
+  dropdownItemTextSelected: {
+    color: Colors.primary,
+    fontWeight: FontWeight.semibold,
   },
   actionContainer: {
     flexDirection: 'row',
