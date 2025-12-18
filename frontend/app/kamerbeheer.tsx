@@ -11,10 +11,19 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
+import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { rooms, residents, floors } from '@/Services/API';
+
+interface SelectedDisconnect {
+  roomId: number;
+  residentName: string;
+  roomNumber: number;
+}
 
 export default function KamerBeheerScreen() {
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [disconnectModalVisible, setDisconnectModalVisible] = useState(false);
+  const [selectedDisconnect, setSelectedDisconnect] = useState<SelectedDisconnect | null>(null);
 
   // Filter rooms by selected floor
   const filteredRooms = selectedFloor
@@ -24,9 +33,24 @@ export default function KamerBeheerScreen() {
   // Sort rooms by room number
   const sortedRooms = [...filteredRooms].sort((a, b) => a.room_id - b.room_id);
 
-  const handleDisconnect = (roomId: number) => {
-    console.log('Disconnect resident from room:', roomId);
-    // TODO: Implement disconnect functionality
+  const handleDisconnect = (roomId: number, residentName: string, roomNumber: number) => {
+    setSelectedDisconnect({ roomId, residentName, roomNumber });
+    setDisconnectModalVisible(true);
+  };
+
+  const handleConfirmDisconnect = () => {
+    if (selectedDisconnect) {
+      console.log('Disconnecting resident from room:', selectedDisconnect.roomId);
+      // TODO: Implement actual disconnect functionality with backend
+      alert(`${selectedDisconnect.residentName} is losgekoppeld van Kamer ${selectedDisconnect.roomNumber}`);
+    }
+    setDisconnectModalVisible(false);
+    setSelectedDisconnect(null);
+  };
+
+  const handleCancelDisconnect = () => {
+    setDisconnectModalVisible(false);
+    setSelectedDisconnect(null);
   };
 
   return (
@@ -123,7 +147,7 @@ export default function KamerBeheerScreen() {
                       {/* Disconnect Button */}
                       <TouchableOpacity
                         style={styles.disconnectButton}
-                        onPress={() => handleDisconnect(room.room_id)}
+                        onPress={() => handleDisconnect(room.room_id, resident.name, room.room_id)}
                       >
                         <MaterialIcons name="link-off" size={16} color={Colors.error} />
                         <Text style={styles.disconnectButtonText}>Loskoppelen</Text>
@@ -141,6 +165,17 @@ export default function KamerBeheerScreen() {
           </View>
         </ScrollView>
       </View>
+
+      {/* Disconnect Confirmation Modal */}
+      {selectedDisconnect && (
+        <DisconnectConfirmationModal
+          visible={disconnectModalVisible}
+          residentName={selectedDisconnect.residentName}
+          roomNumber={selectedDisconnect.roomNumber}
+          onCancel={handleCancelDisconnect}
+          onConfirm={handleConfirmDisconnect}
+        />
+      )}
     </SafeAreaView>
   );
 }
