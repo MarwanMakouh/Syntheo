@@ -4,7 +4,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
-import { notes, getResidentById, getUserById } from '@/Services/API';
+import { NieuweMeldingModal } from '@/components';
+import { notes, getResidentById, getUserById, residents } from '@/Services/API';
 
 // Helper function to format time ago
 const getTimeAgo = (dateString: string) => {
@@ -63,9 +64,22 @@ const getStatusDisplayText = (status: 'open' | 'in_behandeling' | 'afgehandeld')
 export default function MeldingenScreen() {
   const [selectedMelding, setSelectedMelding] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
 
   const handleNewMelding = () => {
-    console.log('Create new melding');
+    setShowNewMeldingModal(true);
+  };
+
+  const handleSaveNewMelding = (melding: {
+    type: string;
+    content: string;
+    urgency: 'Laag' | 'Matig' | 'Hoog';
+    resident_id?: number;
+  }) => {
+    // TODO: Save to backend when ready
+    console.log('Nieuwe melding:', melding);
+    setShowNewMeldingModal(false);
+    alert('Melding opgeslagen! (Demo mode - wordt niet bewaard)');
   };
 
   const handleOpenMelding = (note: any) => {
@@ -135,6 +149,14 @@ export default function MeldingenScreen() {
           onSave={handleSaveMelding}
         />
       )}
+
+      {/* Nieuwe Melding Modal */}
+      <NieuweMeldingModal
+        visible={showNewMeldingModal}
+        onClose={() => setShowNewMeldingModal(false)}
+        onSave={handleSaveNewMelding}
+        residents={residents}
+      />
     </View>
   );
 }

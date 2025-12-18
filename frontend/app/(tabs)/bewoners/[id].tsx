@@ -248,6 +248,7 @@ export default function BewonerInfoScreen() {
         visible={showNewNoteModal}
         onClose={() => setShowNewNoteModal(false)}
         onSave={handleSaveNote}
+        residentId={Number(id)}
       />
     </View>
   );

@@ -8,8 +8,10 @@ import {
   Modal,
   ScrollView,
   Platform,
+  FlatList,
 } from 'react-native';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
+import type { Resident } from '@/types';
 
 interface NieuweMeldingModalProps {
   visible: boolean;
@@ -18,7 +20,10 @@ interface NieuweMeldingModalProps {
     type: string;
     content: string;
     urgency: 'Laag' | 'Matig' | 'Hoog';
+    resident_id?: number;
   }) => void;
+  residentId?: number;
+  residents?: Resident[];
 }
 
 const TYPE_OPTIONS = [
@@ -33,10 +38,18 @@ const URGENCY_OPTIONS = [
   { value: 'Hoog', label: 'Urgent' },
 ] as const;
 
-export function NieuweMeldingModal({ visible, onClose, onSave }: NieuweMeldingModalProps) {
+export function NieuweMeldingModal({ visible, onClose, onSave, residentId, residents }: NieuweMeldingModalProps) {
   const [type, setType] = useState<'Algemeen' | 'Medisch' | 'Incident'>('Algemeen');
   const [content, setContent] = useState('');
   const [urgency, setUrgency] = useState<'Laag' | 'Matig' | 'Hoog'>('Laag');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [showResidentList, setShowResidentList] = useState(false);
+
+  // Filter residents based on search query
+  const filteredResidents = residents?.filter(resident =>
+    resident.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   const handleSave = () => {
     if (content.trim().length < 10) {
@@ -44,12 +57,26 @@ export function NieuweMeldingModal({ visible, onClose, onSave }: NieuweMeldingMo
       return;
     }
 
-    onSave({ type, content, urgency });
+    // If no residentId prop is provided, check if a resident is selected
+    if (!residentId && !selectedResident) {
+      alert('Selecteer een bewoner voor deze melding');
+      return;
+    }
+
+    onSave({
+      type,
+      content,
+      urgency,
+      resident_id: residentId || selectedResident?.resident_id
+    });
 
     // Reset form
     setType('Algemeen');
     setContent('');
     setUrgency('Laag');
+    setSearchQuery('');
+    setSelectedResident(null);
+    setShowResidentList(false);
   };
 
   const handleClose = () => {
@@ -57,6 +84,9 @@ export function NieuweMeldingModal({ visible, onClose, onSave }: NieuweMeldingMo
     setType('Algemeen');
     setContent('');
     setUrgency('Laag');
+    setSearchQuery('');
+    setSelectedResident(null);
+    setShowResidentList(false);
     onClose();
   };
 
@@ -71,6 +101,53 @@ export function NieuweMeldingModal({ visible, onClose, onSave }: NieuweMeldingMo
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
           <Text style={styles.title}>Nieuwe Melding</Text>
+
+          {/* Bewoner Selector - Only show if no residentId is provided */}
+          {!residentId && residents && (
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Bewoner *</Text>
+              <TouchableOpacity
+                style={styles.searchInput}
+                onPress={() => setShowResidentList(!showResidentList)}
+              >
+                <Text style={selectedResident ? styles.selectedResidentText : styles.placeholderText}>
+                  {selectedResident ? selectedResident.name : 'Selecteer een bewoner'}
+                </Text>
+              </TouchableOpacity>
+
+              {showResidentList && (
+                <View style={styles.residentListContainer}>
+                  <TextInput
+                    style={styles.searchBar}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Zoek bewoner..."
+                    placeholderTextColor={Colors.textMuted}
+                  />
+                  <FlatList
+                    data={filteredResidents}
+                    keyExtractor={(item) => item.resident_id.toString()}
+                    style={styles.residentList}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.residentItem}
+                        onPress={() => {
+                          setSelectedResident(item);
+                          setShowResidentList(false);
+                          setSearchQuery('');
+                        }}
+                      >
+                        <Text style={styles.residentItemText}>{item.name}</Text>
+                      </TouchableOpacity>
+                    )}
+                    ListEmptyComponent={
+                      <Text style={styles.emptyListText}>Geen bewoners gevonden</Text>
+                    }
+                  />
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Type */}
           <View style={styles.fieldContainer}>
@@ -284,5 +361,56 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     fontWeight: FontWeight.semibold,
     color: Colors.textOnPrimary,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.background,
+  },
+  selectedResidentText: {
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+  },
+  placeholderText: {
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
+  },
+  residentListContainer: {
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    maxHeight: 250,
+  },
+  searchBar: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+  },
+  residentList: {
+    maxHeight: 200,
+  },
+  residentItem: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  residentItemText: {
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+  },
+  emptyListText: {
+    fontSize: FontSize.md,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: Spacing['2xl'],
   },
 });
