@@ -208,8 +208,8 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 2,
-    borderColor: '#FCD34D',
-    backgroundColor: '#FFFBEB',
+    borderColor: Colors.warningBorder,
+    backgroundColor: Colors.warningBackground,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   },
   urgencyButtonActive: {
     borderColor: Colors.warning,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: Colors.warningMediumBackground,
   },
   urgencyButtonText: {
     fontSize: FontSize.md,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#D1FAE5',
+    backgroundColor: Colors.infoBackground,
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     gap: Spacing.md,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: FontSize.sm,
-    color: '#059669',
+    color: Colors.successText,
     lineHeight: LineHeight.normal,
   },
   actionContainer: {
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#E5E5E5',
+    backgroundColor: Colors.buttonSecondary,
   },
   cancelButtonText: {
     fontSize: FontSize.lg,

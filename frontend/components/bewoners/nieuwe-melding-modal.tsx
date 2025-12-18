@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   typeButtonActive: {
     borderColor: Colors.success,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Colors.successBackground,
   },
   typeButtonText: {
     fontSize: FontSize.md,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   urgencyButtonActive: {
     borderColor: Colors.success,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Colors.successBackground,
   },
   urgencyButtonText: {
     fontSize: FontSize.md,
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#E5E5E5',
+    backgroundColor: Colors.buttonSecondary,
   },
   cancelButtonText: {
     fontSize: FontSize.lg,

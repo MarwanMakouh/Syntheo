@@ -48,7 +48,7 @@ export function MeldingCard({ note, authorName }: MeldingCardProps) {
       case 'Hoog':
         return Colors.warningAlt;
       case 'Matig':
-        return '#CA8A04';
+        return Colors.urgencyMediumText;
       case 'Laag':
         return Colors.textSecondary;
       default:

@@ -102,6 +102,7 @@ export const Colors = {
   urgencyHigh: palette.red400,
   urgencyHighBg: palette.orange100,
   urgencyMedium: palette.orange400,
+  urgencyMediumText: palette.orange700,
   urgencyMediumBg: palette.yellow100,
   urgencyLow: palette.gray600,
   urgencyLowBg: palette.gray75,
