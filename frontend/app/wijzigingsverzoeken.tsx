@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -74,15 +73,14 @@ export default function WijzigingsverzookenScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <NavigationBar />
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <Text style={styles.pageTitle}>Wijzigingsverzoeken</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Text style={styles.pageTitle}>Wijzigingsverzoeken</Text>
 
           {/* Requests List */}
           {sortedRequests.map((request) => {
@@ -160,24 +158,19 @@ export default function WijzigingsverzookenScreen() {
               <Text style={styles.emptyText}>Geen wijzigingsverzoeken</Text>
             </View>
           )}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.backgroundTertiary,
-  },
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundTertiary,
   },
   scrollContent: {
     padding: Spacing.xl,
-    paddingTop: Spacing['2xl'],
+    paddingTop: Platform.OS === 'web' ? Spacing['2xl'] : 0,
     paddingBottom: Spacing['3xl'],
     ...Platform.select({
       web: {
