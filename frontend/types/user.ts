@@ -1,10 +1,19 @@
+export type UserRole = 'Verpleegster' | 'Hoofdverpleegster' | 'Beheerder' | 'Keukenpersoneel';
+
 export interface User {
   user_id: number;
   email: string;
   password: string;
   name: string;
-  role: string;
+  role: UserRole;
   floor_id: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface RoleOption {
+  id: UserRole;
+  title: string;
+  description: string;
+  icon: string;
 }

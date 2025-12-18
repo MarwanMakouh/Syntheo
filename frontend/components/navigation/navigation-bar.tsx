@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
 import { users } from '@/Services';
 import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
+import { useRole } from '@/contexts/RoleContext';
 
 // Simuleer ingelogde user (Jan Janssen)
 const CURRENT_USER = users[0]; // Jan Janssen, verpleger
@@ -11,9 +12,14 @@ const CURRENT_USER = users[0]; // Jan Janssen, verpleger
 export function NavigationBar() {
   const router = useRouter();
   const segments = useSegments();
+  const { selectedRole, clearRole } = useRole();
 
-  // Check if we're on a detail page (e.g., /bewoners/[id])
-  const isDetailPage = segments.length > 2 && segments[segments.length - 1].startsWith('[');
+  // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
+  const isDetailPage =
+    (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
+    segments.includes('wijzigingsverzoeken') ||
+    segments.includes('wijzigingsverzoek-detail') ||
+    segments.includes('kamerbeheer');
 
   const handleNotifications = () => {
     // TODO: Handle notifications when backend is ready
@@ -21,8 +27,8 @@ export function NavigationBar() {
   };
 
   const handleLogout = () => {
-    // TODO: Handle logout when auth is ready
-    console.log('Logout pressed');
+    clearRole();
+    router.replace('/role-selection');
   };
 
   const handleBack = () => {
@@ -52,7 +58,7 @@ export function NavigationBar() {
             {CURRENT_USER.name}
           </Text>
           <Text style={styles.userRole}>
-            {CURRENT_USER.role}
+            {selectedRole || CURRENT_USER.role}
           </Text>
         </View>
       )}
@@ -66,7 +72,7 @@ export function NavigationBar() {
               {CURRENT_USER.name}
             </Text>
             <Text style={styles.userRole}>
-              {CURRENT_USER.role}
+              {selectedRole || CURRENT_USER.role}
             </Text>
           </View>
         )}
