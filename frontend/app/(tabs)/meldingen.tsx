@@ -4,7 +4,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
-import { notes, getResidentById, getUserById } from '@/Services/API';
+import { NieuweMeldingModal } from '@/components';
+import { notes, getResidentById, getUserById, residents } from '@/Services/API';
+import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Helper function to format time ago
 const getTimeAgo = (dateString: string) => {
@@ -63,9 +65,22 @@ const getStatusDisplayText = (status: 'open' | 'in_behandeling' | 'afgehandeld')
 export default function MeldingenScreen() {
   const [selectedMelding, setSelectedMelding] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
 
   const handleNewMelding = () => {
-    console.log('Create new melding');
+    setShowNewMeldingModal(true);
+  };
+
+  const handleSaveNewMelding = (melding: {
+    type: string;
+    content: string;
+    urgency: 'Laag' | 'Matig' | 'Hoog';
+    resident_id?: number;
+  }) => {
+    // TODO: Save to backend when ready
+    console.log('Nieuwe melding:', melding);
+    setShowNewMeldingModal(false);
+    alert('Melding opgeslagen! (Demo mode - wordt niet bewaard)');
   };
 
   const handleOpenMelding = (note: any) => {
@@ -135,6 +150,14 @@ export default function MeldingenScreen() {
           onSave={handleSaveMelding}
         />
       )}
+
+      {/* Nieuwe Melding Modal */}
+      <NieuweMeldingModal
+        visible={showNewMeldingModal}
+        onClose={() => setShowNewMeldingModal(false)}
+        onSave={handleSaveNewMelding}
+        residents={residents}
+      />
     </View>
   );
 }
@@ -142,38 +165,38 @@ export default function MeldingenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.backgroundSecondary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Layout.screenPaddingLarge,
+    paddingTop: Layout.screenPadding,
+    paddingBottom: Layout.screenPadding,
+    backgroundColor: Colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    gap: 16,
+    borderBottomColor: Colors.borderLight,
+    gap: Layout.screenPadding,
     zIndex: 1000,
   },
   newButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#5B47FB',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    backgroundColor: Colors.success,
+    paddingHorizontal: Layout.screenPadding,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
   },
   newButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
   },
   meldingenList: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: Layout.screenPaddingLarge,
+    paddingTop: Layout.screenPadding,
   },
 });

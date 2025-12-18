@@ -13,9 +13,11 @@ const palette = {
   purple500: '#5B47FB',
 
   // Greens
+  green50: '#F0FDF4',
+  green100: '#D1FAE5',
   green500: '#10B981',
   green600: '#34C759',
-  green700: '#00A86B',
+  green700: '#059669',
 
   // Reds
   red100: '#FEE2E2',
@@ -23,13 +25,16 @@ const palette = {
   red400: '#EF4444',
   red500: '#DC2626',
 
-  // Oranges
+  // Oranges & Yellows
   orange100: '#FFF4E6',
+  orange200: '#FFF7ED',
   orange400: '#F97316',
   orange500: '#FF9500',
   orange600: '#D97706',
   orange700: '#CA8A04',
+  yellow50: '#FFFBEB',
   yellow100: '#FFF9E6',
+  yellow300: '#FCD34D',
 
   // Neutrals
   black: '#000000',
@@ -41,6 +46,7 @@ const palette = {
   gray500: '#666666',
   gray400: '#999999',
   gray300: '#cccccc',
+  gray250: '#E5E5E5',
   gray200: '#D1D5DB',
   gray150: '#E5E7EB',
   gray100: '#e0e0e0',
@@ -96,6 +102,7 @@ export const Colors = {
   urgencyHigh: palette.red400,
   urgencyHighBg: palette.orange100,
   urgencyMedium: palette.orange400,
+  urgencyMediumText: palette.orange700,
   urgencyMediumBg: palette.yellow100,
   urgencyLow: palette.gray600,
   urgencyLowBg: palette.gray75,
@@ -123,6 +130,18 @@ export const Colors = {
 
   // Buttons
   buttonDisabled: palette.gray300,
+  buttonSecondary: palette.gray250,
+  buttonSecondaryText: palette.gray500,
+
+  // Success variants (for forms/modals)
+  successBackground: palette.green50,
+  successText: palette.green700,
+
+  // Warning/Info variants (for forms)
+  warningBackground: palette.yellow50,
+  warningBorder: palette.yellow300,
+  warningMediumBackground: palette.orange200,
+  infoBackground: palette.green100,
 
   // Tab bar
   tabActive: palette.blue500,

@@ -1,14 +1,14 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
 
-export type TabType = 'Info' | 'Notities' | 'Medicatie' | 'Dieet';
+export type TabType = 'Info' | 'Meldingen' | 'Medicatie' | 'Dieet';
 
 interface BewonerTabsProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
 }
 
-const TABS: TabType[] = ['Info', 'Notities', 'Medicatie', 'Dieet'];
+const TABS: TabType[] = ['Info', 'Meldingen', 'Medicatie', 'Dieet'];
 
 export function BewonerTabs({ activeTab, onTabChange }: BewonerTabsProps) {
   return (

@@ -14,8 +14,8 @@ import {
   ContactCard,
   BewonerDetailHeader,
   BewonerTabs,
-  NotitieCard,
-  NieuweNotitieModal,
+  MeldingCard,
+  NieuweMeldingModal,
   MedicatieSchema,
   MedicatieHistoriek,
   DieetInformatie,
@@ -33,6 +33,7 @@ import {
   rooms,
   users,
 } from '@/Services';
+import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
@@ -114,15 +115,15 @@ export default function BewonerInfoScreen() {
     Linking.openURL(`tel:${phoneNumber}`);
   };
 
-  const handleSaveNote = (notitie: {
+  const handleSaveNote = (melding: {
     type: string;
     content: string;
     urgency: 'Laag' | 'Matig' | 'Hoog';
   }) => {
     // TODO: Save to backend when ready
-    console.log('Nieuwe notitie:', notitie);
+    console.log('Nieuwe melding:', melding);
     setShowNewNoteModal(false);
-    alert('Notitie opgeslagen! (Demo mode - wordt niet bewaard)');
+    alert('Melding opgeslagen! (Demo mode - wordt niet bewaard)');
   };
 
   const handleSaveDietChanges = (data: any) => {
@@ -174,22 +175,22 @@ export default function BewonerInfoScreen() {
             </View>
           </View>
         );
-      case 'Notities':
+      case 'Meldingen':
         return (
-          <View style={styles.notitiesContainer}>
+          <View style={styles.meldingenContainer}>
             <TouchableOpacity
               style={styles.newNoteButton}
               onPress={() => setShowNewNoteModal(true)}
             >
               <MaterialIcons name="add" size={20} color="#FFFFFF" />
-              <Text style={styles.newNoteButtonText}>Nieuwe Notitie</Text>
+              <Text style={styles.newNoteButtonText}>Nieuwe Melding</Text>
             </TouchableOpacity>
 
             {notes.length > 0 ? (
               notes.map((note) => {
                 const author = users.find(u => u.user_id === note.author_id);
                 return (
-                  <NotitieCard
+                  <MeldingCard
                     key={note.note_id}
                     note={note}
                     authorName={author?.name || 'Onbekend'}
@@ -197,8 +198,8 @@ export default function BewonerInfoScreen() {
                 );
               })
             ) : (
-              <View style={styles.emptyNotities}>
-                <Text style={styles.emptyText}>Geen notities gevonden</Text>
+              <View style={styles.emptyMeldingen}>
+                <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
               </View>
             )}
           </View>
@@ -243,11 +244,12 @@ export default function BewonerInfoScreen() {
         {renderTabContent()}
       </ScrollView>
 
-      {/* Nieuwe Notitie Modal */}
-      <NieuweNotitieModal
+      {/* Nieuwe Melding Modal */}
+      <NieuweMeldingModal
         visible={showNewNoteModal}
         onClose={() => setShowNewNoteModal(false)}
         onSave={handleSaveNote}
+        residentId={Number(id)}
       />
     </View>
   );
@@ -256,16 +258,16 @@ export default function BewonerInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroundSecondary,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    backgroundColor: '#ffffff',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
+    backgroundColor: Colors.background,
+    margin: Layout.screenPadding,
+    padding: Layout.screenPaddingLarge,
+    borderRadius: BorderRadius.lg,
     ...Platform.select({
       web: {
         maxWidth: 800,
@@ -286,34 +288,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 12,
-    color: '#666666',
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   infoValue: {
-    fontSize: 16,
-    color: '#000000',
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.medium,
   },
   section: {
     marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 16,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Layout.screenPadding,
   },
   placeholderText: {
-    fontSize: 16,
-    color: '#999999',
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
     textAlign: 'center',
     paddingVertical: 40,
   },
-  notitiesContainer: {
-    padding: 16,
+  meldingenContainer: {
+    padding: Layout.screenPadding,
     ...Platform.select({
       web: {
         maxWidth: 800,
@@ -326,30 +328,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 16,
+    backgroundColor: Colors.success,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Layout.screenPaddingLarge,
+    borderRadius: BorderRadius.md,
+    marginBottom: Layout.screenPadding,
     alignSelf: 'flex-start',
   },
   newNoteButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    marginLeft: Spacing.md,
   },
-  emptyNotities: {
+  emptyMeldingen: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: Spacing['6xl'],
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999999',
+    fontSize: FontSize.lg,
+    color: Colors.textMuted,
   },
   medicatieContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background,
   },
 });

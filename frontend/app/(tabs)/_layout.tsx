@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { NavigationBar } from '@/components';
+import { Colors, FontSize, FontWeight } from '@/constants';
 
 export default function TabLayout() {
   return (
@@ -11,19 +12,19 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: true,
         header: () => <NavigationBar />,
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#666666',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: Colors.background,
           borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
+          borderTopColor: Colors.border,
           height: Platform.OS === 'ios' ? 88 : Platform.OS === 'android' ? 65 : 60,
           paddingBottom: Platform.OS === 'ios' ? 28 : Platform.OS === 'android' ? 10 : 10,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: FontSize.xs,
+          fontWeight: FontWeight.medium,
         },
       }}>
       <Tabs.Screen
