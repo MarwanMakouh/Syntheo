@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
+import { AssignResidentModal } from '@/components/assign-resident-modal';
 import { rooms, residents, floors } from '@/Services/API';
 
 interface SelectedDisconnect {
@@ -24,6 +25,8 @@ export default function KamerBeheerScreen() {
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [disconnectModalVisible, setDisconnectModalVisible] = useState(false);
   const [selectedDisconnect, setSelectedDisconnect] = useState<SelectedDisconnect | null>(null);
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [selectedRoomForAssign, setSelectedRoomForAssign] = useState<number | null>(null);
 
   // Filter rooms by selected floor
   const filteredRooms = selectedFloor
@@ -32,6 +35,33 @@ export default function KamerBeheerScreen() {
 
   // Sort rooms by room number
   const sortedRooms = [...filteredRooms].sort((a, b) => a.room_id - b.room_id);
+
+  // Get unassigned and assigned residents
+  const { unassignedResidents, assignedResidents } = useMemo(() => {
+    const assignedResidentIds = rooms
+      .filter((room) => room.resident_id !== null)
+      .map((room) => room.resident_id);
+
+    const unassigned = residents
+      .filter((resident) => !assignedResidentIds.includes(resident.resident_id))
+      .map((resident) => ({
+        resident_id: resident.resident_id,
+        name: resident.name,
+      }));
+
+    const assigned = residents
+      .filter((resident) => assignedResidentIds.includes(resident.resident_id))
+      .map((resident) => {
+        const room = rooms.find((r) => r.resident_id === resident.resident_id);
+        return {
+          resident_id: resident.resident_id,
+          name: resident.name,
+          currentRoom: room?.room_id,
+        };
+      });
+
+    return { unassignedResidents: unassigned, assignedResidents: assigned };
+  }, []);
 
   const handleDisconnect = (roomId: number, residentName: string, roomNumber: number) => {
     setSelectedDisconnect({ roomId, residentName, roomNumber });
@@ -53,6 +83,27 @@ export default function KamerBeheerScreen() {
     setSelectedDisconnect(null);
   };
 
+  const handleAssignResident = (roomId: number) => {
+    setSelectedRoomForAssign(roomId);
+    setAssignModalVisible(true);
+  };
+
+  const handleConfirmAssign = (residentId: number) => {
+    if (selectedRoomForAssign) {
+      const resident = residents.find((r) => r.resident_id === residentId);
+      console.log('Assigning resident', residentId, 'to room', selectedRoomForAssign);
+      // TODO: Implement actual assign functionality with backend
+      alert(`${resident?.name} is toegewezen aan Kamer ${selectedRoomForAssign}`);
+    }
+    setAssignModalVisible(false);
+    setSelectedRoomForAssign(null);
+  };
+
+  const handleCancelAssign = () => {
+    setAssignModalVisible(false);
+    setSelectedRoomForAssign(null);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <NavigationBar />
@@ -68,6 +119,21 @@ export default function KamerBeheerScreen() {
               <Text style={styles.pageSubtitle}>Beheer kamertoewijzingen van bewoners</Text>
             </View>
           </View>
+
+          {/* Unassigned Residents Warning */}
+          {unassignedResidents.length > 0 && (
+            <View style={styles.warningBanner}>
+              <MaterialIcons name="warning" size={24} color={Colors.warning} />
+              <View style={styles.warningContent}>
+                <Text style={styles.warningTitle}>
+                  {unassignedResidents.length} bewoner{unassignedResidents.length > 1 ? 's' : ''} zonder kamertoewijzing
+                </Text>
+                <Text style={styles.warningText}>
+                  {unassignedResidents.map((r) => r.name).join(', ')}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* Floor Filter */}
           <View style={styles.filterContainer}>
@@ -115,11 +181,21 @@ export default function KamerBeheerScreen() {
               const isOccupied = room.resident_id !== null;
 
               return (
-                <View key={room.room_id} style={styles.roomCard}>
+                <View
+                  key={room.room_id}
+                  style={[
+                    styles.roomCard,
+                    isOccupied ? styles.roomCardOccupied : styles.roomCardEmpty,
+                  ]}
+                >
                   {/* Room Header */}
                   <View style={styles.roomHeader}>
                     <View style={styles.roomTitleContainer}>
-                      <MaterialIcons name="meeting-room" size={20} color={Colors.success} />
+                      <MaterialIcons
+                        name="meeting-room"
+                        size={20}
+                        color={isOccupied ? '#dc2626' : '#10b981'}
+                      />
                       <Text style={styles.roomNumber}>Kamer {room.room_id}</Text>
                     </View>
                     <View
@@ -134,7 +210,7 @@ export default function KamerBeheerScreen() {
                           isOccupied ? styles.statusBadgeTextOccupied : styles.statusBadgeTextEmpty,
                         ]}
                       >
-                        {isOccupied ? 'Bezet' : 'Leeg'}
+                        {isOccupied ? 'Bezet' : 'Vrij'}
                       </Text>
                     </View>
                   </View>
@@ -155,9 +231,18 @@ export default function KamerBeheerScreen() {
                     </>
                   )}
 
-                  {/* Empty state */}
+                  {/* Empty state with Assign Button */}
                   {!isOccupied && (
-                    <Text style={styles.emptyRoomText}>Geen bewoner toegewezen</Text>
+                    <>
+                      <Text style={styles.emptyRoomText}>Geen bewoner toegewezen</Text>
+                      <TouchableOpacity
+                        style={styles.assignButton}
+                        onPress={() => handleAssignResident(room.room_id)}
+                      >
+                        <MaterialIcons name="person-add" size={16} color={Colors.success} />
+                        <Text style={styles.assignButtonText}>Bewoner Toewijzen</Text>
+                      </TouchableOpacity>
+                    </>
                   )}
                 </View>
               );
@@ -174,6 +259,18 @@ export default function KamerBeheerScreen() {
           roomNumber={selectedDisconnect.roomNumber}
           onCancel={handleCancelDisconnect}
           onConfirm={handleConfirmDisconnect}
+        />
+      )}
+
+      {/* Assign Resident Modal */}
+      {selectedRoomForAssign && (
+        <AssignResidentModal
+          visible={assignModalVisible}
+          roomNumber={selectedRoomForAssign}
+          unassignedResidents={unassignedResidents}
+          assignedResidents={assignedResidents}
+          onCancel={handleCancelAssign}
+          onAssign={handleConfirmAssign}
         />
       )}
     </SafeAreaView>
@@ -222,6 +319,32 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
 
+  // Warning Banner
+  warningBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
+    backgroundColor: '#fff9e6',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: '#ffd966',
+    marginBottom: Spacing.xl,
+  },
+  warningContent: {
+    flex: 1,
+  },
+  warningTitle: {
+    fontSize: FontSize.md,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.semibold,
+    marginBottom: Spacing.xs,
+  },
+  warningText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+  },
+
   // Filter
   filterContainer: {
     flexDirection: 'row',
@@ -260,7 +383,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: Colors.success,
     padding: Spacing.lg,
     minWidth: 280,
     ...Platform.select({
@@ -271,6 +393,12 @@ const styles = StyleSheet.create({
         width: '100%',
       },
     }),
+  },
+  roomCardOccupied: {
+    borderColor: '#dc2626',
+  },
+  roomCardEmpty: {
+    borderColor: '#10b981',
   },
 
   // Room Header
@@ -298,20 +426,20 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
   },
   statusBadgeOccupied: {
-    backgroundColor: '#d1fae5',
+    backgroundColor: '#fee2e2',
   },
   statusBadgeEmpty: {
-    backgroundColor: Colors.backgroundMuted,
+    backgroundColor: '#d1fae5',
   },
   statusBadgeText: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.semibold,
   },
   statusBadgeTextOccupied: {
-    color: '#065f46',
+    color: '#991b1b',
   },
   statusBadgeTextEmpty: {
-    color: Colors.textSecondary,
+    color: '#065f46',
   },
 
   // Resident
@@ -344,5 +472,23 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textMuted,
     fontStyle: 'italic',
+    marginBottom: Spacing.lg,
+  },
+
+  // Assign Button
+  assignButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.md,
+  },
+  assignButtonText: {
+    fontSize: FontSize.sm,
+    color: Colors.success,
+    fontWeight: FontWeight.medium,
   },
 });

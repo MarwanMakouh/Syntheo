@@ -9,6 +9,7 @@ export * from './announcement-create-modal';
 
 // Kamerbeheer Components
 export * from './disconnect-confirmation-modal';
+export * from './assign-resident-modal';
 
 // Bewoners Components
 export * from './bewoners/bewoner-card';
