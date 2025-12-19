@@ -9,6 +9,8 @@ const categoryToBackend: Record<string, string> = {
   'Familie': 'social',
   'Voeding': 'general',
   'Algemeen': 'general',
+  'Medisch': 'health',        // From NieuweMeldingModal
+  'Incident': 'general',       // From NieuweMeldingModal
 };
 
 const categoryFromBackend: Record<string, string> = {
