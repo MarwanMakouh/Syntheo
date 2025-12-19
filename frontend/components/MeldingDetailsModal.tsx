@@ -7,6 +7,7 @@ interface MeldingDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   melding: {
+    noteId: number; // Added note_id
     residentName: string;
     category: string;
     urgency: string;
@@ -15,7 +16,7 @@ interface MeldingDetailsModalProps {
     description: string;
     status: string;
   };
-  onSave?: (status: string) => void;
+  onSave?: (noteId: number, status: string) => void; // Changed to pass noteId
 }
 
 export function MeldingDetailsModal({ visible, onClose, melding, onSave }: MeldingDetailsModalProps) {
@@ -26,7 +27,7 @@ export function MeldingDetailsModal({ visible, onClose, melding, onSave }: Meldi
 
   const handleSave = () => {
     if (onSave) {
-      onSave(status);
+      onSave(melding.noteId, status);
     }
     onClose();
   };

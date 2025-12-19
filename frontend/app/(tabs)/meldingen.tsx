@@ -6,7 +6,7 @@ import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
 import { getResidentById, getUserById, residents } from '@/Services/API';
-import { fetchNotes, createNote } from '@/Services/notesApi';
+import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 import type { Note } from '@/types/note';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
@@ -124,6 +124,7 @@ export default function MeldingenScreen() {
     const status = getStatus(note);
 
     setSelectedMelding({
+      noteId: note.note_id, // Added note_id
       residentName: resident?.name || 'Onbekend',
       category: note.category,
       urgency: note.urgency,
@@ -140,9 +141,25 @@ export default function MeldingenScreen() {
     setSelectedMelding(null);
   };
 
-  const handleSaveMelding = (status: string) => {
-    console.log('Save melding with status:', status);
-    // Here you would update the melding in your backend/state
+  const handleSaveMelding = async (noteId: number, status: string) => {
+    try {
+      // Map status to API action
+      if (status === 'Afgehandeld') {
+        // Resolve the note
+        await resolveNote(noteId);
+      } else if (status === 'Open') {
+        // Unresolve the note
+        await unresolveNote(noteId);
+      }
+      // For 'Behandeling' we don't change the resolved status, only display differs
+
+      // Refresh the notes list to show updated status
+      await loadNotes();
+      alert('Status succesvol bijgewerkt!');
+    } catch (err) {
+      console.error('Failed to update note status:', err);
+      alert('Fout bij bijwerken van status. Probeer opnieuw.');
+    }
   };
 
   // Show loading state
