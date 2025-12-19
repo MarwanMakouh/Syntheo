@@ -111,7 +111,6 @@ export default function MeldingenScreen() {
       setShowNewMeldingModal(false);
       // Refresh the notes list
       await loadNotes();
-      alert('Melding succesvol opgeslagen!');
     } catch (err) {
       console.error('Failed to create note:', err);
       alert('Fout bij opslaan van melding. Probeer opnieuw.');
@@ -155,7 +154,6 @@ export default function MeldingenScreen() {
 
       // Refresh the notes list to show updated status
       await loadNotes();
-      alert('Status succesvol bijgewerkt!');
     } catch (err) {
       console.error('Failed to update note status:', err);
       alert('Fout bij bijwerken van status. Probeer opnieuw.');
