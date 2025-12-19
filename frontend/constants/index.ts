@@ -17,3 +17,4 @@ export {
 } from './typography';
 export { Shadows, type ShadowKey } from './shadows';
 export { BorderRadius, getCircleRadius, type BorderRadiusKey } from './borderRadius';
+export { API_BASE_URL, API_ENDPOINTS } from './apiConfig';
