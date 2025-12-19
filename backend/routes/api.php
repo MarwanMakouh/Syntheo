@@ -128,6 +128,7 @@ Route::prefix('diets')->group(function () {
 
 // Note Management Routes
 Route::prefix('notes')->group(function () {
+    Route::get('/', [NoteController::class, 'all']);
     Route::get('/resident/{residentId}', [NoteController::class, 'index']);
     Route::get('/{id}', [NoteController::class, 'show']);
     Route::post('/', [NoteController::class, 'store']);

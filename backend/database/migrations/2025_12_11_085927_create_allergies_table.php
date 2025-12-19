@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('resident_id')->constrained('residents', 'resident_id')->onDelete('cascade');
             $table->string('symptom');
             $table->string('severity');
+            $table->text('notes')->nullable(); // Added notes field for additional allergy information
             $table->timestamp('created_at');
         });
     }

@@ -13,8 +13,8 @@ return new class extends Migration
             $table->foreignId('res_medication_id')->constrained('res_medication', 'res_medication_id')->onDelete('cascade');
             $table->string('dosage');
             $table->text('instructions')->nullable();
-            $table->time('time_of_day');
-            $table->string('day_of_week');
+            $table->string('time_of_day'); // Changed from time() to string() - stores 'Ochtend', 'Middag', 'Avond', 'Nacht'
+            $table->string('day_of_week')->nullable(); // Added nullable() - null means daily
         });
     }
 
