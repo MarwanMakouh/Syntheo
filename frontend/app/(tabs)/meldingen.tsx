@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
-import { notes, getResidentById, getUserById, residents } from '@/Services/API';
+import { getResidentById, getUserById, residents } from '@/Services/API';
+import { fetchNotes, createNote } from '@/Services/notesApi';
+import type { Note } from '@/types/note';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Helper function to format time ago
@@ -63,24 +65,57 @@ const getStatusDisplayText = (status: 'open' | 'in_behandeling' | 'afgehandeld')
 };
 
 export default function MeldingenScreen() {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMelding, setSelectedMelding] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
+
+  // Fetch notes from backend on mount
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+  const loadNotes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedNotes = await fetchNotes();
+      setNotes(fetchedNotes);
+    } catch (err) {
+      console.error('Failed to load notes:', err);
+      setError('Kon meldingen niet laden. Zorg ervoor dat de backend server draait.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNewMelding = () => {
     setShowNewMeldingModal(true);
   };
 
-  const handleSaveNewMelding = (melding: {
+  const handleSaveNewMelding = async (melding: {
     type: string;
     content: string;
     urgency: 'Laag' | 'Matig' | 'Hoog';
     resident_id?: number;
   }) => {
-    // TODO: Save to backend when ready
-    console.log('Nieuwe melding:', melding);
-    setShowNewMeldingModal(false);
-    alert('Melding opgeslagen! (Demo mode - wordt niet bewaard)');
+    try {
+      await createNote({
+        resident_id: melding.resident_id,
+        category: melding.type,
+        urgency: melding.urgency,
+        content: melding.content,
+      });
+      setShowNewMeldingModal(false);
+      // Refresh the notes list
+      await loadNotes();
+      alert('Melding succesvol opgeslagen!');
+    } catch (err) {
+      console.error('Failed to create note:', err);
+      alert('Fout bij opslaan van melding. Probeer opnieuw.');
+    }
   };
 
   const handleOpenMelding = (note: any) => {
@@ -110,6 +145,29 @@ export default function MeldingenScreen() {
     // Here you would update the melding in your backend/state
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Meldingen laden...</Text>
+      </View>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <MaterialIcons name="error-outline" size={48} color={Colors.error} />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadNotes}>
+          <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Header with Filter and New Button */}
@@ -123,22 +181,29 @@ export default function MeldingenScreen() {
 
       {/* Meldingen List */}
       <ScrollView style={styles.meldingenList}>
-        {notes.map((note) => {
-          const resident = getResidentById(note.resident_id);
-          const status = getStatus(note);
+        {notes.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialIcons name="inbox" size={64} color={Colors.textSecondary} />
+            <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
+          </View>
+        ) : (
+          notes.map((note) => {
+            const resident = getResidentById(note.resident_id);
+            const status = getStatus(note);
 
-          return (
-            <MeldingCard
-              key={note.note_id}
-              residentName={resident?.name || 'Onbekend'}
-              description={note.content}
-              timeAgo={getTimeAgo(note.created_at)}
-              urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
-              status={status}
-              onPress={() => handleOpenMelding(note)}
-            />
-          );
-        })}
+            return (
+              <MeldingCard
+                key={note.note_id}
+                residentName={resident?.name || 'Onbekend'}
+                description={note.content}
+                timeAgo={getTimeAgo(note.created_at)}
+                urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
+                status={status}
+                onPress={() => handleOpenMelding(note)}
+              />
+            );
+          })
+        )}
       </ScrollView>
 
       {/* Details Modal */}
@@ -166,6 +231,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Layout.screenPaddingLarge,
+  },
+  loadingText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+  },
+  errorText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Layout.screenPaddingLarge,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+  },
+  retryButtonText: {
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
   header: {
     flexDirection: 'row',
