@@ -8,6 +8,21 @@ use Illuminate\Http\Request;
 class NoteController extends Controller
 {
     /**
+     * Get all notes (for all residents)
+     */
+    public function all()
+    {
+        $notes = Note::with(['resident', 'author', 'resolver'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $notes
+        ]);
+    }
+
+    /**
      * Get all notes for a specific resident
      */
     public function index($residentId)
