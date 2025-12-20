@@ -8,7 +8,11 @@ interface ResidentMedicationCardProps {
   resident: {
     resident_id: number;
     name: string;
-    room_id: number | null;
+    room?: {
+      room_id: number;
+      room_number: string;
+      floor_id: number;
+    } | null;
     medications: Array<any>;
   };
   status: 'not-started' | 'in-progress' | 'completed';
@@ -59,7 +63,7 @@ export function ResidentMedicationCard({
         <StatusIndicator status={status} />
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
-            {resident.room_id ? `Kamer ${resident.room_id}` : 'Kamer onbekend'} - {resident.name}
+            {resident.room ? `Kamer ${resident.room.room_number}` : 'Kamer onbekend'} - {resident.name}
           </Text>
           <Text style={styles.headerSubtitle}>
             {medicationCount} {medicationCount === 1 ? 'medicatie' : 'medicaties'}

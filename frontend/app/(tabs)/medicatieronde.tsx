@@ -69,10 +69,17 @@ export default function MedicatierondeScreen() {
 
       // Fetch medication rounds for today
       const today = getTodayDateString();
-      const todaysRounds = await fetchMedicationRounds({
-        date_from: today,
-        date_to: today,
-      });
+      let todaysRounds: any[] = [];
+
+      try {
+        todaysRounds = await fetchMedicationRounds({
+          date_from: today,
+          date_to: today,
+        });
+      } catch (roundsError) {
+        console.error('Failed to load medication rounds (continuing anyway):', roundsError);
+        // Continue even if rounds can't be loaded
+      }
 
       // Initialize states based on existing rounds
       const initialStates: ResidentStates = {};

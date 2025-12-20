@@ -51,13 +51,24 @@ export default function BewonersScreen() {
 
   // Filter bewoners
   const filteredResidents = useMemo(() => {
+    console.log('Filtering - Total residents:', allResidents.length);
+    console.log('Selected floor:', selectedFloor);
+
     let filtered = allResidents.filter(resident => {
       // Filter by floor - check if resident's room is on the selected floor
       if (resident.room && resident.room.floor_id === selectedFloor) {
+        console.log(`Match: ${resident.name} on floor ${resident.room.floor_id}`);
         return true;
+      }
+      if (resident.room) {
+        console.log(`No match: ${resident.name} on floor ${resident.room.floor_id} (looking for ${selectedFloor})`);
+      } else {
+        console.log(`No room: ${resident.name}`);
       }
       return false;
     });
+
+    console.log('Filtered count:', filtered.length);
 
     if (searchQuery.trim()) {
       filtered = filtered.filter(resident =>
