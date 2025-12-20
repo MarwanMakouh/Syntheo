@@ -214,4 +214,47 @@ class ResidentController extends Controller
             'data' => $residents
         ]);
     }
+
+    /**
+     * Get residents with medications for a specific dagdeel (time of day)
+     * Query parameter: dagdeel (Ochtend, Middag, Avond, Nacht)
+     */
+    public function getWithMedicationForDagdeel(Request $request)
+    {
+        $dagdeel = $request->input('dagdeel', 'Ochtend');
+
+        // Get residents who have active medications scheduled for this dagdeel
+        $residents = Resident::with([
+            'room',
+            'medications' => function($query) use ($dagdeel) {
+                $query->where('is_active', true)
+                    ->with([
+                        'medication',
+                        'schedules' => function($scheduleQuery) use ($dagdeel) {
+                            $scheduleQuery->where('time_of_day', $dagdeel);
+                        }
+                    ]);
+            }
+        ])
+        ->whereHas('medications', function($query) use ($dagdeel) {
+            $query->where('is_active', true)
+                ->whereHas('schedules', function($scheduleQuery) use ($dagdeel) {
+                    $scheduleQuery->where('time_of_day', $dagdeel);
+                });
+        })
+        ->get()
+        ->map(function($resident) {
+            // Filter out medications that don't have schedules for this dagdeel
+            $resident->medications = $resident->medications->filter(function($medication) {
+                return $medication->schedules->count() > 0;
+            })->values();
+
+            return $resident;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $residents
+        ]);
+    }
 }

@@ -1,5 +1,6 @@
 // API Configuration
-export const API_BASE_URL = 'http://localhost:8000/api';
+// Use your computer's IP address instead of localhost for mobile device access
+export const API_BASE_URL = 'http://192.168.1.26:8000/api';
 
 // API Endpoints
 export const API_ENDPOINTS = {

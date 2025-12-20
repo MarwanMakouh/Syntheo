@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DagdeelDropdown } from '@/components/DagdeelDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
-import { getResidentsWithMedicationForDagdeel } from '@/Services/API';
+import { fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
 
 interface ResidentState {
@@ -50,19 +50,24 @@ export default function MedicatierondeScreen() {
     loadResidentsForDagdeel(selectedDagdeel);
   }, [selectedDagdeel]);
 
-  const loadResidentsForDagdeel = (dagdeel: string) => {
-    const residentsData = getResidentsWithMedicationForDagdeel(dagdeel);
-    setResidents(residentsData);
+  const loadResidentsForDagdeel = async (dagdeel: string) => {
+    try {
+      const residentsData = await fetchResidentsWithMedicationForDagdeel(dagdeel);
+      setResidents(residentsData);
 
-    const initialStates: ResidentStates = {};
-    residentsData.forEach((resident: any) => {
-      initialStates[resident.resident_id] = {
-        isExpanded: false,
-        checkedMedications: new Set(),
-        completedAt: null,
-      };
-    });
-    setResidentStates(initialStates);
+      const initialStates: ResidentStates = {};
+      residentsData.forEach((resident: any) => {
+        initialStates[resident.resident_id] = {
+          isExpanded: false,
+          checkedMedications: new Set(),
+          completedAt: null,
+        };
+      });
+      setResidentStates(initialStates);
+    } catch (error) {
+      console.error('Failed to load residents:', error);
+      setResidents([]);
+    }
   };
 
   const getUncheckedMedications = (residentId: number) => {

@@ -72,6 +72,9 @@ Route::prefix('residents')->group(function () {
     // Search residents by name
     Route::get('/search', [ResidentController::class, 'search']);
 
+    // Get residents with medications for a specific dagdeel
+    Route::get('/medication-dagdeel', [ResidentController::class, 'getWithMedicationForDagdeel']);
+
     // Filter residents by room number
     Route::get('/room/{roomNumber}', [ResidentController::class, 'filterByRoom']);
 
