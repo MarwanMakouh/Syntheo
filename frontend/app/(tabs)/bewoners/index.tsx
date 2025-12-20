@@ -17,7 +17,7 @@ import { users } from '@/Services';
 import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Simuleer ingelogde user (Jan Janssen)
-const CURRENT_USER = users[0]; // Jan Janssen, floor_id: 1
+const CURRENT_USER = users[0]; // floor_id: 1
 
 const FLOOR_OPTIONS = [
   { label: 'Verdieping 1', value: 1 },
@@ -27,8 +27,11 @@ const FLOOR_OPTIONS = [
 
 export default function BewonersScreen() {
   const router = useRouter();
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFloor, setSelectedFloor] = useState(CURRENT_USER.floor_id);
+  const [selectedFloor, setSelectedFloor] = useState<number>(
+    CURRENT_USER.floor_id
+  );
   const [allResidents, setAllResidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,24 +54,12 @@ export default function BewonersScreen() {
 
   // Filter bewoners
   const filteredResidents = useMemo(() => {
-    console.log('Filtering - Total residents:', allResidents.length);
-    console.log('Selected floor:', selectedFloor);
-
     let filtered = allResidents.filter(resident => {
-      // Filter by floor - check if resident's room is on the selected floor
-      if (resident.room && resident.room.floor_id === selectedFloor) {
-        console.log(`Match: ${resident.name} on floor ${resident.room.floor_id}`);
-        return true;
-      }
-      if (resident.room) {
-        console.log(`No match: ${resident.name} on floor ${resident.room.floor_id} (looking for ${selectedFloor})`);
-      } else {
-        console.log(`No room: ${resident.name}`);
-      }
-      return false;
+      return (
+        resident.room &&
+        resident.room.floor_id === selectedFloor
+      );
     });
-
-    console.log('Filtered count:', filtered.length);
 
     if (searchQuery.trim()) {
       filtered = filtered.filter(resident =>
@@ -88,7 +79,9 @@ export default function BewonersScreen() {
       },
       (buttonIndex) => {
         if (buttonIndex > 0) {
-          setSelectedFloor(FLOOR_OPTIONS[buttonIndex - 1].value);
+          setSelectedFloor(
+            Number(FLOOR_OPTIONS[buttonIndex - 1].value)
+          );
         }
       }
     );
@@ -111,20 +104,25 @@ export default function BewonersScreen() {
 
       {/* Floor Filter */}
       {Platform.OS === 'ios' ? (
-        <TouchableOpacity style={styles.filterContainer} onPress={handleFloorPress}>
-          <MaterialIcons name="filter-list" size={20} color="#666666" />
+        <TouchableOpacity
+          style={styles.filterContainer}
+          onPress={handleFloorPress}
+        >
+          <MaterialIcons name="filter-list" size={20} color="#666" />
           <Text style={styles.filterLabel}>Verdieping:</Text>
           <Text style={styles.filterValue}>{getFloorLabel()}</Text>
-          <MaterialIcons name="arrow-drop-down" size={24} color="#666666" />
+          <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
         </TouchableOpacity>
       ) : (
         <View style={styles.filterContainer}>
-          <MaterialIcons name="filter-list" size={20} color="#666666" />
+          <MaterialIcons name="filter-list" size={20} color="#666" />
           <Text style={styles.filterLabel}>Verdieping:</Text>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={selectedFloor}
-              onValueChange={(value) => setSelectedFloor(value)}
+              onValueChange={(value) =>
+                setSelectedFloor(Number(value))
+              }
               style={styles.picker}
             >
               <Picker.Item label="Verdieping 1" value={1} />
@@ -137,7 +135,8 @@ export default function BewonersScreen() {
 
       {/* Results count */}
       <Text style={styles.resultCount}>
-        {filteredResidents.length} bewoner{filteredResidents.length !== 1 ? 's' : ''} gevonden
+        {filteredResidents.length} bewoner
+        {filteredResidents.length !== 1 ? 's' : ''} gevonden
       </Text>
 
       {/* Residents List */}
@@ -146,17 +145,25 @@ export default function BewonersScreen() {
         renderItem={({ item }) => (
           <BewonerCard
             resident={item}
-            roomNumber={item.room ? item.room.room_number : null}
-            onPress={() => router.push(`/(tabs)/bewoners/${item.resident_id}` as any)}
+            roomNumber={item.room?.room_number ?? null}
+            onPress={() =>
+              router.push(`/(tabs)/bewoners/${item.resident_id}` as any)
+            }
           />
         )}
         keyExtractor={(item) => item.resident_id.toString()}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <MaterialIcons name="person-off" size={64} color={Colors.iconMuted} />
+            <MaterialIcons
+              name="person-off"
+              size={64}
+              color={Colors.iconMuted}
+            />
             <Text style={styles.emptyText}>
-              {loading ? 'Bewoners laden...' : 'Geen bewoners gevonden'}
+              {loading
+                ? 'Bewoners laden...'
+                : 'Geen bewoners gevonden'}
             </Text>
           </View>
         }
@@ -224,24 +231,10 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginHorizontal: Layout.screenPadding,
     marginBottom: Spacing.md,
-    ...Platform.select({
-      web: {
-        maxWidth: 600,
-        alignSelf: 'center',
-        width: '100%',
-      },
-    }),
   },
   listContent: {
     paddingHorizontal: Layout.screenPadding,
     paddingBottom: Layout.screenPadding,
-    ...Platform.select({
-      web: {
-        maxWidth: 600,
-        alignSelf: 'center',
-        width: '100%',
-      },
-    }),
   },
   emptyContainer: {
     alignItems: 'center',
