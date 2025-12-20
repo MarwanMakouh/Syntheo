@@ -23,7 +23,7 @@ class ResSchedule extends Model
     ];
 
     protected $casts = [
-        'time_of_day' => 'datetime:H:i',
+        // 'time_of_day' is a string enum (Ochtend, Middag, Avond, Nacht), not a datetime
     ];
 
     public function resMedication()

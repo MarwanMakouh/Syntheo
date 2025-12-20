@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\Users\\\\marwa\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan route:clear)",
+      "Bash(\"C:\\\\Users\\\\marwa\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan route:list)",
+      "Bash(curl:*)",
+      "Bash(test:*)"
+    ]
+  }
+}

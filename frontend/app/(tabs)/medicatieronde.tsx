@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DagdeelDropdown } from '@/components/DagdeelDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
-import { getResidentsWithMedicationForDagdeel } from '@/Services/API';
+import { fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
+import { saveMedicationRoundsBulk, fetchMedicationRounds } from '@/Services/medicationRoundsApi';
+import { users } from '@/Services';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
+
+// Simuleer ingelogde user (Jan Janssen)
+const CURRENT_USER = users[0];
+
+// Helper function to get today's date in YYYY-MM-DD format
+const getTodayDateString = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
 
 interface ResidentState {
   isExpanded: boolean;
@@ -50,19 +61,74 @@ export default function MedicatierondeScreen() {
     loadResidentsForDagdeel(selectedDagdeel);
   }, [selectedDagdeel]);
 
-  const loadResidentsForDagdeel = (dagdeel: string) => {
-    const residentsData = getResidentsWithMedicationForDagdeel(dagdeel);
-    setResidents(residentsData);
+  const loadResidentsForDagdeel = async (dagdeel: string) => {
+    try {
+      // Fetch residents with medications for this dagdeel
+      const residentsData = await fetchResidentsWithMedicationForDagdeel(dagdeel);
+      setResidents(residentsData);
 
-    const initialStates: ResidentStates = {};
-    residentsData.forEach((resident: any) => {
-      initialStates[resident.resident_id] = {
-        isExpanded: false,
-        checkedMedications: new Set(),
-        completedAt: null,
-      };
-    });
-    setResidentStates(initialStates);
+      // Fetch medication rounds for today
+      const today = getTodayDateString();
+      let todaysRounds: any[] = [];
+
+      try {
+        todaysRounds = await fetchMedicationRounds({
+          date_from: today,
+          date_to: today,
+        });
+      } catch (roundsError) {
+        console.error('Failed to load medication rounds (continuing anyway):', roundsError);
+        // Continue even if rounds can't be loaded
+      }
+
+      // Initialize states based on existing rounds
+      const initialStates: ResidentStates = {};
+      residentsData.forEach((resident: any) => {
+        // Find all rounds for this resident today
+        const residentRounds = todaysRounds.filter(
+          (round: any) => round.resident_id === resident.resident_id
+        );
+
+        // Check if this resident has completed rounds for this dagdeel
+        const hasCompletedRounds = residentRounds.length > 0;
+
+        // Get all schedule IDs for this resident in this dagdeel
+        const allScheduleIds: number[] = [];
+        resident.medications.forEach((medication: any) => {
+          medication.schedules.forEach((schedule: any) => {
+            allScheduleIds.push(schedule.schedule_id);
+          });
+        });
+
+        // Find which schedules were marked as 'given'
+        const givenScheduleIds = new Set<number>();
+        let completedAt: Date | null = null;
+
+        residentRounds.forEach((round: any) => {
+          // Check if this round's schedule is for this dagdeel
+          if (allScheduleIds.includes(round.schedule_id)) {
+            if (round.status === 'given') {
+              givenScheduleIds.add(round.schedule_id);
+            }
+            // Set completed time to the first round's given_at
+            if (!completedAt && round.given_at) {
+              completedAt = new Date(round.given_at);
+            }
+          }
+        });
+
+        initialStates[resident.resident_id] = {
+          isExpanded: false,
+          checkedMedications: givenScheduleIds,
+          completedAt: hasCompletedRounds ? completedAt : null,
+        };
+      });
+
+      setResidentStates(initialStates);
+    } catch (error) {
+      console.error('Failed to load residents:', error);
+      setResidents([]);
+    }
   };
 
   const getUncheckedMedications = (residentId: number) => {
@@ -133,24 +199,59 @@ export default function MedicatierondeScreen() {
     }
   };
 
-  const completeSave = (residentId: number, skipReason: string | null) => {
-    setResidentStates((prev) => ({
-      ...prev,
-      [residentId]: {
-        ...prev[residentId],
-        isExpanded: false,
-        completedAt: new Date(),
-      },
-    }));
+  const completeSave = async (residentId: number, skipReason: string | null) => {
+    const resident = residents.find((r: any) => r.resident_id === residentId);
+    const state = residentStates[residentId];
 
-    console.log('Saved medication round for resident:', residentId);
-    console.log('Checked medications:', Array.from(residentStates[residentId].checkedMedications));
-    if (skipReason) {
-      console.log('Skipped medications reason:', skipReason);
-      console.log('Unchecked count:', modalState.uncheckedMedications.length);
+    if (!resident || !state) {
+      Alert.alert('Fout', 'Bewoner of medicatiegegevens niet gevonden');
+      return;
     }
 
-    // TODO: Send to backend with reason when integrated
+    try {
+      // Prepare medications data for API
+      const medications: Array<{
+        schedule_id: number;
+        res_medication_id: number;
+        status: 'given' | 'missed' | 'refused' | 'delayed';
+        notes?: string;
+      }> = [];
+
+      resident.medications.forEach((medication: any) => {
+        medication.schedules.forEach((schedule: any) => {
+          const isChecked = state.checkedMedications.has(schedule.schedule_id);
+
+          medications.push({
+            schedule_id: schedule.schedule_id,
+            res_medication_id: medication.res_medication_id,
+            status: isChecked ? 'given' : 'missed',
+            notes: !isChecked && skipReason ? skipReason : undefined,
+          });
+        });
+      });
+
+      // Save to backend
+      await saveMedicationRoundsBulk({
+        resident_id: residentId,
+        given_by: CURRENT_USER.user_id,
+        medications: medications,
+      });
+
+      // Update local state
+      setResidentStates((prev) => ({
+        ...prev,
+        [residentId]: {
+          ...prev[residentId],
+          isExpanded: false,
+          completedAt: new Date(),
+        },
+      }));
+
+      Alert.alert('Succes', 'Medicatieronde succesvol opgeslagen');
+    } catch (error) {
+      console.error('Error saving medication round:', error);
+      Alert.alert('Fout', 'Er is een fout opgetreden bij het opslaan van de medicatieronde');
+    }
   };
 
   const handleModalGoBack = () => {
