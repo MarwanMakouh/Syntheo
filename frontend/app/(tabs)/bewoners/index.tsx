@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,7 +12,8 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SearchBar, BewonerCard } from '@/components';
-import { users, getResidentsByFloor, getRoomNumber } from '@/Services';
+import { fetchResidents } from '@/Services/residentsApi';
+import { users } from '@/Services';
 import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Simuleer ingelogde user (Jan Janssen)
@@ -28,10 +29,35 @@ export default function BewonersScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFloor, setSelectedFloor] = useState(CURRENT_USER.floor_id);
+  const [allResidents, setAllResidents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch residents from API
+  useEffect(() => {
+    const loadResidents = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchResidents();
+        setAllResidents(data);
+      } catch (error) {
+        console.error('Failed to load residents:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadResidents();
+  }, []);
 
   // Filter bewoners
   const filteredResidents = useMemo(() => {
-    let filtered = getResidentsByFloor(selectedFloor);
+    let filtered = allResidents.filter(resident => {
+      // Filter by floor - check if resident's room is on the selected floor
+      if (resident.room && resident.room.floor_id === selectedFloor) {
+        return true;
+      }
+      return false;
+    });
 
     if (searchQuery.trim()) {
       filtered = filtered.filter(resident =>
@@ -40,7 +66,7 @@ export default function BewonersScreen() {
     }
 
     return filtered;
-  }, [selectedFloor, searchQuery]);
+  }, [allResidents, selectedFloor, searchQuery]);
 
   // Handle floor selection for iOS
   const handleFloorPress = () => {
@@ -109,7 +135,7 @@ export default function BewonersScreen() {
         renderItem={({ item }) => (
           <BewonerCard
             resident={item}
-            roomNumber={getRoomNumber(item.resident_id)}
+            roomNumber={item.room ? item.room.room_number : null}
             onPress={() => router.push(`/(tabs)/bewoners/${item.resident_id}` as any)}
           />
         )}
@@ -118,7 +144,9 @@ export default function BewonersScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialIcons name="person-off" size={64} color={Colors.iconMuted} />
-            <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
+            <Text style={styles.emptyText}>
+              {loading ? 'Bewoners laden...' : 'Geen bewoners gevonden'}
+            </Text>
           </View>
         }
       />

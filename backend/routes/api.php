@@ -175,6 +175,7 @@ Route::prefix('medication-rounds')->group(function () {
     Route::get('/', [MedicationRoundController::class, 'index']);
     Route::get('/{id}', [MedicationRoundController::class, 'show']);
     Route::post('/', [MedicationRoundController::class, 'store']);
+    Route::post('/bulk', [MedicationRoundController::class, 'bulkStore']);
     Route::put('/{id}', [MedicationRoundController::class, 'update']);
     Route::delete('/{id}', [MedicationRoundController::class, 'destroy']);
 });

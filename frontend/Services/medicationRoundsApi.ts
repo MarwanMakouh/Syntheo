@@ -9,11 +9,24 @@ interface ApiResponse<T> {
 }
 
 /**
- * Fetch all medication rounds
+ * Fetch all medication rounds with optional filters
  */
-export const fetchMedicationRounds = async (): Promise<MedicationRound[]> => {
+export const fetchMedicationRounds = async (filters?: {
+  resident_id?: number;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
+}): Promise<MedicationRound[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.medicationRounds}`);
+    const params = new URLSearchParams();
+
+    if (filters?.resident_id) params.append('resident_id', filters.resident_id.toString());
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.date_from) params.append('date_from', filters.date_from);
+    if (filters?.date_to) params.append('date_to', filters.date_to);
+
+    const url = `${API_BASE_URL}${API_ENDPOINTS.medicationRounds}${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -131,6 +144,41 @@ export const deleteMedicationRound = async (roundId: number): Promise<void> => {
     }
   } catch (error) {
     console.error(`Error deleting medication round ${roundId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Bulk create medication rounds for a resident
+ */
+export const saveMedicationRoundsBulk = async (data: {
+  resident_id: number;
+  given_by: number;
+  medications: Array<{
+    schedule_id: number;
+    res_medication_id: number;
+    status: 'given' | 'missed' | 'refused' | 'delayed';
+    notes?: string;
+  }>;
+}): Promise<MedicationRound[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/medication-rounds/bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<MedicationRound[]> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error saving medication rounds (bulk):', error);
     throw error;
   }
 };

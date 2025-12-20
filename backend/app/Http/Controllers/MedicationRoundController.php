@@ -136,4 +136,44 @@ class MedicationRoundController extends Controller
             'message' => 'Medicatieronde succesvol verwijderd'
         ]);
     }
+
+    /**
+     * Bulk create medication rounds for a resident
+     * Used when completing medication round for a resident with multiple medications
+     */
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'resident_id' => 'required|exists:residents,resident_id',
+            'given_by' => 'required|exists:users,user_id',
+            'medications' => 'required|array|min:1',
+            'medications.*.schedule_id' => 'required|exists:res_schedule,schedule_id',
+            'medications.*.res_medication_id' => 'required|exists:res_medication,res_medication_id',
+            'medications.*.status' => 'required|in:given,missed,refused,delayed',
+            'medications.*.notes' => 'nullable|string',
+        ]);
+
+        $rounds = [];
+        $givenAt = now();
+
+        foreach ($validated['medications'] as $medication) {
+            $round = MedicationRound::create([
+                'schedule_id' => $medication['schedule_id'],
+                'res_medication_id' => $medication['res_medication_id'],
+                'resident_id' => $validated['resident_id'],
+                'status' => $medication['status'],
+                'notes' => $medication['notes'] ?? null,
+                'given_by' => $validated['given_by'],
+                'given_at' => $givenAt,
+            ]);
+
+            $rounds[] = $round->load(['schedule', 'resMedication.medication']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Medicatieronde succesvol geregistreerd',
+            'data' => $rounds
+        ], 201);
+    }
 }
