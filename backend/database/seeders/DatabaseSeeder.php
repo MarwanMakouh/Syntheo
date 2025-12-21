@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ResidentSeeder::class,
             RoomSeeder::class,  // Toegevoegd - moet NA residents
+            AddFloor1Residents::class,  // Link bewoners 5 en 6 aan verdieping 1
             ContactSeeder::class,
             AllergySeeder::class,
             DietSeeder::class,
