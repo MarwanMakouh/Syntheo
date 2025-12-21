@@ -5,9 +5,11 @@ import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
-import { getResidentById, getUserById, residents } from '@/Services/API';
+import { getResidentById, getUserById } from '@/Services/API';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
+import { fetchResidents } from '@/Services/residentsApi';
 import type { Note } from '@/types/note';
+import type { Resident } from '@/types/resident';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 // Helper function to format time ago
@@ -66,26 +68,34 @@ const getStatusDisplayText = (status: 'open' | 'in_behandeling' | 'afgehandeld')
 
 export default function MeldingenScreen() {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMelding, setSelectedMelding] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
 
-  // Fetch notes from backend on mount
+  // Fetch notes and residents from backend on mount
   useEffect(() => {
-    loadNotes();
+    loadData();
   }, []);
 
-  const loadNotes = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const fetchedNotes = await fetchNotes();
+
+      // Load both notes and residents in parallel
+      const [fetchedNotes, fetchedResidents] = await Promise.all([
+        fetchNotes(),
+        fetchResidents()
+      ]);
+
       setNotes(fetchedNotes);
+      setResidents(fetchedResidents);
     } catch (err) {
-      console.error('Failed to load notes:', err);
-      setError('Kon meldingen niet laden. Zorg ervoor dat de backend server draait.');
+      console.error('Failed to load data:', err);
+      setError('Kon gegevens niet laden. Zorg ervoor dat de backend server draait.');
     } finally {
       setLoading(false);
     }
@@ -110,7 +120,7 @@ export default function MeldingenScreen() {
       });
       setShowNewMeldingModal(false);
       // Refresh the notes list
-      await loadNotes();
+      await loadData();
     } catch (err) {
       console.error('Failed to create note:', err);
       alert('Fout bij opslaan van melding. Probeer opnieuw.');
@@ -153,7 +163,7 @@ export default function MeldingenScreen() {
       // For 'Behandeling' we don't change the resolved status, only display differs
 
       // Refresh the notes list to show updated status
-      await loadNotes();
+      await loadData();
     } catch (err) {
       console.error('Failed to update note status:', err);
       alert('Fout bij bijwerken van status. Probeer opnieuw.');
@@ -176,7 +186,7 @@ export default function MeldingenScreen() {
       <View style={[styles.container, styles.centerContent]}>
         <MaterialIcons name="error-outline" size={48} color={Colors.error} />
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadNotes}>
+        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
           <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
         </TouchableOpacity>
       </View>

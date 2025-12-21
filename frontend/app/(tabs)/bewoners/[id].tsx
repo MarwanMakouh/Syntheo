@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Linking,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -25,7 +26,6 @@ import { formatDate } from '@/utils';
 import {
   getResidentById,
   getContactsForResident,
-  getNotesForResident,
   getMedicationForResident,
   getAllergiesForResident,
   diets,
@@ -33,20 +33,43 @@ import {
   rooms,
   users,
 } from '@/Services';
+import { fetchNotesByResident, createNote } from '@/Services/notesApi';
+import type { Note } from '@/types/note';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('Info');
   const [showNewNoteModal, setShowNewNoteModal] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loadingNotes, setLoadingNotes] = useState(false);
 
   const resident = getResidentById(Number(id));
   const roomData = rooms.find(r => r.resident_id === Number(id));
   const contacts = getContactsForResident(Number(id));
-  const notes = getNotesForResident(Number(id));
   const medications = getMedicationForResident(Number(id));
   const allergies = getAllergiesForResident(Number(id));
   const residentDiets = diets.filter(d => d.resident_id === Number(id));
+
+  // Load notes from backend when component mounts or when switching to Meldingen tab
+  useEffect(() => {
+    if (activeTab === 'Meldingen') {
+      loadNotes();
+    }
+  }, [activeTab]);
+
+  const loadNotes = async () => {
+    try {
+      setLoadingNotes(true);
+      const fetchedNotes = await fetchNotesByResident(Number(id));
+      setNotes(fetchedNotes);
+    } catch (error) {
+      console.error('Failed to load notes:', error);
+      Alert.alert('Fout', 'Kon meldingen niet laden. Controleer of de backend server draait.');
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
 
   // Generate 7-day history
   const generateHistoriek = () => {
@@ -115,15 +138,28 @@ export default function BewonerInfoScreen() {
     Linking.openURL(`tel:${phoneNumber}`);
   };
 
-  const handleSaveNote = (melding: {
+  const handleSaveNote = async (melding: {
     type: string;
     content: string;
     urgency: 'Laag' | 'Matig' | 'Hoog';
   }) => {
-    // TODO: Save to backend when ready
-    console.log('Nieuwe melding:', melding);
-    setShowNewNoteModal(false);
-    alert('Melding opgeslagen! (Demo mode - wordt niet bewaard)');
+    try {
+      await createNote({
+        resident_id: Number(id),
+        category: melding.type,
+        urgency: melding.urgency,
+        content: melding.content,
+      });
+      setShowNewNoteModal(false);
+
+      // Refresh notes list
+      await loadNotes();
+
+      Alert.alert('Succes', 'Melding succesvol opgeslagen!');
+    } catch (error) {
+      console.error('Failed to create note:', error);
+      Alert.alert('Fout', 'Kon melding niet opslaan. Probeer opnieuw.');
+    }
   };
 
   const handleSaveDietChanges = (data: any) => {
@@ -186,7 +222,11 @@ export default function BewonerInfoScreen() {
               <Text style={styles.newNoteButtonText}>Nieuwe Melding</Text>
             </TouchableOpacity>
 
-            {notes.length > 0 ? (
+            {loadingNotes ? (
+              <View style={styles.emptyMeldingen}>
+                <Text style={styles.emptyText}>Meldingen laden...</Text>
+              </View>
+            ) : notes.length > 0 ? (
               notes.map((note) => {
                 const author = users.find(u => u.user_id === note.author_id);
                 return (
