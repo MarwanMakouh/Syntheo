@@ -72,6 +72,33 @@ class ResScheduleSeeder extends Seeder
                 'time_of_day' => 'Avond', // Changed from '18:00:00' to 'Avond'
                 'day_of_week' => null, // Changed from 'Dagelijks' to null (null = daily)
             ],
+            // Medicatie voor Maria Visser (resident_id: 5)
+            // Metformine voor Maria Visser
+            [
+                'schedule_id' => 8,
+                'res_medication_id' => 7,
+                'dosage' => '500mg',
+                'instructions' => 'Met ontbijt innemen',
+                'time_of_day' => 'Ochtend',
+                'day_of_week' => null,
+            ],
+            [
+                'schedule_id' => 9,
+                'res_medication_id' => 7,
+                'dosage' => '500mg',
+                'instructions' => 'Met avondeten innemen',
+                'time_of_day' => 'Avond',
+                'day_of_week' => null,
+            ],
+            // Simvastatine voor Maria Visser
+            [
+                'schedule_id' => 10,
+                'res_medication_id' => 8,
+                'dosage' => '40mg',
+                'instructions' => 'Voor het slapen gaan',
+                'time_of_day' => 'Nacht',
+                'day_of_week' => null,
+            ],
         ]);
     }
 }

@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
     return 'http://localhost:8000/api';
   } else {
     // For mobile devices, use your computer's local IP address
-    return 'http://192.168.1.26:8000/api';
+    return 'http://192.168.0.139:8000/api';
   }
 };
 

@@ -8,3 +8,7 @@ backend/Syntheo Prototype.make
 backend/test-users.http
 backend/USER_API_TESTS.md
 backend/ERD.pdf
+frontend/constants/apiConfig.ts
+frontend/constants/apiConfig.ts
+frontend/constants/apiConfig.ts
+frontend/constants/apiConfig.ts
