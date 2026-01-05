@@ -40,4 +40,20 @@ export const API_ENDPOINTS = {
   // Resident Medications
   resMedications: '/res-medications',
   resMedicationsByResident: (residentId: number) => `/res-medications/resident/${residentId}`,
+
+  // Diets
+  diets: '/diets',
+  dietByResident: (residentId: number) => `/diets/resident/${residentId}`,
+  dietById: (id: number) => `/diets/${id}`,
+
+  // Allergies
+  allergies: '/allergies',
+  allergiesByResident: (residentId: number) => `/allergies/resident/${residentId}`,
+  allergyById: (id: number) => `/allergies/${id}`,
+
+  // Change Requests
+  changeRequests: '/change-requests',
+  changeRequestById: (id: number) => `/change-requests/${id}`,
+  approveChangeRequest: (id: number) => `/change-requests/${id}/approve`,
+  rejectChangeRequest: (id: number) => `/change-requests/${id}/reject`,
 };

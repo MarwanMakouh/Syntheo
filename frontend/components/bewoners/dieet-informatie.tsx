@@ -1,43 +1,98 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DieetBewerkenModal } from './dieet-bewerken-modal';
 import type { Diet, Allergy } from '@/types';
+import { fetchDietByResident, fetchAllergiesByResident } from '@/Services';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface DieetInformatieProps {
-  allergies: Allergy[];
-  diets: Diet[];
+  residentId: number;
+  currentUserId?: number;
   onSaveChanges?: (data: any) => void;
 }
 
-export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInformatieProps) {
+export function DieetInformatie({ residentId, currentUserId = 1, onSaveChanges }: DieetInformatieProps) {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [allergies, setAllergies] = useState<Allergy[]>([]);
+  const [diet, setDiet] = useState<Diet | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadDietData();
+  }, [residentId]);
+
+  const loadDietData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [fetchedDiet, fetchedAllergies] = await Promise.all([
+        fetchDietByResident(residentId),
+        fetchAllergiesByResident(residentId),
+      ]);
+
+      setDiet(fetchedDiet);
+      setAllergies(fetchedAllergies);
+    } catch (err) {
+      console.error('Error loading diet data:', err);
+      setError('Kon dieetinformatie niet laden');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveChanges = (data: any) => {
     if (onSaveChanges) {
       onSaveChanges(data);
     }
+    // Reload data after saving
+    loadDietData();
   };
+
+  // Wrap single diet in array for backward compatibility
+  const dietsArray = diet ? [diet] : [];
 
   // Prepare initial data for modal
   const allLikes: string[] = [];
   const allDislikes: string[] = [];
-  diets.forEach(diet => {
-    if (diet.preferences?.likes) {
-      allLikes.push(...diet.preferences.likes);
+  dietsArray.forEach(d => {
+    if (d.preferences?.likes) {
+      allLikes.push(...d.preferences.likes);
     }
-    if (diet.preferences?.dislikes) {
-      allDislikes.push(...diet.preferences.dislikes);
+    if (d.preferences?.dislikes) {
+      allDislikes.push(...d.preferences.dislikes);
     }
   });
 
   const initialData = {
     allergies: allergies.map(a => a.symptom).join(', '),
-    dietTypes: diets.map(d => d.diet_type).join(', '),
+    dietTypes: dietsArray.map(d => d.diet_type).join(', '),
     likes: allLikes.join(', '),
     dislikes: allDislikes.join(', '),
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Dieetinformatie laden...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <MaterialIcons name="error-outline" size={48} color={Colors.error} />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadDietData}>
+          <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -68,18 +123,18 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
       )}
 
       {/* Dieettype */}
-      {diets.length > 0 && (
+      {dietsArray.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dieettype</Text>
 
           <View style={styles.dietTypesContainer}>
-            {diets.map((diet) => (
+            {dietsArray.map((d) => (
               <View
-                key={diet.diet_id}
+                key={d.diet_id}
                 style={styles.dietTypeButton}
               >
                 <Text style={styles.dietTypeText}>
-                  {diet.diet_type}
+                  {d.diet_type}
                 </Text>
               </View>
             ))}
@@ -90,19 +145,19 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
       {/* Voorkeuren */}
       {(() => {
         // Collect all preferences from all diets
-        const allLikes: string[] = [];
-        const allDislikes: string[] = [];
+        const preferenceLikes: string[] = [];
+        const preferenceDislikes: string[] = [];
 
-        diets.forEach(diet => {
-          if (diet.preferences?.likes) {
-            allLikes.push(...diet.preferences.likes);
+        dietsArray.forEach(d => {
+          if (d.preferences?.likes) {
+            preferenceLikes.push(...d.preferences.likes);
           }
-          if (diet.preferences?.dislikes) {
-            allDislikes.push(...diet.preferences.dislikes);
+          if (d.preferences?.dislikes) {
+            preferenceDislikes.push(...d.preferences.dislikes);
           }
         });
 
-        if (allLikes.length > 0 || allDislikes.length > 0) {
+        if (preferenceLikes.length > 0 || preferenceDislikes.length > 0) {
           return (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Voorkeuren</Text>
@@ -110,8 +165,8 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
               <View style={styles.preferencesContainer}>
                 <View style={styles.preferenceColumn}>
                   <Text style={styles.preferenceLabel}>Houdt van</Text>
-                  {allLikes.length > 0 ? (
-                    allLikes.map((item, index) => (
+                  {preferenceLikes.length > 0 ? (
+                    preferenceLikes.map((item, index) => (
                       <Text key={index} style={styles.preferenceItem}>{item}</Text>
                     ))
                   ) : (
@@ -121,8 +176,8 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
 
                 <View style={styles.preferenceColumn}>
                   <Text style={styles.preferenceLabel}>Houdt niet van</Text>
-                  {allDislikes.length > 0 ? (
-                    allDislikes.map((item, index) => (
+                  {preferenceDislikes.length > 0 ? (
+                    preferenceDislikes.map((item, index) => (
                       <Text key={index} style={styles.preferenceItem}>{item}</Text>
                     ))
                   ) : (
@@ -141,6 +196,8 @@ export function DieetInformatie({ allergies, diets, onSaveChanges }: DieetInform
         visible={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSave={handleSaveChanges}
+        residentId={residentId}
+        currentUserId={currentUserId}
         initialData={initialData}
       />
     </>
@@ -154,6 +211,34 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.xl,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing['3xl'],
+  },
+  loadingText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+  },
+  errorText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.error,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+  },
+  retryButtonText: {
+    color: Colors.textOnPrimary,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
   },
   editButton: {
     flexDirection: 'row',
