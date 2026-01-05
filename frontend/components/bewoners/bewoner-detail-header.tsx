@@ -5,7 +5,7 @@ import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
 
 interface BewonerDetailHeaderProps {
   resident: Resident;
-  roomNumber: number | null;
+  roomNumber: string | null;
   floorNumber: number | null;
 }
 
