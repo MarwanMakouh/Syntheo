@@ -147,7 +147,7 @@ class ChangeRequestController extends Controller
                     // Update or create diet record
                     \DB::table('diets')
                         ->where('resident_id', $resident->resident_id)
-                        ->update(['type' => $newValue, 'updated_at' => now()]);
+                        ->update(['diet_type' => $newValue, 'updated_at' => now()]);
                     break;
 
                 case 'medication_dosage':
@@ -200,7 +200,6 @@ class ChangeRequestController extends Controller
                         'symptom' => $newValue,
                         'severity' => 'medium', // Default severity
                         'created_at' => now(),
-                        'updated_at' => now(),
                     ]);
                     break;
 
