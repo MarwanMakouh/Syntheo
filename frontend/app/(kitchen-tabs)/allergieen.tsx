@@ -4,6 +4,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   Platform,
   ActionSheetIOS,
@@ -124,8 +125,160 @@ export default function AllergieenOverzichtScreen() {
     }
   };
 
+  // Mobile Card Layout
+  const renderMobileCard = ({ item }: { item: ResidentWithAllergies }) => (
+    <View style={styles.mobileCard}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.residentName}>{item.name}</Text>
+        <Text style={styles.roomNumber}>
+          {item.room_number ? `Kamer ${item.room_number}` : 'Geen kamer'}
+        </Text>
+      </View>
+
+      {!item.has_allergies ? (
+        <View style={styles.noAllergyBadge}>
+          <Text style={styles.noAllergyText}>Geen allergieën</Text>
+        </View>
+      ) : (
+        <View style={styles.allergiesContainer}>
+          {item.allergies.map((allergy) => (
+            <View key={allergy.allergy_id} style={styles.allergyRowMobile}>
+              <View
+                style={[
+                  styles.allergyBadgeMobile,
+                  { backgroundColor: getSeverityColor(allergy.severity) },
+                ]}
+              >
+                <Text style={styles.allergyTextMobile}>{allergy.symptom}</Text>
+              </View>
+              <View
+                style={[
+                  styles.severityBadgeMobile,
+                  { backgroundColor: getSeverityColor(allergy.severity) + '20' },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.severityTextMobile,
+                    { color: getSeverityColor(allergy.severity) },
+                  ]}
+                >
+                  {allergy.severity}
+                </Text>
+              </View>
+            </View>
+          ))}
+          {item.allergies.some((a) => a.notes) && (
+            <View style={styles.notesSection}>
+              <Text style={styles.notesLabel}>Extra Info:</Text>
+              {item.allergies
+                .filter((a) => a.notes)
+                .map((allergy) => (
+                  <Text key={allergy.allergy_id} style={styles.notesText}>
+                    • {allergy.notes}
+                  </Text>
+                ))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+
+  // Desktop/Web Table Layout
+  const renderTableLayout = () => (
+    <View style={styles.tableContainer}>
+      {/* Table Header */}
+      <View style={styles.tableHeader}>
+        <Text style={[styles.tableHeaderText, styles.colBewoner]}>Bewoner</Text>
+        <Text style={[styles.tableHeaderText, styles.colKamer]}>Kamer</Text>
+        <Text style={[styles.tableHeaderText, styles.colAllergieen]}>Allergieën</Text>
+        <Text style={[styles.tableHeaderText, styles.colErnst]}>Ernst</Text>
+        <Text style={[styles.tableHeaderText, styles.colExtraInfo]}>Extra Info</Text>
+      </View>
+
+      {/* Table Rows */}
+      {loading ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Bewoners laden...</Text>
+        </View>
+      ) : residents.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <MaterialIcons name="person-off" size={48} color={Colors.iconMuted} />
+          <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
+        </View>
+      ) : (
+        residents.map((resident) => (
+          <View key={resident.resident_id} style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.colBewoner, styles.boldText]}>
+              {resident.name}
+            </Text>
+            <Text style={[styles.tableCell, styles.colKamer]}>
+              {resident.room_number || '-'}
+            </Text>
+            <View style={[styles.tableCell, styles.colAllergieen]}>
+              {resident.has_allergies ? (
+                resident.allergies.map((allergy) => (
+                  <View
+                    key={allergy.allergy_id}
+                    style={[
+                      styles.allergyBadge,
+                      { backgroundColor: getSeverityColor(allergy.severity) },
+                    ]}
+                  >
+                    <Text style={styles.allergyText}>{allergy.symptom}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noAllergyText}>-</Text>
+              )}
+            </View>
+            <View style={[styles.tableCell, styles.colErnst]}>
+              {resident.has_allergies ? (
+                resident.allergies.map((allergy) => (
+                  <View
+                    key={allergy.allergy_id}
+                    style={[
+                      styles.severityBadge,
+                      { backgroundColor: getSeverityColor(allergy.severity) + '20' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.severityText,
+                        { color: getSeverityColor(allergy.severity) },
+                      ]}
+                    >
+                      {allergy.severity}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noAllergyText}>-</Text>
+              )}
+            </View>
+            <View style={[styles.tableCell, styles.colExtraInfo]}>
+              {resident.has_allergies &&
+              resident.allergies.some((a) => a.notes) ? (
+                resident.allergies
+                  .filter((a) => a.notes)
+                  .map((allergy) => (
+                    <Text key={allergy.allergy_id} style={styles.extraInfoText}>
+                      {allergy.notes}
+                    </Text>
+                  ))
+              ) : (
+                <Text style={styles.noAllergyText}>-</Text>
+              )}
+            </View>
+          </View>
+        ))
+      )}
+    </View>
+  );
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Warning Banner */}
       <View style={styles.warningBanner}>
         <MaterialIcons name="warning" size={20} color="#DC2626" />
@@ -212,98 +365,39 @@ export default function AllergieenOverzichtScreen() {
       {/* Title */}
       <View style={styles.titleSection}>
         <Text style={styles.title}>Volledige Allergieën Lijst</Text>
-      </View>
-
-      {/* Table Container */}
-      <View style={styles.tableContainer}>
-        {/* Table Header */}
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderText, styles.colBewoner]}>Bewoner</Text>
-          <Text style={[styles.tableHeaderText, styles.colKamer]}>Kamer</Text>
-          <Text style={[styles.tableHeaderText, styles.colAllergieen]}>Allergieën</Text>
-          <Text style={[styles.tableHeaderText, styles.colErnst]}>Ernst</Text>
-          <Text style={[styles.tableHeaderText, styles.colExtraInfo]}>Extra Info</Text>
-        </View>
-
-        {/* Table Rows */}
-        {loading ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Bewoners laden...</Text>
-          </View>
-        ) : residents.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialIcons name="person-off" size={48} color={Colors.iconMuted} />
-            <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
-          </View>
-        ) : (
-          residents.map((resident) => (
-            <View key={resident.resident_id} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.colBewoner, styles.boldText]}>
-                {resident.name}
-              </Text>
-              <Text style={[styles.tableCell, styles.colKamer]}>
-                {resident.room_number || '-'}
-              </Text>
-              <View style={[styles.tableCell, styles.colAllergieen]}>
-                {resident.has_allergies ? (
-                  resident.allergies.map((allergy) => (
-                    <View
-                      key={allergy.allergy_id}
-                      style={[
-                        styles.allergyBadge,
-                        { backgroundColor: getSeverityColor(allergy.severity) },
-                      ]}
-                    >
-                      <Text style={styles.allergyText}>{allergy.symptom}</Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.noAllergyText}>-</Text>
-                )}
-              </View>
-              <View style={[styles.tableCell, styles.colErnst]}>
-                {resident.has_allergies ? (
-                  resident.allergies.map((allergy) => (
-                    <View
-                      key={allergy.allergy_id}
-                      style={[
-                        styles.severityBadge,
-                        { backgroundColor: getSeverityColor(allergy.severity) + '20' },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.severityText,
-                          { color: getSeverityColor(allergy.severity) },
-                        ]}
-                      >
-                        {allergy.severity}
-                      </Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.noAllergyText}>-</Text>
-                )}
-              </View>
-              <View style={[styles.tableCell, styles.colExtraInfo]}>
-                {resident.has_allergies &&
-                resident.allergies.some((a) => a.notes) ? (
-                  resident.allergies
-                    .filter((a) => a.notes)
-                    .map((allergy) => (
-                      <Text key={allergy.allergy_id} style={styles.extraInfoText}>
-                        {allergy.notes}
-                      </Text>
-                    ))
-                ) : (
-                  <Text style={styles.noAllergyText}>-</Text>
-                )}
-              </View>
-            </View>
-          ))
+        {Platform.OS !== 'web' && (
+          <Text style={styles.subtitle}>
+            {residents.length} bewoner{residents.length !== 1 ? 's' : ''} gevonden
+          </Text>
         )}
       </View>
-    </ScrollView>
+
+      {/* Conditional Layout: Mobile Cards or Desktop Table */}
+      {Platform.OS === 'web' ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {renderTableLayout()}
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={residents}
+          renderItem={renderMobileCard}
+          keyExtractor={(item) => item.resident_id.toString()}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialIcons
+                name="person-off"
+                size={64}
+                color={Colors.iconMuted}
+              />
+              <Text style={styles.emptyText}>
+                {loading ? 'Bewoners laden...' : 'Geen bewoners gevonden'}
+              </Text>
+            </View>
+          }
+        />
+      )}
+    </View>
   );
 }
 
@@ -332,6 +426,13 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     margin: Layout.screenPadding,
+    ...Platform.select({
+      web: {
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+      },
+    }),
   },
   filtersRow: {
     flexDirection: 'row',
@@ -379,6 +480,99 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
   },
+  subtitle: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  // Mobile Card Styles
+  listContent: {
+    paddingHorizontal: Layout.screenPadding,
+    paddingBottom: Layout.screenPadding,
+  },
+  mobileCard: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  residentName: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  roomNumber: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  allergiesContainer: {
+    gap: Spacing.sm,
+  },
+  allergyRowMobile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  allergyBadgeMobile: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    flex: 1,
+  },
+  allergyTextMobile: {
+    color: '#FFFFFF',
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  severityBadgeMobile: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  severityTextMobile: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
+  noAllergyBadge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  noAllergyText: {
+    color: '#065F46',
+    fontSize: FontSize.md,
+    fontWeight: '600',
+  },
+  notesSection: {
+    marginTop: Spacing.sm,
+    padding: Spacing.md,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+  },
+  notesLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  notesText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  // Desktop Table Styles
   tableContainer: {
     marginHorizontal: Layout.screenPadding,
     backgroundColor: Colors.background,
@@ -387,6 +581,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginBottom: Layout.screenPadding,
     overflow: 'hidden',
+    minWidth: 1000,
   },
   tableHeader: {
     flexDirection: 'row',
@@ -460,10 +655,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     marginBottom: 4,
-  },
-  noAllergyText: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
   },
   emptyContainer: {
     alignItems: 'center',
