@@ -105,6 +105,8 @@ Route::prefix('floors')->group(function () {
 
 // Allergy Management Routes
 Route::prefix('allergies')->group(function () {
+    // Kitchen staff allergy overview
+    Route::get('/kitchen-overview', [AllergyController::class, 'kitchenOverview']);
     Route::get('/resident/{residentId}', [AllergyController::class, 'index']);
     Route::get('/{id}', [AllergyController::class, 'show']);
     Route::post('/', [AllergyController::class, 'store']);

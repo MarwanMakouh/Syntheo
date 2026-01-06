@@ -57,6 +57,16 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="allergieenoverzicht"
+        options={{
+          title: 'Allergieën',
+          href: '/(tabs)/allergieenoverzicht',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="warning" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
