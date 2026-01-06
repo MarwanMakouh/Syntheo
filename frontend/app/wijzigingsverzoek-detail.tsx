@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import {
-  changeRequests,
-  changeFields,
   residents,
   users,
 } from '@/Services/API';
-import { approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
+import { approveChangeRequest, rejectChangeRequest, fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { formatDate } from '@/utils/date';
 
 // Mapping functions for backend values to Dutch
@@ -46,22 +44,61 @@ export default function WijzigingsverzoekDetailScreen() {
   const { id } = useLocalSearchParams();
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [request, setRequest] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const requestId = Number(id);
-  const request = changeRequests.find((r) => r.request_id === requestId);
-  const fields = changeFields.filter((f) => f.request_id === requestId);
+
+  useEffect(() => {
+    loadChangeRequest();
+  }, [id]);
+
+  const loadChangeRequest = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchChangeRequests();
+      const foundRequest = data.find((r) => r.request_id === requestId);
+      if (foundRequest) {
+        setRequest(foundRequest);
+      } else {
+        setError('Wijzigingsverzoek niet gevonden');
+      }
+    } catch (err) {
+      console.error('Failed to load change request:', err);
+      setError('Kan wijzigingsverzoek niet laden');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fields = request?.changeFields || [];
   const resident = request ? residents.find((r) => r.resident_id === request.resident_id) : null;
   const requester = request ? users.find((u) => u.user_id === request.requester_id) : null;
   const reviewer = request?.reviewer_id
     ? users.find((u) => u.user_id === request.reviewer_id)
     : null;
 
-  if (!request) {
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <NavigationBar />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Laden...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !request) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <NavigationBar />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Wijzigingsverzoek niet gevonden</Text>
+          <MaterialIcons name="error-outline" size={48} color={Colors.error} />
+          <Text style={styles.errorText}>{error || 'Wijzigingsverzoek niet gevonden'}</Text>
         </View>
       </SafeAreaView>
     );
@@ -208,22 +245,26 @@ export default function WijzigingsverzoekDetailScreen() {
               <Text style={styles.cardTitle}>Voorgestelde Wijzigingen</Text>
             </View>
             <View style={styles.cardContent}>
-              {fields.map((field) => (
-                <View key={field.field_id} style={styles.changeItem}>
-                  <Text style={styles.fieldName}>{translateFieldName(field.field_name)}</Text>
-                  <View style={styles.changeRow}>
-                    <View style={styles.changeBox}>
-                      <Text style={styles.changeLabel}>Oud</Text>
-                      <Text style={styles.oldValue}>{field.old}</Text>
-                    </View>
-                    <MaterialIcons name="arrow-forward" size={20} color={Colors.textSecondary} />
-                    <View style={styles.changeBox}>
-                      <Text style={styles.changeLabel}>Nieuw</Text>
-                      <Text style={styles.newValue}>{field.new}</Text>
+              {fields && fields.length > 0 ? (
+                fields.map((field) => (
+                  <View key={field.field_id} style={styles.changeItem}>
+                    <Text style={styles.fieldName}>{translateFieldName(field.field_name)}</Text>
+                    <View style={styles.changeRow}>
+                      <View style={styles.changeBox}>
+                        <Text style={styles.changeLabel}>Oud</Text>
+                        <Text style={styles.oldValue}>{field.old || '-'}</Text>
+                      </View>
+                      <MaterialIcons name="arrow-forward" size={20} color={Colors.textSecondary} />
+                      <View style={styles.changeBox}>
+                        <Text style={styles.changeLabel}>Nieuw</Text>
+                        <Text style={styles.newValue}>{field.new}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={styles.emptyText}>Geen wijzigingen gevonden</Text>
+              )}
             </View>
           </View>
 
@@ -494,5 +535,24 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.textOnPrimary,
     fontWeight: FontWeight.semibold,
+  },
+
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  loadingText: {
+    fontSize: FontSize.lg,
+    color: Colors.textSecondary,
+  },
+  emptyText: {
+    fontSize: FontSize.md,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingVertical: Spacing.lg,
   },
 });
