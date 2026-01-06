@@ -5,8 +5,11 @@ import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
-import { getResidentById, getUserById } from '@/Services/API';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
+
+// TODO: Replace with API calls
+const getResidentById = (id: number) => null;
+const getUserById = (id: number) => null;
 import { fetchResidents } from '@/Services/residentsApi';
 import type { Note } from '@/types/note';
 import type { Resident } from '@/types/resident';

@@ -12,13 +12,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
-import {
-  changeRequests,
-  changeFields,
-  residents,
-  users,
-} from '@/Services/API';
 import { formatDate } from '@/utils/date';
+
+// TODO: Replace with API calls
+const changeRequests: any[] = [];
+const changeFields: any[] = [];
+const residents: any[] = [];
+const users: any[] = [];
 
 export default function WijzigingsverzoekDetailScreen() {
   const router = useRouter();

@@ -12,15 +12,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, Shadows, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import { AnnouncementCreateModal } from '@/components/announcement-create-modal';
-import {
-  residents,
-  notes,
-  rooms,
-  changeRequests,
-  medicationRounds,
-  resSchedules,
-} from '@/Services/API';
 import { formatDate } from '@/utils/date';
+
+// TODO: Replace with API calls
+const residents: any[] = [];
+const notes: any[] = [];
+const rooms: any[] = [];
+const changeRequests: any[] = [];
+const medicationRounds: any[] = [];
+const resSchedules: any[] = [];
 
 export default function DashboardScreen() {
   const router = useRouter();
