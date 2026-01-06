@@ -13,7 +13,7 @@ import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from 
 import { NavigationBar } from '@/components';
 import { formatDate } from '@/utils/date';
 
-// TODO: Replace with API calls
+// backend callen
 const changeRequests: any[] = [];
 const changeFields: any[] = [];
 const residents: any[] = [];

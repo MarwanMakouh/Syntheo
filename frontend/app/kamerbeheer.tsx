@@ -13,7 +13,7 @@ import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from 
 import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { AssignResidentModal } from '@/components/assign-resident-modal';
-// TODO: Replace with API calls
+// backend callen
 const rooms: any[] = [];
 const residents: any[] = [];
 const floors: any[] = [];

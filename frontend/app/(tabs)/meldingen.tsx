@@ -7,7 +7,7 @@ import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 
-// TODO: Replace with API calls
+// backend callen
 const getResidentById = (id: number) => null;
 const getUserById = (id: number) => null;
 import { fetchResidents } from '@/Services/residentsApi';

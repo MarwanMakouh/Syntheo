@@ -14,7 +14,7 @@ import { NavigationBar } from '@/components';
 import { AnnouncementCreateModal } from '@/components/announcement-create-modal';
 import { formatDate } from '@/utils/date';
 
-// TODO: Replace with API calls
+// backend callen
 const residents: any[] = [];
 const notes: any[] = [];
 const rooms: any[] = [];

@@ -14,7 +14,7 @@ import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from 
 import { NavigationBar } from '@/components';
 import { formatDate } from '@/utils/date';
 
-// TODO: Replace with API calls
+// backend callen
 const changeRequests: any[] = [];
 const changeFields: any[] = [];
 const residents: any[] = [];
@@ -45,14 +45,14 @@ export default function WijzigingsverzoekDetailScreen() {
   }
 
   const handleApprove = () => {
-    // TODO: Implement approval logic when backend is ready
+    // TODO: backend callen
     console.log('Wijzigingsverzoek goedgekeurd:', requestId);
     alert('Wijzigingsverzoek goedgekeurd! (Demo mode)');
     router.back();
   };
 
   const handleReject = () => {
-    // TODO: Implement rejection logic when backend is ready
+    // TODO: backend callen
     console.log('Wijzigingsverzoek afgekeurd:', requestId);
     alert('Wijzigingsverzoek afgekeurd! (Demo mode)');
     router.back();
