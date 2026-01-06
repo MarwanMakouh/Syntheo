@@ -1,7 +1,7 @@
-import { StyleSheet, View, TextInput, Platform } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { useState } from 'react';
+import { StyleSheet, View, TextInput, TouchableOpacity, Text, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Colors, FontSize, Spacing, BorderRadius } from '@/constants';
+import { Colors, FontSize, Spacing, BorderRadius, FontWeight, Shadows } from '@/constants';
 
 interface ResidentsFiltersProps {
   roomFilter: string;
@@ -14,6 +14,28 @@ interface ResidentsFiltersProps {
   onSearchChange: (value: string) => void;
 }
 
+const ROOM_OPTIONS = [
+  { label: 'Alle kamers', value: 'all' },
+  { label: 'Verdieping 1', value: 'floor1' },
+  { label: 'Verdieping 2', value: 'floor2' },
+  { label: 'Verdieping 3', value: 'floor3' },
+];
+
+const ALLERGY_OPTIONS = [
+  { label: 'Alle allergieën', value: 'all' },
+  { label: 'Heeft allergieën', value: 'has' },
+  { label: 'Geen allergieën', value: 'none' },
+];
+
+const SORT_OPTIONS = [
+  { label: 'Naam (A-Z)', value: 'name_asc' },
+  { label: 'Naam (Z-A)', value: 'name_desc' },
+  { label: 'Leeftijd (Oud-Jong)', value: 'age_desc' },
+  { label: 'Leeftijd (Jong-Oud)', value: 'age_asc' },
+  { label: 'Kamer (Laag-Hoog)', value: 'room_asc' },
+  { label: 'Kamer (Hoog-Laag)', value: 'room_desc' },
+];
+
 export function ResidentsFilters({
   roomFilter,
   allergyFilter,
@@ -24,8 +46,31 @@ export function ResidentsFilters({
   onSortOrderChange,
   onSearchChange,
 }: ResidentsFiltersProps) {
+  const [isRoomOpen, setIsRoomOpen] = useState(false);
+  const [isAllergyOpen, setIsAllergyOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const selectedRoomLabel = ROOM_OPTIONS.find(opt => opt.value === roomFilter)?.label || 'Alle kamers';
+  const selectedAllergyLabel = ALLERGY_OPTIONS.find(opt => opt.value === allergyFilter)?.label || 'Alle allergieën';
+  const selectedSortLabel = SORT_OPTIONS.find(opt => opt.value === sortOrder)?.label || 'Naam (A-Z)';
+
+  const handleRoomSelect = (value: string) => {
+    onRoomFilterChange(value);
+    setIsRoomOpen(false);
+  };
+
+  const handleAllergySelect = (value: string) => {
+    onAllergyFilterChange(value);
+    setIsAllergyOpen(false);
+  };
+
+  const handleSortSelect = (value: string) => {
+    onSortOrderChange(value);
+    setIsSortOpen(false);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, (isRoomOpen || isAllergyOpen || isSortOpen) && styles.containerOpen]}>
       {/* Search Input */}
       <View style={styles.searchContainer}>
         <MaterialIcons
@@ -43,47 +88,148 @@ export function ResidentsFilters({
         />
       </View>
 
-      {/* Room Filter */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={roomFilter}
-          onValueChange={onRoomFilterChange}
-          style={styles.picker}
+      {/* Room Filter Dropdown */}
+      <View style={[styles.dropdownWrapper, isRoomOpen && styles.dropdownWrapperOpen]}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => {
+            setIsRoomOpen(!isRoomOpen);
+            setIsAllergyOpen(false);
+            setIsSortOpen(false);
+          }}
         >
-          <Picker.Item label="Alle kamers" value="all" />
-          <Picker.Item label="Verdieping 1" value="floor1" />
-          <Picker.Item label="Verdieping 2" value="floor2" />
-          <Picker.Item label="Verdieping 3" value="floor3" />
-        </Picker>
+          <Text style={styles.dropdownButtonText}>{selectedRoomLabel}</Text>
+          <MaterialIcons
+            name={isRoomOpen ? "arrow-drop-up" : "arrow-drop-down"}
+            size={24}
+            color={Colors.iconDefault}
+          />
+        </TouchableOpacity>
+
+        {isRoomOpen && (
+          <View style={styles.dropdownList}>
+            <ScrollView style={styles.scrollView}>
+              {ROOM_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.dropdownItem,
+                    roomFilter === option.value && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => handleRoomSelect(option.value)}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      roomFilter === option.value && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {roomFilter === option.value && (
+                    <MaterialIcons name="check" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
-      {/* Allergy Filter */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={allergyFilter}
-          onValueChange={onAllergyFilterChange}
-          style={styles.picker}
+      {/* Allergy Filter Dropdown */}
+      <View style={[styles.dropdownWrapper, isAllergyOpen && styles.dropdownWrapperOpen]}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => {
+            setIsAllergyOpen(!isAllergyOpen);
+            setIsRoomOpen(false);
+            setIsSortOpen(false);
+          }}
         >
-          <Picker.Item label="Alle allergieën" value="all" />
-          <Picker.Item label="Heeft allergieën" value="has" />
-          <Picker.Item label="Geen allergieën" value="none" />
-        </Picker>
+          <Text style={styles.dropdownButtonText}>{selectedAllergyLabel}</Text>
+          <MaterialIcons
+            name={isAllergyOpen ? "arrow-drop-up" : "arrow-drop-down"}
+            size={24}
+            color={Colors.iconDefault}
+          />
+        </TouchableOpacity>
+
+        {isAllergyOpen && (
+          <View style={styles.dropdownList}>
+            <ScrollView style={styles.scrollView}>
+              {ALLERGY_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.dropdownItem,
+                    allergyFilter === option.value && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => handleAllergySelect(option.value)}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      allergyFilter === option.value && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {allergyFilter === option.value && (
+                    <MaterialIcons name="check" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
-      {/* Sort Order */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={sortOrder}
-          onValueChange={onSortOrderChange}
-          style={styles.picker}
+      {/* Sort Order Dropdown */}
+      <View style={[styles.dropdownWrapper, isSortOpen && styles.dropdownWrapperOpen]}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => {
+            setIsSortOpen(!isSortOpen);
+            setIsRoomOpen(false);
+            setIsAllergyOpen(false);
+          }}
         >
-          <Picker.Item label="Naam (A-Z)" value="name_asc" />
-          <Picker.Item label="Naam (Z-A)" value="name_desc" />
-          <Picker.Item label="Leeftijd (Oud-Jong)" value="age_desc" />
-          <Picker.Item label="Leeftijd (Jong-Oud)" value="age_asc" />
-          <Picker.Item label="Kamer (Laag-Hoog)" value="room_asc" />
-          <Picker.Item label="Kamer (Hoog-Laag)" value="room_desc" />
-        </Picker>
+          <Text style={styles.dropdownButtonText}>{selectedSortLabel}</Text>
+          <MaterialIcons
+            name={isSortOpen ? "arrow-drop-up" : "arrow-drop-down"}
+            size={24}
+            color={Colors.iconDefault}
+          />
+        </TouchableOpacity>
+
+        {isSortOpen && (
+          <View style={styles.dropdownList}>
+            <ScrollView style={styles.scrollView}>
+              {SORT_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.dropdownItem,
+                    sortOrder === option.value && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => handleSortSelect(option.value)}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      sortOrder === option.value && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {sortOrder === option.value && (
+                    <MaterialIcons name="check" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -94,8 +240,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.lg,
     marginBottom: Spacing.xl,
-    flexWrap: 'wrap',
-    alignItems: 'stretch',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  containerOpen: {
+    zIndex: 10000,
   },
   searchContainer: {
     flex: 1,
@@ -119,32 +268,63 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     outlineStyle: 'none',
   },
-  pickerContainer: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    height: 50,
-    justifyContent: 'center',
-    ...Platform.select({
-      web: {
-        minWidth: 180,
-        flex: 0,
-      },
-      default: {
-        flex: 1,
-        minWidth: 150,
-      },
-    }),
+  dropdownWrapper: {
+    position: 'relative',
+    zIndex: 100,
+    minWidth: 180,
   },
-  picker: {
-    height: 50,
-    fontSize: FontSize.md,
+  dropdownWrapperOpen: {
+    zIndex: 10000,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.borderMedium,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+  },
+  dropdownButtonText: {
+    fontSize: FontSize.lg,
     color: Colors.textPrimary,
-    ...Platform.select({
-      web: {
-        width: '100%',
-      },
-    }),
+  },
+  dropdownList: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.borderMedium,
+    borderRadius: BorderRadius.md,
+    ...Shadows.dropdown,
+    maxHeight: 300,
+    zIndex: 10001,
+  },
+  scrollView: {
+    maxHeight: 300,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing['2xl'],
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.selectedBackground,
+  },
+  dropdownItemText: {
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+  },
+  dropdownItemTextSelected: {
+    fontWeight: FontWeight.semibold,
+    color: Colors.primary,
   },
 });

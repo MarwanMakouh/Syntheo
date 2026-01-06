@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,30 +7,56 @@ import {
   ScrollView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { AdminLayout } from '@/components/admin';
+import { AdminLayout, UserFormModal, ConfirmationModal } from '@/components/admin';
 import { UsersTable } from '@/components/admin/users-table';
 import { UsersFilters } from '@/components/admin/users-filters';
-import { users } from '@/Services';
+import { fetchUsers, deleteUser, createUser, updateUser } from '@/Services';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 import type { User } from '@/types/user';
 
 export default function DashboardGebruikersScreen() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch users from API
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchUsers();
+      setUsers(data);
+    } catch (err) {
+      setError('Fout bij het laden van gebruikers');
+      console.error('Error loading users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter users based on filters
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
-      const isUserActive = user.is_active !== false; // Default to active if not specified
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'actief' && isUserActive) ||
-        (statusFilter === 'inactief' && !isUserActive);
+      // Status filter temporarily disabled since backend doesn't have is_active field yet
+      const matchesStatus = statusFilter === 'all';
 
       const matchesSearch =
         searchQuery === '' ||
@@ -39,34 +65,71 @@ export default function DashboardGebruikersScreen() {
 
       return matchesRole && matchesStatus && matchesSearch;
     });
-  }, [roleFilter, statusFilter, searchQuery]);
+  }, [users, roleFilter, statusFilter, searchQuery]);
 
   const handleNewUser = () => {
-    // TODO: Open modal to create new user
-    Alert.alert('Nieuwe Gebruiker', 'Functionaliteit nog niet geïmplementeerd');
+    setEditingUser(null);
+    setShowUserModal(true);
+  };
+
+  const handleSubmitUser = async (userData: {
+    name: string;
+    email: string;
+    password?: string;
+    role: string;
+  }) => {
+    try {
+      setIsCreating(true);
+
+      if (editingUser) {
+        // Update existing user
+        await updateUser(editingUser.user_id, { ...userData, floor_id: 1 } as any);
+        Alert.alert('Succes', 'Personeelslid succesvol bijgewerkt');
+      } else {
+        // Create new user
+        await createUser({ ...userData, password: userData.password!, floor_id: 1 } as any);
+        Alert.alert('Succes', 'Personeelslid succesvol toegevoegd');
+      }
+
+      setShowUserModal(false);
+      setEditingUser(null);
+      // Reload users list
+      loadUsers();
+    } catch (err) {
+      Alert.alert('Fout', editingUser ? 'Kon personeelslid niet bijwerken' : 'Kon personeelslid niet toevoegen');
+      console.error('Error saving user:', err);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleEditUser = (user: User) => {
-    // TODO: Open modal to edit user
-    Alert.alert('Gebruiker Bewerken', `Bewerken: ${user.name}`);
+    setEditingUser(user);
+    setShowUserModal(true);
   };
 
   const handleDeleteUser = (user: User) => {
-    Alert.alert(
-      'Gebruiker Verwijderen',
-      `Weet je zeker dat je ${user.name} wilt verwijderen?`,
-      [
-        { text: 'Annuleren', style: 'cancel' },
-        {
-          text: 'Verwijderen',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: Call API to delete user
-            console.log('Delete user:', user.user_id);
-          },
-        },
-      ]
-    );
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteUser(userToDelete.user_id);
+      // Reload users after deletion
+      await loadUsers();
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+      Alert.alert('Succes', 'Personeelslid succesvol verwijderd');
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      Alert.alert('Fout', 'Kon personeelslid niet verwijderen');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -75,31 +138,78 @@ export default function DashboardGebruikersScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.pageTitle}>Gebruikersbeheer</Text>
+            <Text style={styles.pageTitle}>Personeelsbeheer</Text>
             <TouchableOpacity style={styles.newButton} onPress={handleNewUser}>
               <MaterialIcons name="person-add" size={20} color={Colors.background} />
-              <Text style={styles.newButtonText}>Nieuwe Gebruiker</Text>
+              <Text style={styles.newButtonText}>Nieuw Personeelslid</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Filters */}
-          <UsersFilters
-            roleFilter={roleFilter}
-            statusFilter={statusFilter}
-            searchQuery={searchQuery}
-            onRoleFilterChange={setRoleFilter}
-            onStatusFilterChange={setStatusFilter}
-            onSearchChange={setSearchQuery}
-          />
+          {/* Loading State */}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Gebruikers laden...</Text>
+            </View>
+          ) : error ? (
+            /* Error State */
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
+                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              {/* Filters */}
+              <UsersFilters
+                roleFilter={roleFilter}
+                statusFilter={statusFilter}
+                searchQuery={searchQuery}
+                onRoleFilterChange={setRoleFilter}
+                onStatusFilterChange={setStatusFilter}
+                onSearchChange={setSearchQuery}
+              />
 
-          {/* Users Table */}
-          <UsersTable
-            users={filteredUsers}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-          />
+              {/* Users Table */}
+              <UsersTable
+                users={filteredUsers}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
+
+      {/* User Form Modal */}
+      <UserFormModal
+        visible={showUserModal}
+        onClose={() => {
+          setShowUserModal(false);
+          setEditingUser(null);
+        }}
+        onSubmit={handleSubmitUser}
+        isLoading={isCreating}
+        user={editingUser || undefined}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Personeelslid Verwijderen"
+        message={`Weet je zeker dat je ${userToDelete?.name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        isLoading={isDeleting}
+        type="danger"
+      />
     </AdminLayout>
   );
 }
@@ -108,6 +218,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
+    ...Platform.select({
+      web: {
+        overflow: 'visible',
+      },
+    }),
   },
   content: {
     padding: Layout.screenPaddingLarge,
@@ -116,8 +231,10 @@ const styles = StyleSheet.create({
         maxWidth: 1400,
         alignSelf: 'center',
         width: '100%',
+        overflow: 'visible',
       },
     }),
+    overflow: 'visible',
   },
   header: {
     flexDirection: 'row',
@@ -142,6 +259,43 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   newButtonText: {
+    color: Colors.background,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
+  loadingText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
+  errorText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
+  },
+  retryButtonText: {
     color: Colors.background,
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,

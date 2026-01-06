@@ -51,7 +51,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:admin,nurse,doctor,caregiver',
+            'role' => 'required|string|in:Verpleegster,Hoofdverpleegster,Beheerder,Keukenpersoneel',
             'floor_id' => 'nullable|exists:floors,floor_id'
         ]);
 
@@ -92,7 +92,7 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user->user_id, 'user_id')
             ],
             'password' => 'sometimes|string|min:6',
-            'role' => 'sometimes|string|in:admin,nurse,doctor,caregiver',
+            'role' => 'sometimes|string|in:Verpleegster,Hoofdverpleegster,Beheerder,Keukenpersoneel',
             'floor_id' => 'nullable|exists:floors,floor_id'
         ]);
 
