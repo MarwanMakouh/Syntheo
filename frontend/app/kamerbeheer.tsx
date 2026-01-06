@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,15 @@ import {
   TouchableOpacity,
   Platform,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { AssignResidentModal } from '@/components/assign-resident-modal';
-import { rooms, residents, floors } from '@/Services/API';
+import { residents, floors } from '@/Services/API';
+import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
 
 interface SelectedDisconnect {
   roomId: number;
@@ -27,18 +29,40 @@ export default function KamerBeheerScreen() {
   const [selectedDisconnect, setSelectedDisconnect] = useState<SelectedDisconnect | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [selectedRoomForAssign, setSelectedRoomForAssign] = useState<number | null>(null);
+  const [roomsData, setRoomsData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    loadRooms();
+  }, []);
+
+  const loadRooms = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchRooms();
+      setRoomsData(data);
+    } catch (err) {
+      console.error('Failed to load rooms:', err);
+      setError('Kan kamers niet laden');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter rooms by selected floor
   const filteredRooms = selectedFloor
-    ? rooms.filter((room) => room.floor_id === selectedFloor)
-    : rooms;
+    ? roomsData.filter((room) => room.floor_id === selectedFloor)
+    : roomsData;
 
   // Sort rooms by room number
   const sortedRooms = [...filteredRooms].sort((a, b) => a.room_id - b.room_id);
 
   // Get unassigned and assigned residents
   const { unassignedResidents, assignedResidents } = useMemo(() => {
-    const assignedResidentIds = rooms
+    const assignedResidentIds = roomsData
       .filter((room) => room.resident_id !== null)
       .map((room) => room.resident_id);
 
@@ -52,7 +76,7 @@ export default function KamerBeheerScreen() {
     const assigned = residents
       .filter((resident) => assignedResidentIds.includes(resident.resident_id))
       .map((resident) => {
-        const room = rooms.find((r) => r.resident_id === resident.resident_id);
+        const room = roomsData.find((r) => r.resident_id === resident.resident_id);
         return {
           resident_id: resident.resident_id,
           name: resident.name,
@@ -61,18 +85,28 @@ export default function KamerBeheerScreen() {
       });
 
     return { unassignedResidents: unassigned, assignedResidents: assigned };
-  }, []);
+  }, [roomsData]);
 
   const handleDisconnect = (roomId: number, residentName: string, roomNumber: number) => {
     setSelectedDisconnect({ roomId, residentName, roomNumber });
     setDisconnectModalVisible(true);
   };
 
-  const handleConfirmDisconnect = () => {
+  const handleConfirmDisconnect = async () => {
     if (selectedDisconnect) {
-      console.log('Disconnecting resident from room:', selectedDisconnect.roomId);
-      // TODO: Implement actual disconnect functionality with backend
-      alert(`${selectedDisconnect.residentName} is losgekoppeld van Kamer ${selectedDisconnect.roomNumber}`);
+      try {
+        setIsProcessing(true);
+        await unlinkResidentFromRoom(selectedDisconnect.roomId);
+        alert(`${selectedDisconnect.residentName} is succesvol losgekoppeld van Kamer ${selectedDisconnect.roomNumber}`);
+
+        // Refresh rooms list
+        await loadRooms();
+      } catch (error) {
+        console.error('Error disconnecting resident:', error);
+        alert('Fout bij loskoppelen van bewoner. Probeer opnieuw.');
+      } finally {
+        setIsProcessing(false);
+      }
     }
     setDisconnectModalVisible(false);
     setSelectedDisconnect(null);
@@ -88,12 +122,22 @@ export default function KamerBeheerScreen() {
     setAssignModalVisible(true);
   };
 
-  const handleConfirmAssign = (residentId: number) => {
+  const handleConfirmAssign = async (residentId: number) => {
     if (selectedRoomForAssign) {
-      const resident = residents.find((r) => r.resident_id === residentId);
-      console.log('Assigning resident', residentId, 'to room', selectedRoomForAssign);
-      // TODO: Implement actual assign functionality with backend
-      alert(`${resident?.name} is toegewezen aan Kamer ${selectedRoomForAssign}`);
+      try {
+        setIsProcessing(true);
+        await linkResidentToRoom(selectedRoomForAssign, residentId);
+        const resident = residents.find((r) => r.resident_id === residentId);
+        alert(`${resident?.name} is succesvol toegewezen aan Kamer ${selectedRoomForAssign}`);
+
+        // Refresh rooms list
+        await loadRooms();
+      } catch (error) {
+        console.error('Error assigning resident:', error);
+        alert('Fout bij toewijzen van bewoner. Probeer opnieuw.');
+      } finally {
+        setIsProcessing(false);
+      }
     }
     setAssignModalVisible(false);
     setSelectedRoomForAssign(null);
@@ -103,6 +147,33 @@ export default function KamerBeheerScreen() {
     setAssignModalVisible(false);
     setSelectedRoomForAssign(null);
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <NavigationBar />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Laden...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <NavigationBar />
+        <View style={styles.errorContainer}>
+          <MaterialIcons name="error-outline" size={48} color={Colors.error} />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadRooms}>
+            <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -259,6 +330,7 @@ export default function KamerBeheerScreen() {
           roomNumber={selectedDisconnect.roomNumber}
           onCancel={handleCancelDisconnect}
           onConfirm={handleConfirmDisconnect}
+          isProcessing={isProcessing}
         />
       )}
 
@@ -271,6 +343,7 @@ export default function KamerBeheerScreen() {
           assignedResidents={assignedResidents}
           onCancel={handleCancelAssign}
           onAssign={handleConfirmAssign}
+          isProcessing={isProcessing}
         />
       )}
     </SafeAreaView>

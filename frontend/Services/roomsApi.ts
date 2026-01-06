@@ -59,3 +59,65 @@ export const fetchRoomByResidentId = async (residentId: number): Promise<Room | 
     throw error;
   }
 };
+
+/**
+ * Link a resident to a room
+ */
+export const linkResidentToRoom = async (
+  roomId: number,
+  residentId: number
+): Promise<Room> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.linkResident(roomId)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ resident_id: residentId }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<Room> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(`Error linking resident ${residentId} to room ${roomId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Unlink a resident from a room
+ */
+export const unlinkResidentFromRoom = async (roomId: number): Promise<Room> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.unlinkResident(roomId)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<Room> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(`Error unlinking resident from room ${roomId}:`, error);
+    throw error;
+  }
+};
