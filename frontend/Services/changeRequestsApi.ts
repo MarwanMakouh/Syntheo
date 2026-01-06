@@ -65,3 +65,69 @@ export const fetchChangeRequests = async (filters?: {
     throw error;
   }
 };
+
+/**
+ * Approve a change request
+ */
+export const approveChangeRequest = async (
+  requestId: number,
+  reviewerId: number
+): Promise<ChangeRequest> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.approveChangeRequest(requestId)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ reviewer_id: reviewerId }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<ChangeRequest> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(`Error approving change request ${requestId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Reject a change request
+ */
+export const rejectChangeRequest = async (
+  requestId: number,
+  reviewerId: number
+): Promise<ChangeRequest> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.rejectChangeRequest(requestId)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ reviewer_id: reviewerId }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<ChangeRequest> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(`Error rejecting change request ${requestId}:`, error);
+    throw error;
+  }
+};

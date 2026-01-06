@@ -19,12 +19,16 @@ import {
   changeRequests,
   medicationRounds,
   resSchedules,
+  users,
 } from '@/Services/API';
+import { createAnnouncement } from '@/Services/announcementsApi';
+import type { CreateAnnouncementData } from '@/Services/announcementsApi';
 import { formatDate } from '@/utils/date';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
+  const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -139,14 +143,66 @@ export default function DashboardScreen() {
     }
   };
 
-  const handleSendAnnouncement = (announcement: {
+  const handleSendAnnouncement = async (announcement: {
     title: string;
     message: string;
-    recipients: string;
+    recipientCategory: 'Verdieping' | 'Individuele mensen' | 'Iedereen' | 'Afdeling';
+    recipientDetails?: string | string[];
   }) => {
-    console.log('Aankondiging verzonden:', announcement);
-    // TODO: Implement API call to send announcement
-    alert(`Aankondiging "${announcement.title}" verzonden naar ${announcement.recipients}`);
+    try {
+      setIsSendingAnnouncement(true);
+
+      // Map Dutch category to backend format
+      let recipientType: 'all' | 'role' | 'floor' = 'all';
+      let floorId: number | null = null;
+      let recipientIds: number[] = [];
+
+      if (announcement.recipientCategory === 'Iedereen') {
+        recipientType = 'all';
+        // Get all user IDs from users array
+        recipientIds = users.map(u => u.user_id);
+      } else if (announcement.recipientCategory === 'Verdieping') {
+        recipientType = 'floor';
+        // Extract floor number from "Verdieping X" format
+        const floorMatch = announcement.recipientDetails?.toString().match(/\d+/);
+        floorId = floorMatch ? parseInt(floorMatch[0]) : null;
+        // Get all users on this floor (would need users with floor_id in real implementation)
+        // For now, get all users - TODO: filter by floor when user model includes floor_id
+        recipientIds = users.map(u => u.user_id);
+      } else if (announcement.recipientCategory === 'Afdeling') {
+        recipientType = 'role';
+        // Get users with matching role
+        const targetRole = announcement.recipientDetails?.toString();
+        recipientIds = users
+          .filter(u => u.role === targetRole)
+          .map(u => u.user_id);
+      } else if (announcement.recipientCategory === 'Individuele mensen') {
+        recipientType = 'all'; // Backend doesn't have specific type for individuals
+        // recipientDetails is array of names, need to map to user IDs
+        const selectedNames = announcement.recipientDetails as string[];
+        recipientIds = users
+          .filter(u => selectedNames.includes(u.name))
+          .map(u => u.user_id);
+      }
+
+      const announcementData: CreateAnnouncementData = {
+        author_id: 1, // TODO: Get from auth context
+        title: announcement.title,
+        message: announcement.message,
+        recipient_type: recipientType,
+        floor_id: floorId,
+        recipient_ids: recipientIds,
+      };
+
+      await createAnnouncement(announcementData);
+      alert(`Aankondiging "${announcement.title}" succesvol verzonden!`);
+      setAnnouncementModalVisible(false);
+    } catch (error) {
+      console.error('Error sending announcement:', error);
+      alert('Fout bij verzenden van aankondiging. Probeer opnieuw.');
+    } finally {
+      setIsSendingAnnouncement(false);
+    }
   };
 
   const handleViewResident = (residentId: number) => {
@@ -254,6 +310,7 @@ export default function DashboardScreen() {
         visible={announcementModalVisible}
         onClose={() => setAnnouncementModalVisible(false)}
         onSend={handleSendAnnouncement}
+        isLoading={isSendingAnnouncement}
       />
     </View>
   );
