@@ -7,9 +7,9 @@ interface ActionBadgeProps {
 
 const actionColors: Record<string, string> = {
   'CREATE': '#27AE60',
-  'UPDATE': '#27AE60',
+  'UPDATE': '#3498DB',
   'DELETE': '#E74C3C',
-  'APPROVE': '#3498DB',
+  'APPROVE': '#27AE60',
   'REJECT': '#E74C3C',
 };
 

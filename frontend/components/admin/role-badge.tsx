@@ -7,7 +7,7 @@ interface RoleBadgeProps {
 
 const roleColors: Record<string, string> = {
   'Beheerder': '#E74C3C',
-  'Hoofdverpleegster': '#5856D6',
+  'Hoofdverpleegster': '#10B981',
   'Verpleegster': '#27AE60',
   'Keukenpersoneel': '#F39C12',
 };

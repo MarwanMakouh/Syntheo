@@ -105,7 +105,7 @@ export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayout
                     <MaterialIcons
                       name={item.icon}
                       size={20}
-                      color={isActive ? Colors.background : Colors.textSecondary}
+                      color={Colors.background}
                     />
                     <Text
                       style={[
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   },
   sidebar: {
     width: 280,
-    backgroundColor: '#2C3E50',
+    backgroundColor: '#1E4D2B',
     paddingVertical: Spacing.xl,
     ...Platform.select({
       web: {
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   navItemText: {
     fontSize: FontSize.md,
-    color: Colors.textSecondary,
+    color: Colors.background,
     marginLeft: Spacing.md,
     fontWeight: FontWeight.medium,
   },

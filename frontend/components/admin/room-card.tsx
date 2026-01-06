@@ -1,7 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { RoomStatusBadge } from './room-status-badge';
-import { ResidentStatusBadge } from './resident-status-badge';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '@/constants';
 
 interface RoomCardProps {
@@ -22,11 +21,11 @@ export function RoomCard({
   onUnlink,
 }: RoomCardProps) {
   return (
-    <View style={[styles.card, isOccupied && styles.cardOccupied]}>
+    <View style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.roomInfo}>
-          <MaterialIcons name="meeting-room" size={20} color={Colors.success} />
+          <MaterialIcons name="meeting-room" size={20} color={Colors.primary} />
           <Text style={styles.roomNumber}>Kamer {roomNumber}</Text>
         </View>
         <RoomStatusBadge isOccupied={isOccupied} />
@@ -37,11 +36,6 @@ export function RoomCard({
         {isOccupied ? (
           <>
             <Text style={styles.residentName}>{residentName}</Text>
-            {residentStatus && (
-              <View style={styles.statusContainer}>
-                <ResidentStatusBadge status={residentStatus} />
-              </View>
-            )}
             <TouchableOpacity style={styles.unlinkButton} onPress={onUnlink}>
               <MaterialIcons name="person-remove" size={18} color="#E74C3C" />
               <Text style={styles.unlinkButtonText}>Loskoppelen</Text>
@@ -69,9 +63,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.border,
   },
-  cardOccupied: {
-    borderColor: '#27AE60',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -96,9 +87,6 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
   },
-  statusContainer: {
-    marginVertical: Spacing.xs,
-  },
   emptyText: {
     fontSize: FontSize.md,
     color: Colors.textSecondary,
@@ -109,7 +97,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.success,
+    backgroundColor: Colors.primary,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
   },

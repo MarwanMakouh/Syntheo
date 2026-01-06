@@ -17,7 +17,7 @@ export function NoteCard({ note, residentName, authorName, onView }: NoteCardPro
       case 'Matig':
         return '#F39C12';
       case 'Laag':
-        return '#3498DB';
+        return '#27AE60';
       default:
         return Colors.textSecondary;
     }

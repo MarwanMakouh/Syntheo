@@ -11,7 +11,7 @@ export function RoomStatusBadge({ isOccupied }: RoomStatusBadgeProps) {
       style={[
         styles.badge,
         {
-          backgroundColor: isOccupied ? '#27AE60' : '#95A5A6',
+          backgroundColor: isOccupied ? Colors.primary : '#95A5A6',
           color: Colors.background,
         },
       ]}

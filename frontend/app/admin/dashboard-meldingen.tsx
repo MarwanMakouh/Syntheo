@@ -97,7 +97,7 @@ export default function DashboardMeldingenScreen() {
 
           {/* Stats Cards */}
           <View style={styles.statsContainer}>
-            <StatsCard label="Totaal" value={stats.total} color="#5856D6" />
+            <StatsCard label="Totaal" value={stats.total} color="#34C759" />
             <StatsCard label="Open" value={stats.open} color="#E74C3C" />
             <StatsCard label="In behandeling" value={stats.inProgress} color="#F39C12" />
             <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
