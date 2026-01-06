@@ -73,6 +73,7 @@ export const createNote = async (noteData: {
   category: string;
   urgency: 'Laag' | 'Matig' | 'Hoog';
   content: string;
+  author_id?: number;
 }): Promise<Note> => {
   try {
     // Map Dutch values to English for backend
@@ -81,7 +82,7 @@ export const createNote = async (noteData: {
       category: mapCategoryToBackend(noteData.category),
       urgency: mapUrgencyToBackend(noteData.urgency),
       content: noteData.content,
-      author_id: 1, // TODO: Get from auth context
+      author_id: noteData.author_id || 1,
     };
 
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.notes}`, {
@@ -149,7 +150,7 @@ export const updateNote = async (
 /**
  * Resolve a note
  */
-export const resolveNote = async (noteId: number): Promise<Note> => {
+export const resolveNote = async (noteId: number, resolverId?: number): Promise<Note> => {
   try {
     const response = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.resolveNote(noteId)}`,
@@ -160,7 +161,7 @@ export const resolveNote = async (noteId: number): Promise<Note> => {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          resolved_by: 1, // TODO: Get from auth context
+          resolved_by: resolverId || 1,
         }),
       }
     );

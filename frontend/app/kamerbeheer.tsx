@@ -17,10 +17,7 @@ import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { AssignResidentModal } from '@/components/assign-resident-modal';
 import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
-// backend callen
-const rooms: any[] = [];
-const residents: any[] = [];
-const floors: any[] = [];
+import { fetchResidents } from '@/Services/residentsApi';
 
 interface SelectedDisconnect {
   roomId: number;
@@ -36,6 +33,8 @@ export default function KamerBeheerScreen() {
   const [selectedRoomForAssign, setSelectedRoomForAssign] = useState<number | null>(null);
   const [selectedRoomNumberForAssign, setSelectedRoomNumberForAssign] = useState<number | null>(null);
   const [roomsData, setRoomsData] = useState<any[]>([]);
+  const [residents, setResidents] = useState<any[]>([]);
+  const [floors, setFloors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,7 +48,19 @@ export default function KamerBeheerScreen() {
       setIsLoading(true);
       setError(null);
       const data = await fetchRooms();
-      setRoomsData(data);
+      setRoomsData(data || []);
+
+      // also load residents for showing occupant names
+      try {
+        const residentsData = await fetchResidents();
+        setResidents(residentsData || []);
+      } catch (e) {
+        console.error('Failed to load residents for kamerbeheer:', e);
+      }
+
+      // compute floors from rooms
+      const floorIds = Array.from(new Set((data || []).map((r: any) => r.floor_id))).sort((a, b) => a - b);
+      setFloors(floorIds.map((id: number) => ({ floor_id: id })));
     } catch (err) {
       console.error('Failed to load rooms:', err);
       setError('Kan kamers niet laden');
