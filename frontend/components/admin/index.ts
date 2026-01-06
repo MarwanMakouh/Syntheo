@@ -5,3 +5,6 @@ export { RoleBadge } from './role-badge';
 export { StatusBadge } from './status-badge';
 export { UsersTable } from './users-table';
 export { UsersFilters } from './users-filters';
+export { AllergyBadge } from './allergy-badge';
+export { ResidentCard } from './resident-card';
+export { ResidentsFilters } from './residents-filters';
