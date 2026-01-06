@@ -142,11 +142,15 @@ export default function DashboardScreen() {
   const handleSendAnnouncement = (announcement: {
     title: string;
     message: string;
-    recipients: string;
+    recipientCategory: string;
+    recipientDetails?: string | string[];
   }) => {
     console.log('Aankondiging verzonden:', announcement);
     // TODO: Implement API call to send announcement
-    alert(`Aankondiging "${announcement.title}" verzonden naar ${announcement.recipients}`);
+    const recipientText = announcement.recipientDetails 
+      ? `${announcement.recipientCategory} (${Array.isArray(announcement.recipientDetails) ? announcement.recipientDetails.join(', ') : announcement.recipientDetails})`
+      : announcement.recipientCategory;
+    alert(`Aankondiging "${announcement.title}" verzonden naar ${recipientText}`);
   };
 
   const handleViewResident = (residentId: number) => {
