@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SearchBar } from '@/components';
@@ -159,67 +160,138 @@ export default function DietenScreen() {
 
             {/* Expanded Content */}
             {expandedSections.has(group.diet_type) && (
-              <View style={styles.tableContainer}>
-                {/* Table Header */}
-                <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderText, styles.colBewoner]}>Bewoner</Text>
-                  <Text style={[styles.tableHeaderText, styles.colKamer]}>Kamer</Text>
-                  <Text style={[styles.tableHeaderText, styles.colOpmerkingen]}>Opmerkingen</Text>
-                </View>
+              <>
+                {Platform.OS === 'web' ? (
+                  <View style={styles.tableContainer}>
+                    {/* Table Header */}
+                    <View style={styles.tableHeader}>
+                      <Text style={[styles.tableHeaderText, styles.colBewoner]}>Bewoner</Text>
+                      <Text style={[styles.tableHeaderText, styles.colKamer]}>Kamer</Text>
+                      <Text style={[styles.tableHeaderText, styles.colOpmerkingen]}>Opmerkingen</Text>
+                    </View>
 
-                {/* Table Rows */}
-                {group.residents.map((resident) => (
-                  <View key={resident.resident_id} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, styles.colBewoner, styles.boldText]}>
-                      {resident.name}
-                    </Text>
-                    <Text style={[styles.tableCell, styles.colKamer]}>
-                      {resident.room_number || '-'}
-                    </Text>
-                    <View style={[styles.tableCell, styles.colOpmerkingen]}>
-                      {resident.description && (
-                        <Text style={styles.descriptionText}>{resident.description}</Text>
-                      )}
-
-                      {resident.preferences && (
-                        <View style={styles.preferencesSection}>
-                          {resident.preferences.likes && resident.preferences.likes.length > 0 && (
-                            <View style={styles.preferenceGroup}>
-                              <View style={styles.preferenceHeader}>
-                                <MaterialIcons name="thumb-up" size={12} color="#10B981" />
-                                <Text style={styles.preferenceLabel}>Houdt van:</Text>
-                              </View>
-                              <View style={styles.preferenceItems}>
-                                {resident.preferences.likes.map((item, index) => (
-                                  <View key={index} style={styles.preferenceChip}>
-                                    <Text style={styles.preferenceChipText}>{item}</Text>
-                                  </View>
-                                ))}
-                              </View>
-                            </View>
+                    {/* Table Rows */}
+                    {group.residents.map((resident) => (
+                      <View key={resident.resident_id} style={styles.tableRow}>
+                        <Text style={[styles.tableCell, styles.colBewoner, styles.boldText]}>
+                          {resident.name}
+                        </Text>
+                        <Text style={[styles.tableCell, styles.colKamer]}>
+                          {resident.room_number || '-'}
+                        </Text>
+                        <View style={[styles.tableCell, styles.colOpmerkingen]}>
+                          {resident.description && (
+                            <Text style={styles.descriptionText}>{resident.description}</Text>
                           )}
 
-                          {resident.preferences.dislikes && resident.preferences.dislikes.length > 0 && (
-                            <View style={styles.preferenceGroup}>
-                              <View style={styles.preferenceHeader}>
-                                <MaterialIcons name="thumb-down" size={12} color="#EF4444" />
-                                <Text style={styles.preferenceLabel}>Houdt niet van:</Text>
-                              </View>
-                              <View style={styles.preferenceItems}>
-                                {resident.preferences.dislikes.map((item, index) => (
-                                  <View key={index} style={[styles.preferenceChip, styles.dislikeChip]}>
-                                    <Text style={styles.preferenceChipText}>{item}</Text>
+                          {resident.preferences && (
+                            <View style={styles.preferencesSection}>
+                              {resident.preferences.likes && resident.preferences.likes.length > 0 && (
+                                <View style={styles.preferenceGroup}>
+                                  <View style={styles.preferenceHeader}>
+                                    <MaterialIcons name="thumb-up" size={12} color="#10B981" />
+                                    <Text style={styles.preferenceLabel}>Houdt van:</Text>
                                   </View>
-                                ))}
-                              </View>
+                                  <View style={styles.preferenceItems}>
+                                    {resident.preferences.likes.map((item, index) => (
+                                      <View key={index} style={styles.preferenceChip}>
+                                        <Text style={styles.preferenceChipText}>{item}</Text>
+                                      </View>
+                                    ))}
+                                  </View>
+                                </View>
+                              )}
+
+                              {resident.preferences.dislikes && resident.preferences.dislikes.length > 0 && (
+                                <View style={styles.preferenceGroup}>
+                                  <View style={styles.preferenceHeader}>
+                                    <MaterialIcons name="thumb-down" size={12} color="#EF4444" />
+                                    <Text style={styles.preferenceLabel}>Houdt niet van:</Text>
+                                  </View>
+                                  <View style={styles.preferenceItems}>
+                                    {resident.preferences.dislikes.map((item, index) => (
+                                      <View key={index} style={[styles.preferenceChip, styles.dislikeChip]}>
+                                        <Text style={styles.preferenceChipText}>{item}</Text>
+                                      </View>
+                                    ))}
+                                  </View>
+                                </View>
+                              )}
                             </View>
                           )}
                         </View>
-                      )}
-                    </View>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
+                ) : (
+                  <View style={styles.mobileCardsContainer}>
+                    {group.residents.map((resident) => (
+                      <View key={resident.resident_id} style={styles.residentCard}>
+                        <View style={styles.residentCardHeader}>
+                          <Text style={styles.residentCardName}>{resident.name}</Text>
+                          <View style={styles.residentCardRoom}>
+                            <MaterialIcons name="room" size={14} color={Colors.textSecondary} />
+                            <Text style={styles.residentCardRoomText}>
+                              {resident.room_number || 'Geen kamer'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {resident.description && (
+                          <View style={styles.residentCardSection}>
+                            <View style={styles.sectionHeader}>
+                              <MaterialIcons name="info-outline" size={16} color={Colors.primary} />
+                              <Text style={styles.sectionHeaderText}>Beschrijving</Text>
+                            </View>
+                            <Text style={styles.residentCardDescription}>{resident.description}</Text>
+                          </View>
+                        )}
+
+                        {resident.preferences && (
+                          <View style={styles.residentCardSection}>
+                            <View style={styles.sectionHeader}>
+                              <MaterialIcons name="restaurant" size={16} color={Colors.primary} />
+                              <Text style={styles.sectionHeaderText}>Voorkeuren</Text>
+                            </View>
+
+                            {resident.preferences.likes && resident.preferences.likes.length > 0 && (
+                              <View style={styles.preferenceGroupMobile}>
+                                <View style={styles.preferenceHeaderMobile}>
+                                  <MaterialIcons name="thumb-up" size={14} color="#10B981" />
+                                  <Text style={styles.preferenceLabelMobile}>Houdt van</Text>
+                                </View>
+                                <View style={styles.preferenceItemsMobile}>
+                                  {resident.preferences.likes.map((item, index) => (
+                                    <View key={index} style={styles.preferenceChipMobile}>
+                                      <Text style={styles.preferenceChipTextMobile}>{item}</Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+
+                            {resident.preferences.dislikes && resident.preferences.dislikes.length > 0 && (
+                              <View style={styles.preferenceGroupMobile}>
+                                <View style={styles.preferenceHeaderMobile}>
+                                  <MaterialIcons name="thumb-down" size={14} color="#EF4444" />
+                                  <Text style={styles.preferenceLabelMobile}>Houdt niet van</Text>
+                                </View>
+                                <View style={styles.preferenceItemsMobile}>
+                                  {resident.preferences.dislikes.map((item, index) => (
+                                    <View key={index} style={[styles.preferenceChipMobile, styles.dislikeChipMobile]}>
+                                      <Text style={styles.preferenceChipTextMobile}>{item}</Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
             )}
           </View>
         ))
@@ -391,5 +463,100 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textMuted,
     marginTop: Spacing.md,
+  },
+  // Mobile Card Styles
+  mobileCardsContainer: {
+    padding: Spacing.md,
+    gap: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  residentCard: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  residentCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  residentCardName: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  residentCardRoom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+  },
+  residentCardRoomText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  residentCardSection: {
+    gap: Spacing.xs,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
+  sectionHeaderText: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  residentCardDescription: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  preferenceGroupMobile: {
+    marginTop: Spacing.xs,
+  },
+  preferenceHeaderMobile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
+  preferenceLabelMobile: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  preferenceItemsMobile: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  preferenceChipMobile: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  dislikeChipMobile: {
+    backgroundColor: '#FEE2E2',
+  },
+  preferenceChipTextMobile: {
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    fontWeight: '500',
   },
 });

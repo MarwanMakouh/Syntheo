@@ -278,7 +278,7 @@ export default function AllergieenOverzichtScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Warning Banner */}
       <View style={styles.warningBanner}>
         <MaterialIcons name="warning" size={20} color="#DC2626" />
@@ -374,9 +374,9 @@ export default function AllergieenOverzichtScreen() {
 
       {/* Conditional Layout: Mobile Cards or Desktop Table */}
       {Platform.OS === 'web' ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.webTableWrapper}>
           {renderTableLayout()}
-        </ScrollView>
+        </View>
       ) : (
         <FlatList
           data={residents}
@@ -397,7 +397,7 @@ export default function AllergieenOverzichtScreen() {
           }
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -405,6 +405,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
+  },
+  scrollContent: {
+    ...Platform.select({
+      web: {
+        flexGrow: 1,
+      },
+    }),
   },
   warningBanner: {
     flexDirection: 'row',
@@ -416,21 +423,32 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: '#FECACA',
+    ...Platform.select({
+      web: {
+        alignSelf: 'center',
+      },
+    }),
   },
   warningText: {
-    flex: 1,
     marginLeft: Spacing.sm,
     fontSize: FontSize.sm,
     color: '#DC2626',
     fontWeight: '600',
+    ...Platform.select({
+      default: {
+        flex: 1,
+      },
+      web: {
+        flexShrink: 1,
+      },
+    }),
   },
   searchContainer: {
     margin: Layout.screenPadding,
     ...Platform.select({
       web: {
-        maxWidth: 600,
         alignSelf: 'center',
-        width: '100%',
+        minWidth: 600,
       },
     }),
   },
@@ -439,18 +457,38 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     marginHorizontal: Layout.screenPadding,
     marginBottom: Spacing.md,
+    ...Platform.select({
+      web: {
+        alignSelf: 'center',
+      },
+    }),
   },
   filterContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.background,
     paddingLeft: Spacing.md,
-    paddingRight: Platform.OS === 'ios' ? Spacing.md : 0,
-    paddingVertical: Platform.OS === 'ios' ? Spacing.md : 0,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        flex: 1,
+        paddingRight: Spacing.md,
+        paddingVertical: Spacing.md,
+      },
+      android: {
+        flex: 1,
+        paddingRight: 0,
+        paddingVertical: 0,
+      },
+      web: {
+        minWidth: 250,
+        paddingRight: Spacing.md,
+        paddingVertical: Spacing.sm,
+      },
+    }),
   },
   filterLabel: {
     fontSize: FontSize.sm,
@@ -459,21 +497,48 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   filterValue: {
-    flex: 1,
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     marginLeft: Spacing.xs,
     fontWeight: '600',
+    ...Platform.select({
+      default: {
+        flex: 1,
+      },
+      web: {
+        minWidth: 150,
+      },
+    }),
   },
   pickerContainer: {
-    flex: 1,
+    ...Platform.select({
+      default: {
+        flex: 1,
+      },
+      web: {
+        minWidth: 150,
+        overflow: 'hidden',
+        borderRadius: BorderRadius.lg,
+      },
+    }),
   },
   picker: {
     height: 40,
+    ...Platform.select({
+      web: {
+        backgroundColor: 'transparent',
+        border: 'none',
+      },
+    }),
   },
   titleSection: {
     marginHorizontal: Layout.screenPadding,
     marginBottom: Spacing.md,
+    ...Platform.select({
+      web: {
+        alignSelf: 'center',
+      },
+    }),
   },
   title: {
     fontSize: FontSize.xl,
@@ -574,12 +639,10 @@ const styles = StyleSheet.create({
   },
   // Desktop Table Styles
   tableContainer: {
-    marginHorizontal: Layout.screenPadding,
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Layout.screenPadding,
     overflow: 'hidden',
     minWidth: 1000,
   },
@@ -665,5 +728,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textMuted,
     marginTop: Spacing.md,
+  },
+  webTableWrapper: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
+    paddingHorizontal: Layout.screenPadding,
+    marginBottom: Layout.screenPadding,
   },
 });
