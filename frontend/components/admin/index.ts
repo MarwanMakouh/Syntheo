@@ -18,3 +18,5 @@ export { NotesFilters } from './notes-filters';
 export { ActionBadge } from './action-badge';
 export { AuditLogsFilters } from './audit-logs-filters';
 export { AuditLogsTable, type AuditLog } from './audit-logs-table';
+export { UserFormModal } from './user-form-modal';
+export { ConfirmationModal } from './confirmation-modal';

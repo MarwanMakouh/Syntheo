@@ -10,10 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { AdminLayout } from '@/components/admin';
+import { AdminLayout, UserFormModal, ConfirmationModal } from '@/components/admin';
 import { UsersTable } from '@/components/admin/users-table';
 import { UsersFilters } from '@/components/admin/users-filters';
-import { fetchUsers, deleteUser } from '@/Services';
+import { fetchUsers, deleteUser, createUser, updateUser } from '@/Services';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 import type { User } from '@/types/user';
 
@@ -24,6 +24,12 @@ export default function DashboardGebruikersScreen() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch users from API
   useEffect(() => {
@@ -62,38 +68,68 @@ export default function DashboardGebruikersScreen() {
   }, [users, roleFilter, statusFilter, searchQuery]);
 
   const handleNewUser = () => {
-    // TODO: Open modal to create new user
-    Alert.alert('Nieuwe Gebruiker', 'Functionaliteit nog niet geïmplementeerd');
+    setEditingUser(null);
+    setShowUserModal(true);
+  };
+
+  const handleSubmitUser = async (userData: {
+    name: string;
+    email: string;
+    password?: string;
+    role: string;
+  }) => {
+    try {
+      setIsCreating(true);
+
+      if (editingUser) {
+        // Update existing user
+        await updateUser(editingUser.user_id, { ...userData, floor_id: 1 } as any);
+        Alert.alert('Succes', 'Personeelslid succesvol bijgewerkt');
+      } else {
+        // Create new user
+        await createUser({ ...userData, password: userData.password!, floor_id: 1 } as any);
+        Alert.alert('Succes', 'Personeelslid succesvol toegevoegd');
+      }
+
+      setShowUserModal(false);
+      setEditingUser(null);
+      // Reload users list
+      loadUsers();
+    } catch (err) {
+      Alert.alert('Fout', editingUser ? 'Kon personeelslid niet bijwerken' : 'Kon personeelslid niet toevoegen');
+      console.error('Error saving user:', err);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleEditUser = (user: User) => {
-    // TODO: Open modal to edit user
-    Alert.alert('Gebruiker Bewerken', `Bewerken: ${user.name}`);
+    setEditingUser(user);
+    setShowUserModal(true);
   };
 
   const handleDeleteUser = (user: User) => {
-    Alert.alert(
-      'Gebruiker Verwijderen',
-      `Weet je zeker dat je ${user.name} wilt verwijderen?`,
-      [
-        { text: 'Annuleren', style: 'cancel' },
-        {
-          text: 'Verwijderen',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteUser(user.user_id);
-              // Reload users after deletion
-              loadUsers();
-              Alert.alert('Succes', 'Gebruiker succesvol verwijderd');
-            } catch (err) {
-              Alert.alert('Fout', 'Kon gebruiker niet verwijderen');
-              console.error('Error deleting user:', err);
-            }
-          },
-        },
-      ]
-    );
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteUser(userToDelete.user_id);
+      // Reload users after deletion
+      await loadUsers();
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+      Alert.alert('Succes', 'Personeelslid succesvol verwijderd');
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      Alert.alert('Fout', 'Kon personeelslid niet verwijderen');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -102,10 +138,10 @@ export default function DashboardGebruikersScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.pageTitle}>Gebruikersbeheer</Text>
+            <Text style={styles.pageTitle}>Personeelsbeheer</Text>
             <TouchableOpacity style={styles.newButton} onPress={handleNewUser}>
               <MaterialIcons name="person-add" size={20} color={Colors.background} />
-              <Text style={styles.newButtonText}>Nieuwe Gebruiker</Text>
+              <Text style={styles.newButtonText}>Nieuw Personeelslid</Text>
             </TouchableOpacity>
           </View>
 
@@ -146,6 +182,34 @@ export default function DashboardGebruikersScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* User Form Modal */}
+      <UserFormModal
+        visible={showUserModal}
+        onClose={() => {
+          setShowUserModal(false);
+          setEditingUser(null);
+        }}
+        onSubmit={handleSubmitUser}
+        isLoading={isCreating}
+        user={editingUser || undefined}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Personeelslid Verwijderen"
+        message={`Weet je zeker dat je ${userToDelete?.name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        isLoading={isDeleting}
+        type="danger"
+      />
     </AdminLayout>
   );
 }
@@ -154,6 +218,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
+    ...Platform.select({
+      web: {
+        overflow: 'visible',
+      },
+    }),
   },
   content: {
     padding: Layout.screenPaddingLarge,
@@ -162,8 +231,10 @@ const styles = StyleSheet.create({
         maxWidth: 1400,
         alignSelf: 'center',
         width: '100%',
+        overflow: 'visible',
       },
     }),
+    overflow: 'visible',
   },
   header: {
     flexDirection: 'row',
