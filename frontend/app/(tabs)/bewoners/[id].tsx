@@ -32,6 +32,7 @@ import {
   users,
 } from '@/Services';
 import { fetchNotesByResident, createNote } from '@/Services/notesApi';
+import { fetchResMedicationsByResident } from '@/Services/resMedicationsApi';
 import { createChangeRequest } from '@/Services/changeRequestsApi';
 import type { Note } from '@/types/note';
 import type { CreateChangeRequestData } from '@/types/changeRequest';
@@ -43,17 +44,28 @@ export default function BewonerInfoScreen() {
   const [showNewNoteModal, setShowNewNoteModal] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(false);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [loadingMedications, setLoadingMedications] = useState(false);
   const [currentUserId] = useState(1); // TODO: Get from auth context
 
   const resident = getResidentById(Number(id));
   const roomData = rooms.find(r => r.resident_id === Number(id));
   const contacts = getContactsForResident(Number(id));
+  const allergies = getAllergiesForResident(Number(id));
+  const residentDiets = diets.filter(d => d.resident_id === Number(id));
   const medications = getMedicationForResident(Number(id));
 
   // Load notes from backend when component mounts or when switching to Meldingen tab
   useEffect(() => {
     if (activeTab === 'Meldingen') {
       loadNotes();
+    }
+  }, [activeTab]);
+
+  // Load medications from backend when component mounts or when switching to Medicatie tab
+  useEffect(() => {
+    if (activeTab === 'Medicatie') {
+      loadMedications();
     }
   }, [activeTab]);
 
@@ -67,6 +79,19 @@ export default function BewonerInfoScreen() {
       Alert.alert('Fout', 'Kon meldingen niet laden. Controleer of de backend server draait.');
     } finally {
       setLoadingNotes(false);
+    }
+  };
+
+  const loadMedications = async () => {
+    try {
+      setLoadingMedications(true);
+      const fetchedMedications = await fetchResMedicationsByResident(Number(id));
+      setMedications(fetchedMedications);
+    } catch (error) {
+      console.error('Failed to load medications:', error);
+      Alert.alert('Fout', 'Kon medicatie niet laden. Controleer of de backend server draait.');
+    } finally {
+      setLoadingMedications(false);
     }
   };
 
@@ -257,8 +282,16 @@ export default function BewonerInfoScreen() {
       case 'Medicatie':
         return (
           <ScrollView style={styles.medicatieContainer}>
-            <MedicatieSchema medications={medications} />
-            <MedicatieHistoriek historiek={medicatieHistoriek} />
+            {loadingMedications ? (
+              <View style={styles.emptyMeldingen}>
+                <Text style={styles.emptyText}>Medicatie laden...</Text>
+              </View>
+            ) : (
+              <>
+                <MedicatieSchema medications={medications} />
+                <MedicatieHistoriek historiek={medicatieHistoriek} />
+              </>
+            )}
           </ScrollView>
         );
       case 'Dieet':
