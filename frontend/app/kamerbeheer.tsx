@@ -29,6 +29,7 @@ export default function KamerBeheerScreen() {
   const [selectedDisconnect, setSelectedDisconnect] = useState<SelectedDisconnect | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [selectedRoomForAssign, setSelectedRoomForAssign] = useState<number | null>(null);
+  const [selectedRoomNumberForAssign, setSelectedRoomNumberForAssign] = useState<number | null>(null);
   const [roomsData, setRoomsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,8 +118,9 @@ export default function KamerBeheerScreen() {
     setSelectedDisconnect(null);
   };
 
-  const handleAssignResident = (roomId: number) => {
+  const handleAssignResident = (roomId: number, roomNumber: number) => {
     setSelectedRoomForAssign(roomId);
+    setSelectedRoomNumberForAssign(roomNumber);
     setAssignModalVisible(true);
   };
 
@@ -141,11 +143,13 @@ export default function KamerBeheerScreen() {
     }
     setAssignModalVisible(false);
     setSelectedRoomForAssign(null);
+    setSelectedRoomNumberForAssign(null);
   };
 
   const handleCancelAssign = () => {
     setAssignModalVisible(false);
     setSelectedRoomForAssign(null);
+    setSelectedRoomNumberForAssign(null);
   };
 
   if (isLoading) {
@@ -267,7 +271,7 @@ export default function KamerBeheerScreen() {
                         size={20}
                         color={isOccupied ? '#dc2626' : '#10b981'}
                       />
-                      <Text style={styles.roomNumber}>Kamer {room.room_id}</Text>
+                      <Text style={styles.roomNumber}>Kamer {room.room_number}</Text>
                     </View>
                     <View
                       style={[
@@ -294,7 +298,7 @@ export default function KamerBeheerScreen() {
                       {/* Disconnect Button */}
                       <TouchableOpacity
                         style={styles.disconnectButton}
-                        onPress={() => handleDisconnect(room.room_id, resident.name, room.room_id)}
+                        onPress={() => handleDisconnect(room.room_id, resident.name, parseInt(room.room_number))}
                       >
                         <MaterialIcons name="link-off" size={16} color={Colors.error} />
                         <Text style={styles.disconnectButtonText}>Loskoppelen</Text>
@@ -308,7 +312,7 @@ export default function KamerBeheerScreen() {
                       <Text style={styles.emptyRoomText}>Geen bewoner toegewezen</Text>
                       <TouchableOpacity
                         style={styles.assignButton}
-                        onPress={() => handleAssignResident(room.room_id)}
+                        onPress={() => handleAssignResident(room.room_id, parseInt(room.room_number))}
                       >
                         <MaterialIcons name="person-add" size={16} color={Colors.success} />
                         <Text style={styles.assignButtonText}>Bewoner Toewijzen</Text>
@@ -335,10 +339,10 @@ export default function KamerBeheerScreen() {
       )}
 
       {/* Assign Resident Modal */}
-      {selectedRoomForAssign && (
+      {selectedRoomForAssign && selectedRoomNumberForAssign && (
         <AssignResidentModal
           visible={assignModalVisible}
-          roomNumber={selectedRoomForAssign}
+          roomNumber={selectedRoomNumberForAssign}
           unassignedResidents={unassignedResidents}
           assignedResidents={assignedResidents}
           onCancel={handleCancelAssign}
