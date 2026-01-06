@@ -11,4 +11,5 @@ export interface Room {
   room_id: number;
   floor_id: number;
   resident_id: number | null;
+  room_number: string;
 }

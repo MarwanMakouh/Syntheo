@@ -28,10 +28,12 @@ import {
   getContactsForResident,
   getMedicationForResident,
   medicationRounds,
-  rooms,
   users,
 } from '@/Services';
 import { fetchNotesByResident, createNote } from '@/Services/notesApi';
+import { fetchRoomByResidentId } from '@/Services/roomsApi';
+import type { Note } from '@/types/note';
+import type { Room } from '@/types/resident';
 import { fetchResMedicationsByResident } from '@/Services/resMedicationsApi';
 import { createChangeRequest } from '@/Services/changeRequestsApi';
 import type { Note } from '@/types/note';
@@ -44,12 +46,13 @@ export default function BewonerInfoScreen() {
   const [showNewNoteModal, setShowNewNoteModal] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(false);
+  const [roomData, setRoomData] = useState<Room | null>(null);
+  const [loadingRoom, setLoadingRoom] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
   const [loadingMedications, setLoadingMedications] = useState(false);
   const [currentUserId] = useState(1); // TODO: Get from auth context
 
   const resident = getResidentById(Number(id));
-  const roomData = rooms.find(r => r.resident_id === Number(id));
   const contacts = getContactsForResident(Number(id));
   const allergies = getAllergiesForResident(Number(id));
   const residentDiets = diets.filter(d => d.resident_id === Number(id));
@@ -62,6 +65,22 @@ export default function BewonerInfoScreen() {
     }
   }, [activeTab]);
 
+  // Load room data from backend when component mounts
+  useEffect(() => {
+    loadRoomData();
+  }, [id]);
+
+  const loadRoomData = async () => {
+    try {
+      setLoadingRoom(true);
+      const room = await fetchRoomByResidentId(Number(id));
+      setRoomData(room);
+    } catch (error) {
+      console.error('Failed to load room data:', error);
+    } finally {
+      setLoadingRoom(false);
+    }
+  };
   // Load medications from backend when component mounts or when switching to Medicatie tab
   useEffect(() => {
     if (activeTab === 'Medicatie') {
@@ -224,7 +243,7 @@ export default function BewonerInfoScreen() {
               <View style={styles.infoRow}>
                 <View style={styles.infoColumn}>
                   <Text style={styles.infoLabel}>Kamer</Text>
-                  <Text style={styles.infoValue}>{roomData?.room_id || '-'}</Text>
+                  <Text style={styles.infoValue}>{roomData?.room_number || '-'}</Text>
                 </View>
                 <View style={styles.infoColumn}>
                   <Text style={styles.infoLabel}>Verdieping</Text>
@@ -313,7 +332,7 @@ export default function BewonerInfoScreen() {
         {/* Bewoner Header */}
         <BewonerDetailHeader
           resident={resident}
-          roomNumber={roomData?.room_id || null}
+          roomNumber={roomData?.room_number || null}
           floorNumber={roomData?.floor_id || null}
         />
 
