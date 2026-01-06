@@ -37,7 +37,7 @@ export default function DashboardScreen() {
   const stats = useMemo(() => {
     const urgentCount = notes.filter((n) => n.urgency === 'Hoog' && !n.is_resolved).length;
     const attentionCount = notes.filter((n) => n.urgency === 'Matig' && !n.is_resolved).length;
-    const stableCount = notes.filter((n) => n.urgency === 'Laag' || n.is_resolved).length;
+    const stableCount = notes.filter((n) => n.urgency === 'Laag' && !n.is_resolved).length;
 
     // Calculate medication compliance
     const totalScheduled = medicationRounds.length;
