@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
@@ -16,6 +17,7 @@ interface DisconnectConfirmationModalProps {
   roomNumber: number;
   onCancel: () => void;
   onConfirm: () => void;
+  isProcessing?: boolean;
 }
 
 export function DisconnectConfirmationModal({
@@ -24,6 +26,7 @@ export function DisconnectConfirmationModal({
   roomNumber,
   onCancel,
   onConfirm,
+  isProcessing = false,
 }: DisconnectConfirmationModalProps) {
   return (
     <Modal
@@ -58,11 +61,16 @@ export function DisconnectConfirmationModal({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.confirmButton}
+                style={[styles.confirmButton, isProcessing && styles.buttonDisabled]}
                 onPress={onConfirm}
                 activeOpacity={0.7}
+                disabled={isProcessing}
               >
-                <Text style={styles.confirmButtonText}>Loskoppelen</Text>
+                {isProcessing ? (
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+                ) : (
+                  <Text style={styles.confirmButtonText}>Loskoppelen</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -151,5 +159,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textOnPrimary,
     fontWeight: FontWeight.medium,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
