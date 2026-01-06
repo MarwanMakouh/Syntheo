@@ -1,0 +1,68 @@
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
+import type { Diet } from '@/types/diet';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+/**
+ * Fetch diet information for a specific resident
+ */
+export const fetchDietByResident = async (residentId: number): Promise<Diet | null> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.dietByResident(residentId)}`
+    );
+
+    if (response.status === 404) {
+      return null; // No diet found for this resident
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<Diet> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(`Error fetching diet for resident ${residentId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Create or update diet for a resident
+ * NOTE: This should typically go through change requests
+ */
+export const createOrUpdateDiet = async (dietData: {
+  resident_id: number;
+  diet_type: string;
+  description?: string;
+  preferences?: {
+    likes?: string[];
+    dislikes?: string[];
+  };
+}): Promise<Diet> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.diets}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(dietData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<Diet> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error creating/updating diet:', error);
+    throw error;
+  }
+};

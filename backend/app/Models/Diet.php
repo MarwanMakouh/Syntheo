@@ -17,10 +17,12 @@ class Diet extends Model
         'resident_id',
         'diet_type',
         'description',
+        'preferences',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'preferences' => 'array',
     ];
 
     public function resident()
