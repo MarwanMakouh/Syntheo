@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -23,22 +24,51 @@ const users: any[] = [];
 export default function WijzigingsverzoekDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [request, setRequest] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const requestId = Number(id);
-  const request = changeRequests.find((r) => r.request_id === requestId);
-  const fields = changeFields.filter((f) => f.request_id === requestId);
+
+  useEffect(() => {
+    loadChangeRequest();
+  }, [id]);
+
+  const loadChangeRequest = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchChangeRequests();
+      const foundRequest = data.find((r) => r.request_id === requestId);
+      if (foundRequest) {
+        setRequest(foundRequest);
+      } else {
+        setError('Wijzigingsverzoek niet gevonden');
+      }
+    } catch (err) {
+      console.error('Failed to load change request:', err);
+      setError('Kan wijzigingsverzoek niet laden');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fields = request?.changeFields || [];
   const resident = request ? residents.find((r) => r.resident_id === request.resident_id) : null;
   const requester = request ? users.find((u) => u.user_id === request.requester_id) : null;
   const reviewer = request?.reviewer_id
     ? users.find((u) => u.user_id === request.reviewer_id)
     : null;
 
-  if (!request) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <NavigationBar />
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Wijzigingsverzoek niet gevonden</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Laden...</Text>
         </View>
       </SafeAreaView>
     );
@@ -123,16 +153,16 @@ export default function WijzigingsverzoekDetailScreen() {
               <View
                 style={[
                   styles.urgencyBadge,
-                  { backgroundColor: getUrgencyBgColor(request.urgency) }
+                  { backgroundColor: getUrgencyBgColor(mapUrgency(request.urgency)) }
                 ]}
               >
                 <Text
                   style={[
                     styles.urgencyText,
-                    { color: getUrgencyColor(request.urgency) }
+                    { color: getUrgencyColor(mapUrgency(request.urgency)) }
                   ]}
                 >
-                  {request.urgency.toUpperCase()}
+                  {mapUrgency(request.urgency).toUpperCase()}
                 </Text>
               </View>
             </View>
@@ -169,22 +199,26 @@ export default function WijzigingsverzoekDetailScreen() {
               <Text style={styles.cardTitle}>Voorgestelde Wijzigingen</Text>
             </View>
             <View style={styles.cardContent}>
-              {fields.map((field) => (
-                <View key={field.field_id} style={styles.changeItem}>
-                  <Text style={styles.fieldName}>{translateFieldName(field.field_name)}</Text>
-                  <View style={styles.changeRow}>
-                    <View style={styles.changeBox}>
-                      <Text style={styles.changeLabel}>Oud</Text>
-                      <Text style={styles.oldValue}>{field.old}</Text>
-                    </View>
-                    <MaterialIcons name="arrow-forward" size={20} color={Colors.textSecondary} />
-                    <View style={styles.changeBox}>
-                      <Text style={styles.changeLabel}>Nieuw</Text>
-                      <Text style={styles.newValue}>{field.new}</Text>
+              {fields && fields.length > 0 ? (
+                fields.map((field) => (
+                  <View key={field.field_id} style={styles.changeItem}>
+                    <Text style={styles.fieldName}>{translateFieldName(field.field_name)}</Text>
+                    <View style={styles.changeRow}>
+                      <View style={styles.changeBox}>
+                        <Text style={styles.changeLabel}>Oud</Text>
+                        <Text style={styles.oldValue}>{field.old || '-'}</Text>
+                      </View>
+                      <MaterialIcons name="arrow-forward" size={20} color={Colors.textSecondary} />
+                      <View style={styles.changeBox}>
+                        <Text style={styles.changeLabel}>Nieuw</Text>
+                        <Text style={styles.newValue}>{field.new}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={styles.emptyText}>Geen wijzigingen gevonden</Text>
+              )}
             </View>
           </View>
 
@@ -197,8 +231,8 @@ export default function WijzigingsverzoekDetailScreen() {
             <View style={styles.cardContent}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Huidige status:</Text>
-                <Text style={[styles.statusText, { color: getStatusColor(request.status) }]}>
-                  {request.status}
+                <Text style={[styles.statusText, { color: getStatusColor(mapStatus(request.status)) }]}>
+                  {mapStatus(request.status)}
                 </Text>
               </View>
               {request.reviewed_at && (
@@ -221,22 +255,32 @@ export default function WijzigingsverzoekDetailScreen() {
           </View>
 
           {/* Action Buttons - Only show for pending requests */}
-          {request.status === 'In behandeling' && (
+          {request.status === 'pending' && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[styles.button, styles.rejectButton]}
                 onPress={handleReject}
                 activeOpacity={0.7}
+                disabled={isRejecting || isApproving}
               >
-                <MaterialIcons name="close" size={20} color={Colors.textOnPrimary} />
+                {isRejecting ? (
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+                ) : (
+                  <MaterialIcons name="close" size={20} color={Colors.textOnPrimary} />
+                )}
                 <Text style={styles.buttonText}>Afkeuren</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.approveButton]}
                 onPress={handleApprove}
                 activeOpacity={0.7}
+                disabled={isRejecting || isApproving}
               >
-                <MaterialIcons name="check" size={20} color={Colors.textOnPrimary} />
+                {isApproving ? (
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+                ) : (
+                  <MaterialIcons name="check" size={20} color={Colors.textOnPrimary} />
+                )}
                 <Text style={styles.buttonText}>Goedkeuren</Text>
               </TouchableOpacity>
             </View>
@@ -445,5 +489,24 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.textOnPrimary,
     fontWeight: FontWeight.semibold,
+  },
+
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  loadingText: {
+    fontSize: FontSize.lg,
+    color: Colors.textSecondary,
+  },
+  emptyText: {
+    fontSize: FontSize.md,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingVertical: Spacing.lg,
   },
 });

@@ -59,4 +59,13 @@ export const API_ENDPOINTS = {
   changeRequestById: (id: number) => `/change-requests/${id}`,
   approveChangeRequest: (id: number) => `/change-requests/${id}/approve`,
   rejectChangeRequest: (id: number) => `/change-requests/${id}/reject`,
+
+  // Announcements
+  announcements: '/announcements',
+  announcementById: (id: number) => `/announcements/${id}`,
+  userAnnouncements: (userId: number) => `/announcements/user/${userId}`,
+
+  // Rooms operations
+  linkResident: (roomId: number) => `/rooms/${roomId}/link-resident`,
+  unlinkResident: (roomId: number) => `/rooms/${roomId}/unlink-resident`,
 };

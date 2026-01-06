@@ -25,6 +25,7 @@ const resSchedules: any[] = [];
 export default function DashboardScreen() {
   const router = useRouter();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
+  const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -139,7 +140,7 @@ export default function DashboardScreen() {
     }
   };
 
-  const handleSendAnnouncement = (announcement: {
+  const handleSendAnnouncement = async (announcement: {
     title: string;
     message: string;
     recipientCategory: string;
@@ -258,6 +259,7 @@ export default function DashboardScreen() {
         visible={announcementModalVisible}
         onClose={() => setAnnouncementModalVisible(false)}
         onSend={handleSendAnnouncement}
+        isLoading={isSendingAnnouncement}
       />
     </View>
   );

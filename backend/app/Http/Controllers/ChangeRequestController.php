@@ -101,7 +101,7 @@ class ChangeRequestController extends Controller
      */
     public function approve(Request $request, $id)
     {
-        $changeRequest = ChangeRequest::find($id);
+        $changeRequest = ChangeRequest::with('changeFields')->find($id);
 
         if (!$changeRequest) {
             return response()->json([
@@ -114,6 +114,9 @@ class ChangeRequestController extends Controller
             'reviewer_id' => 'required|exists:users,user_id',
         ]);
 
+        // Apply the changes to the database
+        $this->applyChanges($changeRequest);
+
         $changeRequest->update([
             'status' => 'approved',
             'reviewer_id' => $validated['reviewer_id'],
@@ -122,9 +125,127 @@ class ChangeRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Wijzigingsverzoek goedgekeurd',
+            'message' => 'Wijzigingsverzoek goedgekeurd en toegepast',
             'data' => $changeRequest->load(['resident', 'requester', 'reviewer', 'changeFields'])
         ]);
+    }
+
+    /**
+     * Apply approved changes to the database
+     */
+    private function applyChanges(ChangeRequest $changeRequest)
+    {
+        $resident = $changeRequest->resident;
+
+        foreach ($changeRequest->changeFields as $field) {
+            $fieldName = $field->field_name;
+            $newValue = $field->new;
+
+            // Handle different field types
+            switch ($fieldName) {
+                case 'diet_type':
+                    // Update or create diet record
+                    \DB::table('diets')
+                        ->where('resident_id', $resident->resident_id)
+                        ->update(['diet_type' => $newValue, 'updated_at' => now()]);
+                    break;
+
+                case 'medication_dosage':
+                    // Update medication dosage in res_medications
+                    // This is simplified - you might need to identify which medication specifically
+                    \DB::table('res_medications')
+                        ->where('resident_id', $resident->resident_id)
+                        ->update(['dosage' => $newValue, 'updated_at' => now()]);
+                    break;
+
+                case 'medication_frequency':
+                    // Update medication frequency
+                    \DB::table('res_medications')
+                        ->where('resident_id', $resident->resident_id)
+                        ->update(['frequency' => $newValue, 'updated_at' => now()]);
+                    break;
+
+                case 'room_number':
+                    // Update room assignment
+                    $newRoom = \DB::table('rooms')
+                        ->where('room_number', $newValue)
+                        ->first();
+
+                    if ($newRoom) {
+                        // Unlink from old room
+                        \DB::table('rooms')
+                            ->where('resident_id', $resident->resident_id)
+                            ->update(['resident_id' => null, 'updated_at' => now()]);
+
+                        // Link to new room
+                        \DB::table('rooms')
+                            ->where('room_id', $newRoom->room_id)
+                            ->update(['resident_id' => $resident->resident_id, 'updated_at' => now()]);
+                    }
+                    break;
+
+                case 'contact_phone':
+                    // Update contact phone in contacts table
+                    \DB::table('contacts')
+                        ->where('resident_id', $resident->resident_id)
+                        ->where('relationship', 'Noodcontact') // or another identifier
+                        ->update(['phone' => $newValue, 'updated_at' => now()]);
+                    break;
+
+                case 'allergy':
+                case 'allergies':
+                    // Add new allergy
+                    \DB::table('allergies')->insert([
+                        'resident_id' => $resident->resident_id,
+                        'symptom' => $newValue,
+                        'severity' => 'medium', // Default severity
+                        'created_at' => now(),
+                    ]);
+                    break;
+
+                case 'preferences.likes':
+                    // Update diet preferences - likes
+                    $diet = \DB::table('diets')
+                        ->where('resident_id', $resident->resident_id)
+                        ->first();
+
+                    if ($diet) {
+                        $preferences = json_decode($diet->preferences, true) ?? [];
+                        // Convert comma-separated string to array
+                        $preferences['likes'] = array_map('trim', explode(',', $newValue));
+
+                        \DB::table('diets')
+                            ->where('resident_id', $resident->resident_id)
+                            ->update([
+                                'preferences' => json_encode($preferences),
+                                'updated_at' => now()
+                            ]);
+                    }
+                    break;
+
+                case 'preferences.dislikes':
+                    // Update diet preferences - dislikes
+                    $diet = \DB::table('diets')
+                        ->where('resident_id', $resident->resident_id)
+                        ->first();
+
+                    if ($diet) {
+                        $preferences = json_decode($diet->preferences, true) ?? [];
+                        // Convert comma-separated string to array
+                        $preferences['dislikes'] = array_map('trim', explode(',', $newValue));
+
+                        \DB::table('diets')
+                            ->where('resident_id', $resident->resident_id)
+                            ->update([
+                                'preferences' => json_encode($preferences),
+                                'updated_at' => now()
+                            ]);
+                    }
+                    break;
+
+                // Add more cases as needed for other field types
+            }
+        }
     }
 
     /**

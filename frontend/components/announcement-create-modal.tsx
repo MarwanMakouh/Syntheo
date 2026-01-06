@@ -8,6 +8,7 @@ import {
   Modal,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
@@ -20,7 +21,8 @@ interface AnnouncementCreateModalProps {
     message: string;
     recipientCategory: RecipientCategory;
     recipientDetails?: string | string[];
-  }) => void;
+  }) => void | Promise<void>;
+  isLoading?: boolean;
 }
 
 type RecipientCategory = 'Verdieping' | 'Individuele mensen' | 'Iedereen' | 'Afdeling';
@@ -48,7 +50,8 @@ const INDIVIDUALS = [
 export function AnnouncementCreateModal({
   visible,
   onClose,
-  onSend
+  onSend,
+  isLoading = false,
 }: AnnouncementCreateModalProps) {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -101,7 +104,7 @@ export function AnnouncementCreateModal({
 
   const needsDetailsSelection = selectedCategory !== 'Iedereen';
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (title.trim().length === 0) {
       alert('Vul een titel in');
       return;
@@ -124,7 +127,7 @@ export function AnnouncementCreateModal({
       }
     }
 
-    onSend({
+    await onSend({
       title: title.trim(),
       message: message.trim(),
       recipientCategory: selectedCategory,
@@ -133,13 +136,15 @@ export function AnnouncementCreateModal({
         : selectedDetails || undefined,
     });
 
-    // Reset form
-    setTitle('');
-    setMessage('');
-    setSelectedCategory('Iedereen');
-    setSelectedDetails('');
-    setSelectedIndividuals([]);
-    onClose();
+    // Only reset if not loading (onSend might have failed)
+    if (!isLoading) {
+      // Reset form
+      setTitle('');
+      setMessage('');
+      setSelectedCategory('Iedereen');
+      setSelectedDetails('');
+      setSelectedIndividuals([]);
+    }
   };
 
   const handleClose = () => {
@@ -361,10 +366,15 @@ export function AnnouncementCreateModal({
             <Text style={styles.cancelButtonText}>Annuleer</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.sendButton}
+            style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
             onPress={handleSend}
+            disabled={isLoading}
           >
-            <Text style={styles.sendButtonText}>Verzend</Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+            ) : (
+              <Text style={styles.sendButtonText}>Verzend</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -561,5 +571,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     fontWeight: FontWeight.semibold,
     color: Colors.textOnPrimary,
+  },
+  sendButtonDisabled: {
+    opacity: 0.6,
   },
 });

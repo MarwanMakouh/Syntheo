@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
@@ -24,6 +25,7 @@ interface AssignResidentModalProps {
   assignedResidents: ResidentOption[];
   onCancel: () => void;
   onAssign: (residentId: number) => void;
+  isProcessing?: boolean;
 }
 
 export function AssignResidentModal({
@@ -33,6 +35,7 @@ export function AssignResidentModal({
   assignedResidents,
   onCancel,
   onAssign,
+  isProcessing = false,
 }: AssignResidentModalProps) {
   const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -129,13 +132,17 @@ export function AssignResidentModal({
               <TouchableOpacity
                 style={[
                   styles.assignButton,
-                  !selectedResidentId && styles.assignButtonDisabled,
+                  (!selectedResidentId || isProcessing) && styles.assignButtonDisabled,
                 ]}
                 onPress={handleAssign}
                 activeOpacity={0.7}
-                disabled={!selectedResidentId}
+                disabled={!selectedResidentId || isProcessing}
               >
-                <Text style={styles.assignButtonText}>Toewijzen</Text>
+                {isProcessing ? (
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+                ) : (
+                  <Text style={styles.assignButtonText}>Toewijzen</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
