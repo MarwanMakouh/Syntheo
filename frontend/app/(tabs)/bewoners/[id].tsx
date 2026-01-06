@@ -34,6 +34,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 import { createChangeRequest } from '@/Services/changeRequestsApi';
 import type { CreateChangeRequestData } from '@/types/changeRequest';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 // backend state (loaded from API)
 
@@ -47,7 +48,8 @@ export default function BewonerInfoScreen() {
   const [loadingRoom, setLoadingRoom] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
   const [loadingMedications, setLoadingMedications] = useState(false);
-  const [currentUserId] = useState(1); // TODO: Get from auth context
+  const { currentUser } = useAuth();
+  const currentUserId = currentUser?.user_id || 1;
   const [resident, setResident] = useState<Resident | null>(null);
   const [loadingResident, setLoadingResident] = useState(false);
   const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
@@ -240,6 +242,7 @@ export default function BewonerInfoScreen() {
         category: melding.type,
         urgency: melding.urgency,
         content: melding.content,
+        author_id: currentUserId,
       });
       setShowNewNoteModal(false);
 

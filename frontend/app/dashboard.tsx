@@ -76,12 +76,6 @@ export default function DashboardScreen() {
         label: 'Stabiel',
         textColor: Colors.statsStable,
       },
-      {
-        id: 4,
-        number: `${stats.compliance}%`,
-        label: 'Med. Naleving',
-        textColor: Colors.statsCompliance,
-      },
     ],
     [stats]
   );
@@ -114,25 +108,40 @@ export default function DashboardScreen() {
     [stats.pendingChanges]
   );
 
-  // Get urgent residents from data
+  // Get urgent residents from data (one entry per resident, latest urgent note)
   const urgentResidents = useMemo(() => {
     const urgentNotes = notes.filter((note) => note.urgency === 'Hoog' && !note.is_resolved);
 
-    return urgentNotes.map((note) => {
-      const resident = residents.find((r) => r.resident_id === note.resident_id);
-      const room = rooms.find((r) => r.resident_id === note.resident_id);
-      const residentNotes = notes.filter(
-        (n) => n.resident_id === note.resident_id && !n.is_resolved
-      );
+    // Group by resident_id and pick latest note per resident
+    const byResident = new Map<number, any>();
+    urgentNotes.forEach((note) => {
+      const existing = byResident.get(note.resident_id);
+      if (!existing) {
+        byResident.set(note.resident_id, note);
+      } else {
+        if (new Date(note.created_at) > new Date(existing.created_at)) {
+          byResident.set(note.resident_id, note);
+        }
+      }
+    });
 
-      return {
-        id: note.resident_id,
-        room: room?.room_id || 0,
+    const result: Array<any> = [];
+    byResident.forEach((note, residentId) => {
+      const resident = residents.find((r) => r.resident_id === residentId);
+      const room = rooms.find((r) => r.resident_id === residentId);
+      const residentNotes = notes.filter((n) => n.resident_id === residentId && !n.is_resolved);
+
+      result.push({
+        id: residentId,
+        room: room?.room_number || room?.room_id || '-',
         name: resident?.name || 'Onbekend',
         incident: `${note.category} - ${formatDate(note.created_at, 'dd-MM, HH:mm')}`,
         openNotes: residentNotes.length,
-      };
+      });
     });
+
+    // sort by newest incident
+    return result.sort((a, b) => new Date(b.incident.split(' - ')[1]).getTime() - new Date(a.incident.split(' - ')[1]).getTime());
   }, [notes, residents, rooms]);
 
   useEffect(() => {

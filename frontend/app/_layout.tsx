@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { RoleProvider } from '@/contexts/RoleContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -14,8 +15,9 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <RoleProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <AuthProvider>
+      <RoleProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="role-selection" />
@@ -25,7 +27,8 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
         </Stack>
         <StatusBar style="auto" />
-      </ThemeProvider>
-    </RoleProvider>
+        </ThemeProvider>
+      </RoleProvider>
+    </AuthProvider>
   );
 }
