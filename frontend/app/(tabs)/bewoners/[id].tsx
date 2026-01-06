@@ -27,14 +27,14 @@ import {
   getResidentById,
   getContactsForResident,
   getMedicationForResident,
-  getAllergiesForResident,
-  diets,
   medicationRounds,
   rooms,
   users,
 } from '@/Services';
 import { fetchNotesByResident, createNote } from '@/Services/notesApi';
+import { createChangeRequest } from '@/Services/changeRequestsApi';
 import type { Note } from '@/types/note';
+import type { CreateChangeRequestData } from '@/types/changeRequest';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function BewonerInfoScreen() {
@@ -43,13 +43,12 @@ export default function BewonerInfoScreen() {
   const [showNewNoteModal, setShowNewNoteModal] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(false);
+  const [currentUserId] = useState(1); // TODO: Get from auth context
 
   const resident = getResidentById(Number(id));
   const roomData = rooms.find(r => r.resident_id === Number(id));
   const contacts = getContactsForResident(Number(id));
   const medications = getMedicationForResident(Number(id));
-  const allergies = getAllergiesForResident(Number(id));
-  const residentDiets = diets.filter(d => d.resident_id === Number(id));
 
   // Load notes from backend when component mounts or when switching to Meldingen tab
   useEffect(() => {
@@ -162,10 +161,21 @@ export default function BewonerInfoScreen() {
     }
   };
 
-  const handleSaveDietChanges = (data: any) => {
-    // TODO: Save to backend when ready
-    console.log('Dieet wijzigingen:', data);
-    alert('Verzoek ingediend! De wijzigingen worden ter goedkeuring naar de hoofdverpleegkundige gestuurd.');
+  const handleSaveDietChanges = async (changeRequestData: CreateChangeRequestData) => {
+    try {
+      await createChangeRequest(changeRequestData);
+
+      Alert.alert(
+        'Succes',
+        'Wijzigingsverzoek ingediend! De wijzigingen worden ter goedkeuring naar de hoofdverpleegkundige gestuurd.'
+      );
+    } catch (error) {
+      console.error('Failed to create change request:', error);
+      Alert.alert(
+        'Fout',
+        'Kon wijzigingsverzoek niet indienen. Probeer opnieuw.'
+      );
+    }
   };
 
   const renderTabContent = () => {
@@ -254,8 +264,8 @@ export default function BewonerInfoScreen() {
       case 'Dieet':
         return (
           <DieetInformatie
-            allergies={allergies}
-            diets={residentDiets}
+            residentId={Number(id)}
+            currentUserId={currentUserId}
             onSaveChanges={handleSaveDietChanges}
           />
         );

@@ -11,17 +11,14 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
+import type { CreateChangeRequestData } from '@/types';
 
 interface DieetBewerkenModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (data: {
-    allergies: string;
-    dietTypes: string;
-    likes: string;
-    dislikes: string;
-    urgency: 'Normaal' | 'Aandacht' | 'Urgent';
-  }) => void;
+  onSave: (changeRequestData: CreateChangeRequestData) => void;
+  residentId: number;
+  currentUserId: number;
   initialData?: {
     allergies: string;
     dietTypes: string;
@@ -36,7 +33,13 @@ const URGENCY_OPTIONS = [
   { value: 'Urgent', label: 'Urgent' },
 ] as const;
 
-export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: DieetBewerkenModalProps) {
+const urgencyMap = {
+  'Normaal': 'low',
+  'Aandacht': 'medium',
+  'Urgent': 'high',
+} as const;
+
+export function DieetBewerkenModal({ visible, onClose, onSave, residentId, currentUserId, initialData }: DieetBewerkenModalProps) {
   const [allergies, setAllergies] = useState(initialData?.allergies || '');
   const [dietTypes, setDietTypes] = useState(initialData?.dietTypes || '');
   const [likes, setLikes] = useState(initialData?.likes || '');
@@ -44,13 +47,51 @@ export function DieetBewerkenModal({ visible, onClose, onSave, initialData }: Di
   const [urgency, setUrgency] = useState<'Normaal' | 'Aandacht' | 'Urgent'>('Aandacht');
 
   const handleSave = () => {
-    onSave({
-      allergies,
-      dietTypes,
-      likes,
-      dislikes,
-      urgency,
-    });
+    // Build change fields array with only changed fields
+    const fields: Array<{field_name: string; old: string | null; new: string}> = [];
+
+    // Compare and add changed fields
+    if (allergies !== initialData?.allergies) {
+      fields.push({
+        field_name: 'allergies',
+        old: initialData?.allergies || null,
+        new: allergies,
+      });
+    }
+
+    if (dietTypes !== initialData?.dietTypes) {
+      fields.push({
+        field_name: 'diet_type',
+        old: initialData?.dietTypes || null,
+        new: dietTypes,
+      });
+    }
+
+    if (likes !== initialData?.likes) {
+      fields.push({
+        field_name: 'preferences.likes',
+        old: initialData?.likes || null,
+        new: likes,
+      });
+    }
+
+    if (dislikes !== initialData?.dislikes) {
+      fields.push({
+        field_name: 'preferences.dislikes',
+        old: initialData?.dislikes || null,
+        new: dislikes,
+      });
+    }
+
+    // Create change request data
+    const changeRequestData: CreateChangeRequestData = {
+      resident_id: residentId,
+      requester_id: currentUserId,
+      urgency: urgencyMap[urgency],
+      fields,
+    };
+
+    onSave(changeRequestData);
     handleClose();
   };
 
