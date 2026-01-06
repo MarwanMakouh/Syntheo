@@ -36,7 +36,6 @@ import type { Note } from '@/types/note';
 import type { Room } from '@/types/resident';
 import { fetchResMedicationsByResident } from '@/Services/resMedicationsApi';
 import { createChangeRequest } from '@/Services/changeRequestsApi';
-import type { Note } from '@/types/note';
 import type { CreateChangeRequestData } from '@/types/changeRequest';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
@@ -54,9 +53,6 @@ export default function BewonerInfoScreen() {
 
   const resident = getResidentById(Number(id));
   const contacts = getContactsForResident(Number(id));
-  const allergies = getAllergiesForResident(Number(id));
-  const residentDiets = diets.filter(d => d.resident_id === Number(id));
-  const medications = getMedicationForResident(Number(id));
 
   // Load notes from backend when component mounts or when switching to Meldingen tab
   useEffect(() => {
