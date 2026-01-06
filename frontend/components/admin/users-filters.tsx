@@ -30,10 +30,10 @@ export function UsersFilters({
           style={styles.picker}
         >
           <Picker.Item label="Alle rollen" value="all" />
-          <Picker.Item label="Beheerder" value="Beheerder" />
-          <Picker.Item label="Hoofdverpleegster" value="Hoofdverpleegster" />
-          <Picker.Item label="Verpleegster" value="Verpleegster" />
-          <Picker.Item label="Keukenpersoneel" value="Keukenpersoneel" />
+          <Picker.Item label="Beheerder" value="admin" />
+          <Picker.Item label="Verpleegster" value="verpleegkundige" />
+          <Picker.Item label="Dokter" value="dokter" />
+          <Picker.Item label="Keukenpersoneel" value="keukenpersoneel" />
         </Picker>
       </View>
 

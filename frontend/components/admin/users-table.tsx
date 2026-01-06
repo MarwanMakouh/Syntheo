@@ -58,7 +58,7 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
               <RoleBadge role={user.role} />
             </View>
             <View style={[styles.cell, styles.statusColumn]}>
-              <StatusBadge status={user.is_active !== false ? 'Actief' : 'Inactief'} />
+              <StatusBadge status="Actief" />
             </View>
             <Text style={[styles.cell, styles.dateColumn]} numberOfLines={1}>
               {formatDate(user.updated_at)}

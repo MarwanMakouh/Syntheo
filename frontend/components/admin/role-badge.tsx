@@ -5,19 +5,29 @@ interface RoleBadgeProps {
   role: string;
 }
 
+// Map backend roles to display names
+const roleMapping: Record<string, string> = {
+  'admin': 'Beheerder',
+  'verpleegkundige': 'Verpleegster',
+  'dokter': 'Dokter',
+  'keukenpersoneel': 'Keukenpersoneel',
+};
+
 const roleColors: Record<string, string> = {
   'Beheerder': '#E74C3C',
-  'Hoofdverpleegster': '#10B981',
+  'Dokter': '#10B981',
   'Verpleegster': '#27AE60',
   'Keukenpersoneel': '#F39C12',
 };
 
 export function RoleBadge({ role }: RoleBadgeProps) {
-  const backgroundColor = roleColors[role] || Colors.textSecondary;
+  // Map backend role to display name
+  const displayRole = roleMapping[role.toLowerCase()] || role;
+  const backgroundColor = roleColors[displayRole] || Colors.textSecondary;
 
   return (
     <Text style={[styles.badge, { backgroundColor }]}>
-      {role.toUpperCase()}
+      {displayRole.toUpperCase()}
     </Text>
   );
 }

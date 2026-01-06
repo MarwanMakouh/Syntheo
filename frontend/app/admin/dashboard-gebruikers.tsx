@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,30 +7,50 @@ import {
   ScrollView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout } from '@/components/admin';
 import { UsersTable } from '@/components/admin/users-table';
 import { UsersFilters } from '@/components/admin/users-filters';
-import { users } from '@/Services';
+import { fetchUsers, deleteUser } from '@/Services';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 import type { User } from '@/types/user';
 
 export default function DashboardGebruikersScreen() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch users from API
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchUsers();
+      setUsers(data);
+    } catch (err) {
+      setError('Fout bij het laden van gebruikers');
+      console.error('Error loading users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter users based on filters
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
-      const isUserActive = user.is_active !== false; // Default to active if not specified
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'actief' && isUserActive) ||
-        (statusFilter === 'inactief' && !isUserActive);
+      // Status filter temporarily disabled since backend doesn't have is_active field yet
+      const matchesStatus = statusFilter === 'all';
 
       const matchesSearch =
         searchQuery === '' ||
@@ -39,7 +59,7 @@ export default function DashboardGebruikersScreen() {
 
       return matchesRole && matchesStatus && matchesSearch;
     });
-  }, [roleFilter, statusFilter, searchQuery]);
+  }, [users, roleFilter, statusFilter, searchQuery]);
 
   const handleNewUser = () => {
     // TODO: Open modal to create new user
@@ -60,9 +80,16 @@ export default function DashboardGebruikersScreen() {
         {
           text: 'Verwijderen',
           style: 'destructive',
-          onPress: () => {
-            // TODO: Call API to delete user
-            console.log('Delete user:', user.user_id);
+          onPress: async () => {
+            try {
+              await deleteUser(user.user_id);
+              // Reload users after deletion
+              loadUsers();
+              Alert.alert('Succes', 'Gebruiker succesvol verwijderd');
+            } catch (err) {
+              Alert.alert('Fout', 'Kon gebruiker niet verwijderen');
+              console.error('Error deleting user:', err);
+            }
           },
         },
       ]
@@ -82,22 +109,41 @@ export default function DashboardGebruikersScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Filters */}
-          <UsersFilters
-            roleFilter={roleFilter}
-            statusFilter={statusFilter}
-            searchQuery={searchQuery}
-            onRoleFilterChange={setRoleFilter}
-            onStatusFilterChange={setStatusFilter}
-            onSearchChange={setSearchQuery}
-          />
+          {/* Loading State */}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Gebruikers laden...</Text>
+            </View>
+          ) : error ? (
+            /* Error State */
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
+                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              {/* Filters */}
+              <UsersFilters
+                roleFilter={roleFilter}
+                statusFilter={statusFilter}
+                searchQuery={searchQuery}
+                onRoleFilterChange={setRoleFilter}
+                onStatusFilterChange={setStatusFilter}
+                onSearchChange={setSearchQuery}
+              />
 
-          {/* Users Table */}
-          <UsersTable
-            users={filteredUsers}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-          />
+              {/* Users Table */}
+              <UsersTable
+                users={filteredUsers}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
     </AdminLayout>
@@ -142,6 +188,43 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   newButtonText: {
+    color: Colors.background,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
+  loadingText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
+  errorText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
+  },
+  retryButtonText: {
     color: Colors.background,
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
