@@ -12,3 +12,6 @@ export { RoomStatusBadge } from './room-status-badge';
 export { ResidentStatusBadge } from './resident-status-badge';
 export { RoomCard } from './room-card';
 export { WarningBanner } from './warning-banner';
+export { StatsCard } from './stats-card';
+export { NoteCard } from './note-card';
+export { NotesFilters } from './notes-filters';
