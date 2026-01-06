@@ -50,6 +50,8 @@ export default function RoleSelectionScreen() {
     // Navigate to the appropriate screen based on role
     if (role === 'Hoofdverpleegster') {
       router.replace('/dashboard');
+    } else if (role === 'Keukenpersoneel') {
+      router.replace('/(kitchen-tabs)/allergieen');
     } else {
       router.replace('/(tabs)/bewoners');
     }

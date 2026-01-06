@@ -192,8 +192,7 @@ export default function AllergieenOverzichtScreen() {
       <View style={styles.warningBanner}>
         <MaterialIcons name="warning" size={20} color="#DC2626" />
         <Text style={styles.warningText}>
-          LET OP: Levengevaarlijk! Deze lijst bevat alle bewoners met allergieën.
-          Controleer ALTIJD voordat u een hierold of serveerd.
+          LET OP: Levengevaarlijk! Deze lijst bevat alle bewoners met allergieën. Controleer ALTIJD voordat u een hierold of serveerd.
         </Text>
       </View>
 

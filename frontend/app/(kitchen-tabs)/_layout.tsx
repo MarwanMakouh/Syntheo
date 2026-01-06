@@ -6,7 +6,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { NavigationBar } from '@/components';
 import { Colors, FontSize, FontWeight } from '@/constants';
 
-export default function TabLayout() {
+export default function KitchenTabLayout() {
   return (
     <Tabs
       screenOptions={{
@@ -28,32 +28,22 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="bewoners"
+        name="allergieen"
         options={{
-          title: 'Bewoners',
-          href: '/(tabs)/bewoners',
+          title: 'Allergieën',
+          href: '/(kitchen-tabs)/allergieen',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="people" size={size} color={color} />
+            <MaterialIcons name="warning" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="medicatieronde"
+        name="dieten"
         options={{
-          title: 'Medicatie',
-          href: '/(tabs)/medicatieronde',
+          title: 'Diëten & Voorkeuren',
+          href: '/(kitchen-tabs)/dieten',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="medical-services" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="meldingen"
-        options={{
-          title: 'Meldingen',
-          href: '/(tabs)/meldingen',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="notifications" size={size} color={color} />
+            <MaterialIcons name="restaurant-menu" size={size} color={color} />
           ),
         }}
       />
