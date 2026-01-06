@@ -125,6 +125,8 @@ Route::prefix('contacts')->group(function () {
 
 // Diet Management Routes
 Route::prefix('diets')->group(function () {
+    // Kitchen staff diet overview
+    Route::get('/kitchen-overview', [DietController::class, 'kitchenOverview']);
     Route::get('/resident/{residentId}', [DietController::class, 'show']);
     Route::post('/', [DietController::class, 'store']);
     Route::put('/{id}', [DietController::class, 'update']);
