@@ -33,7 +33,25 @@ export const fetchMedicationRounds = async (filters?: {
     }
 
     const result: ApiResponse<MedicationRound[]> = await response.json();
-    return result.data || [];
+    const data = result.data || [];
+
+    // Normalize status values from backend to Dutch for the frontend
+    const statusMap: Record<string, string> = {
+      given: 'Gegeven',
+      missed: 'Gemist',
+      refused: 'Geweigerd',
+      delayed: 'Vertraagd',
+      // already localized values passthrough
+      Gegeven: 'Gegeven',
+      Gemist: 'Gemist',
+      Geweigerd: 'Geweigerd',
+      Vertraagd: 'Vertraagd',
+    };
+
+    return data.map((r: MedicationRound) => ({
+      ...r,
+      status: statusMap[(r.status || '').toString()] || r.status,
+    }));
   } catch (error) {
     console.error('Error fetching medication rounds:', error);
     throw error;

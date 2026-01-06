@@ -51,8 +51,15 @@ export const fetchDietByResident = async (residentId: number): Promise<Diet | nu
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result: ApiResponse<Diet> = await response.json();
-    return result.data;
+    const result: ApiResponse<any> = await response.json();
+    const data = result.data;
+
+    // Some backends return a single object, others return an array
+    if (Array.isArray(data)) {
+      return data.length > 0 ? data[0] : null;
+    }
+
+    return data || null;
   } catch (error) {
     console.error(`Error fetching diet for resident ${residentId}:`, error);
     throw error;
