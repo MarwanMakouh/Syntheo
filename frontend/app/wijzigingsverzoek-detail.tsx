@@ -14,12 +14,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import { formatDate } from '@/utils/date';
-
-// backend callen
-const changeRequests: any[] = [];
-const changeFields: any[] = [];
-const residents: any[] = [];
-const users: any[] = [];
+import { fetchChangeRequests, approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
+import { fetchResidents } from '@/Services/residentsApi';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
+import { mapUrgencyFromBackend } from '@/Services/noteMapper';
 
 export default function WijzigingsverzoekDetailScreen() {
   const router = useRouter();
@@ -29,6 +27,8 @@ export default function WijzigingsverzoekDetailScreen() {
   const [request, setRequest] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [residents, setResidents] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   const requestId = Number(id);
 
@@ -36,17 +36,51 @@ export default function WijzigingsverzoekDetailScreen() {
     loadChangeRequest();
   }, [id]);
 
+  const mapUrgency = (u: string) => mapUrgencyFromBackend(u || '');
+  const mapStatus = (s: string) => {
+    switch (s) {
+      case 'approved':
+        return 'Goedgekeurd';
+      case 'rejected':
+        return 'Afgekeurd';
+      case 'pending':
+      default:
+        return 'In behandeling';
+    }
+  };
+
   const loadChangeRequest = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await fetchChangeRequests();
-      const foundRequest = data.find((r) => r.request_id === requestId);
+      const [data, residentsData] = await Promise.all([
+        fetchChangeRequests(),
+        fetchResidents(),
+      ]);
+
+      // fetch users list
+      let usersData: any[] = [];
+      try {
+        const resp = await fetch(`${API_BASE_URL}${API_ENDPOINTS.users}`);
+        if (resp.ok) {
+          const json = await resp.json();
+          usersData = json.data || [];
+        } else {
+          console.error('Failed to fetch users, status:', resp.status);
+        }
+      } catch (e) {
+        console.error('Failed to fetch users:', e);
+      }
+
+      const foundRequest = (data || []).find((r) => r.request_id === requestId);
       if (foundRequest) {
         setRequest(foundRequest);
       } else {
         setError('Wijzigingsverzoek niet gevonden');
       }
+
+      setResidents(residentsData || []);
+      setUsers(usersData || []);
     } catch (err) {
       console.error('Failed to load change request:', err);
       setError('Kan wijzigingsverzoek niet laden');
@@ -75,17 +109,38 @@ export default function WijzigingsverzoekDetailScreen() {
   }
 
   const handleApprove = () => {
-    // TODO: backend callen
-    console.log('Wijzigingsverzoek goedgekeurd:', requestId);
-    alert('Wijzigingsverzoek goedgekeurd! (Demo mode)');
-    router.back();
+    (async () => {
+      try {
+        setIsApproving(true);
+        // TODO: replace reviewerId with actual auth user id
+        const reviewerId = 1;
+        await approveChangeRequest(requestId, reviewerId);
+        alert('Wijzigingsverzoek goedgekeurd');
+        router.back();
+      } catch (e) {
+        console.error('Failed to approve request:', e);
+        alert('Kon verzoek niet goedkeuren');
+      } finally {
+        setIsApproving(false);
+      }
+    })();
   };
 
   const handleReject = () => {
-    // TODO: backend callen
-    console.log('Wijzigingsverzoek afgekeurd:', requestId);
-    alert('Wijzigingsverzoek afgekeurd! (Demo mode)');
-    router.back();
+    (async () => {
+      try {
+        setIsRejecting(true);
+        const reviewerId = 1;
+        await rejectChangeRequest(requestId, reviewerId);
+        alert('Wijzigingsverzoek afgekeurd');
+        router.back();
+      } catch (e) {
+        console.error('Failed to reject request:', e);
+        alert('Kon verzoek niet afkeuren');
+      } finally {
+        setIsRejecting(false);
+      }
+    })();
   };
 
   const getUrgencyColor = (urgency: string) => {

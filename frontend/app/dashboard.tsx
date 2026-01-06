@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,25 @@ import { Colors, Spacing, Typography, Shadows, BorderRadius, FontSize, FontWeigh
 import { NavigationBar } from '@/components';
 import { AnnouncementCreateModal } from '@/components/announcement-create-modal';
 import { formatDate } from '@/utils/date';
+import { fetchResidents } from '@/Services/residentsApi';
+import { fetchNotes } from '@/Services/notesApi';
+import { fetchRooms } from '@/Services/roomsApi';
+import { fetchChangeRequests } from '@/Services/changeRequestsApi';
+import { fetchMedicationRounds } from '@/Services/medicationRoundsApi';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 
-// backend callen
-const residents: any[] = [];
-const notes: any[] = [];
-const rooms: any[] = [];
-const changeRequests: any[] = [];
-const medicationRounds: any[] = [];
-const resSchedules: any[] = [];
+// component state (loaded from API)
 
 export default function DashboardScreen() {
   const router = useRouter();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
+
+  const [residents, setResidents] = useState<any[]>([]);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [changeRequests, setChangeRequests] = useState<any[]>([]);
+  const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -47,7 +53,7 @@ export default function DashboardScreen() {
       compliance,
       pendingChanges,
     };
-  }, []);
+  }, [notes, medicationRounds, changeRequests]);
 
   // Dynamic status cards with real data
   const dynamicStatusCards = useMemo(
@@ -127,7 +133,34 @@ export default function DashboardScreen() {
         openNotes: residentNotes.length,
       };
     });
+  }, [notes, residents, rooms]);
+
+  useEffect(() => {
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const today = new Date();
+      const date = today.toISOString().split('T')[0];
+
+      const [residentsData, notesData, roomsData, changeReqsData, roundsData] = await Promise.all([
+        fetchResidents(),
+        fetchNotes(),
+        fetchRooms(),
+        fetchChangeRequests(),
+        fetchMedicationRounds({ date_from: date, date_to: date }),
+      ]);
+
+      setResidents(residentsData || []);
+      setNotes(notesData || []);
+      setRooms(roomsData || []);
+      setChangeRequests(changeReqsData || []);
+      setMedicationRounds(roundsData || []);
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+    }
+  };
 
   const handleActionPress = (actionTitle: string) => {
     console.log(`Action pressed: ${actionTitle}`);

@@ -25,20 +25,17 @@ import {
 import { formatDate } from '@/utils';
 import { fetchNotesByResident, createNote } from '@/Services/notesApi';
 import { fetchRoomByResidentId } from '@/Services/roomsApi';
+import { fetchResidentById } from '@/Services/residentsApi';
 import type { Note } from '@/types/note';
-import type { Room } from '@/types/resident';
+import type { Room, Resident } from '@/types/resident';
 import { fetchResMedicationsByResident } from '@/Services/resMedicationsApi';
+import { fetchMedicationRounds } from '@/Services/medicationRoundsApi';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 import { createChangeRequest } from '@/Services/changeRequestsApi';
 import type { CreateChangeRequestData } from '@/types/changeRequest';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
-// backend calls
-const residents: any[] = [];
-const contacts: any[] = [];
-const medicationRounds: any[] = [];
-const users: any[] = [];
-const getResidentById = (id: number) => residents.find((r: any) => r.resident_id === id);
-const getContactsForResident = (id: number) => contacts.filter((c: any) => c.resident_id === id);
+// backend state (loaded from API)
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
@@ -51,9 +48,63 @@ export default function BewonerInfoScreen() {
   const [medications, setMedications] = useState<any[]>([]);
   const [loadingMedications, setLoadingMedications] = useState(false);
   const [currentUserId] = useState(1); // TODO: Get from auth context
+  const [resident, setResident] = useState<Resident | null>(null);
+  const [loadingResident, setLoadingResident] = useState(false);
+  const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
-  const resident = getResidentById(Number(id));
-  const contacts = getContactsForResident(Number(id));
+  const contacts = resident?.contacts || [];
+
+  // Load resident data from backend when component mounts
+ // Load resident data from backend when component mounts                                         
+      useEffect(() => {                                                                                
+        loadResidentData();                                                                            
+ }, [id]);                                                                                        
+
+  const loadResidentData = async () => {
+    try {
+      setLoadingResident(true);
+
+      const fetchedResident = await fetchResidentById(Number(id));
+      setResident(fetchedResident);
+
+      // Fetch users (authors) for notes
+      try {
+        const resp = await fetch(`${API_BASE_URL}${API_ENDPOINTS.users}`);
+        if (resp.ok) {
+          const json = await resp.json();
+          setUsers(json.data || []);
+        } else {
+          console.error('Failed to fetch users, status:', resp.status);
+        }
+      } catch (e) {
+        console.error('Failed to fetch users:', e);
+      }
+
+      // Fetch medication rounds for the past 7 days for this resident
+      try {
+        const today = new Date();
+        const dateTo = today.toISOString().split('T')[0];
+        const fromDate = new Date(today);
+        fromDate.setDate(fromDate.getDate() - 6);
+        const dateFrom = fromDate.toISOString().split('T')[0];
+
+        const rounds = await fetchMedicationRounds({
+          resident_id: Number(id),
+          date_from: dateFrom,
+          date_to: dateTo,
+        });
+        setMedicationRounds(rounds || []);
+      } catch (e) {
+        console.error('Failed to fetch medication rounds:', e);
+      }
+    } catch (error) {
+      console.error('Failed to load resident data:', error);
+      Alert.alert('Fout', 'Kon bewoner niet laden. Controleer of de backend server draait.');
+    } finally {
+      setLoadingResident(false);
+    }
+  };
 
   // Load notes from backend when component mounts or when switching to Meldingen tab
   useEffect(() => {

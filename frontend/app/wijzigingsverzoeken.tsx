@@ -13,18 +13,20 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import { formatDate } from '@/utils/date';
+import { fetchChangeRequests } from '@/Services/changeRequestsApi';
+import { fetchResidents } from '@/Services/residentsApi';
+import { mapUrgencyFromBackend } from '@/Services/noteMapper';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 
-// backend callen
-const changeRequests: any[] = [];
-const changeFields: any[] = [];
-const residents: any[] = [];
-const users: any[] = [];
+// component state (loaded from API)
 
 export default function WijzigingsverzookenScreen() {
   const router = useRouter();
   const [changeRequestsData, setChangeRequestsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [residents, setResidents] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     loadChangeRequests();
@@ -34,8 +36,28 @@ export default function WijzigingsverzookenScreen() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await fetchChangeRequests();
-      setChangeRequestsData(data);
+      const [data, residentsData] = await Promise.all([
+        fetchChangeRequests(),
+        fetchResidents(),
+      ]);
+
+      // fetch users list
+      let usersData: any[] = [];
+      try {
+        const resp = await fetch(`${API_BASE_URL}${API_ENDPOINTS.users}`);
+        if (resp.ok) {
+          const json = await resp.json();
+          usersData = json.data || [];
+        } else {
+          console.error('Failed to fetch users, status:', resp.status);
+        }
+      } catch (e) {
+        console.error('Failed to fetch users:', e);
+      }
+
+      setChangeRequestsData(data || []);
+      setResidents(residentsData || []);
+      setUsers(usersData || []);
     } catch (err) {
       console.error('Failed to load change requests:', err);
       setError('Kan wijzigingsverzoeken niet laden');
@@ -130,9 +152,21 @@ export default function WijzigingsverzookenScreen() {
 
           {/* Requests List */}
           {sortedRequests.map((request) => {
+            const mapUrgency = (u: string) => mapUrgencyFromBackend(u || '');
+            const mapStatus = (s: string) => {
+              switch (s) {
+                case 'approved':
+                  return 'Goedgekeurd';
+                case 'rejected':
+                  return 'Afgekeurd';
+                case 'pending':
+                default:
+                  return 'In behandeling';
+              }
+            };
             const resident = residents.find((r) => r.resident_id === request.resident_id);
             const requester = users.find((u) => u.user_id === request.requester_id);
-            const fields = changeFields.filter((f) => f.request_id === request.request_id);
+            const fields = request.changeFields || request.change_fields || [];
             const changesText = fields.map(f => translateFieldName(f.field_name)).join(', ');
 
             return (
