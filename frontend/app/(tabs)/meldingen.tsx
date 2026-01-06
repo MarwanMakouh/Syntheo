@@ -8,8 +8,9 @@ import { NieuweMeldingModal } from '@/components';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 
 // backend callen
-const getResidentById = (id: number) => null;
-const getUserById = (id: number) => null;
+const getResidentById = (id: number): { resident_id: number; name: string } | undefined => undefined;
+const getUserById = (id: number): { user_id: number; name: string } | undefined => undefined;
+
 import { fetchResidents } from '@/Services/residentsApi';
 import type { Note } from '@/types/note';
 import type { Resident } from '@/types/resident';

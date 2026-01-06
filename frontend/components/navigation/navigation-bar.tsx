@@ -19,9 +19,9 @@ export function NavigationBar() {
   // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
   const isDetailPage =
     (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
-    segments.includes('wijzigingsverzoeken') ||
-    segments.includes('wijzigingsverzoek-detail') ||
-    segments.includes('kamerbeheer');
+    (segments as string[]).includes('wijzigingsverzoeken') ||
+    (segments as string[]).includes('wijzigingsverzoek-detail') ||
+    (segments as string[]).includes('kamerbeheer');
 
   const handleNotifications = () => {
     // TODO: backend callen
