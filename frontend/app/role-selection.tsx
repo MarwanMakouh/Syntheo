@@ -52,6 +52,8 @@ export default function RoleSelectionScreen() {
       router.replace('/admin/dashboard-home');
     } else if (role === 'Hoofdverpleegster') {
       router.replace('/dashboard');
+    } else if (role === 'Keukenpersoneel') {
+      router.replace('/(kitchen-tabs)/allergieen');
     } else {
       router.replace('/(tabs)/bewoners');
     }
