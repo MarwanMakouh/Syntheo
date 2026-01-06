@@ -193,14 +193,55 @@ class ChangeRequestController extends Controller
                     break;
 
                 case 'allergy':
+                case 'allergies':
                     // Add new allergy
                     \DB::table('allergies')->insert([
                         'resident_id' => $resident->resident_id,
-                        'allergy_name' => $newValue,
+                        'symptom' => $newValue,
                         'severity' => 'medium', // Default severity
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                    break;
+
+                case 'preferences.likes':
+                    // Update diet preferences - likes
+                    $diet = \DB::table('diets')
+                        ->where('resident_id', $resident->resident_id)
+                        ->first();
+
+                    if ($diet) {
+                        $preferences = json_decode($diet->preferences, true) ?? [];
+                        // Convert comma-separated string to array
+                        $preferences['likes'] = array_map('trim', explode(',', $newValue));
+
+                        \DB::table('diets')
+                            ->where('resident_id', $resident->resident_id)
+                            ->update([
+                                'preferences' => json_encode($preferences),
+                                'updated_at' => now()
+                            ]);
+                    }
+                    break;
+
+                case 'preferences.dislikes':
+                    // Update diet preferences - dislikes
+                    $diet = \DB::table('diets')
+                        ->where('resident_id', $resident->resident_id)
+                        ->first();
+
+                    if ($diet) {
+                        $preferences = json_decode($diet->preferences, true) ?? [];
+                        // Convert comma-separated string to array
+                        $preferences['dislikes'] = array_map('trim', explode(',', $newValue));
+
+                        \DB::table('diets')
+                            ->where('resident_id', $resident->resident_id)
+                            ->update([
+                                'preferences' => json_encode($preferences),
+                                'updated_at' => now()
+                            ]);
+                    }
                     break;
 
                 // Add more cases as needed for other field types
