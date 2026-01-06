@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
   ViewStyle,
   TextStyle,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from 
 import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { AssignResidentModal } from '@/components/assign-resident-modal';
+import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
 // backend callen
 const rooms: any[] = [];
 const residents: any[] = [];
@@ -570,5 +572,44 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.success,
     fontWeight: FontWeight.medium,
+  } as TextStyle,
+
+  // Loading
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  } as ViewStyle,
+  loadingText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+  } as TextStyle,
+
+  // Error
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  } as ViewStyle,
+  errorText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
+    textAlign: 'center',
+  } as TextStyle,
+  retryButton: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+  } as ViewStyle,
+  retryButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.textOnPrimary,
+    fontWeight: FontWeight.semibold,
   } as TextStyle,
 });
