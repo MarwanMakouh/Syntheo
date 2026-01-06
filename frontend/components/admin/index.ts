@@ -22,3 +22,5 @@ export { UserFormModal } from './user-form-modal';
 export { ConfirmationModal } from './confirmation-modal';
 export { ResidentFormModal } from './resident-form-modal';
 export { AssignResidentModal } from './assign-resident-modal';
+export { RoomsFilters } from './rooms-filters';
+export { NotificationsDropdown } from './notifications-dropdown';

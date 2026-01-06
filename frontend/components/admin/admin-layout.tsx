@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,11 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
+import { NotificationsDropdown } from './notifications-dropdown';
+import { fetchNotes } from '@/Services/notesApi';
+import { fetchResidents } from '@/Services/residentsApi';
+import type { Note } from '@/types/note';
+import type { Resident } from '@/types/resident';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '@/constants';
 
 interface AdminLayoutProps {
@@ -31,7 +36,49 @@ interface NavSection {
 
 export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayoutProps) {
   const router = useRouter();
-  const [notificationCount] = useState(3);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load notifications data
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const [notesData, residentsData] = await Promise.all([
+        fetchNotes(),
+        fetchResidents(),
+      ]);
+      setNotes(notesData);
+      setResidents(residentsData);
+    } catch (err) {
+      console.error('Error loading notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get unresolved notes count
+  const unresolvedNotesCount = notes.filter(note => !note.is_resolved).length;
+
+  // Get last 5 unresolved notes sorted by urgency and date
+  const recentNotes = notes
+    .filter(note => !note.is_resolved)
+    .sort((a, b) => {
+      // Sort by urgency first (Hoog > Matig > Laag)
+      const urgencyOrder = { 'Hoog': 3, 'Matig': 2, 'Laag': 1 };
+      const urgencyDiff = (urgencyOrder[b.urgency as keyof typeof urgencyOrder] || 0) -
+                         (urgencyOrder[a.urgency as keyof typeof urgencyOrder] || 0);
+      if (urgencyDiff !== 0) return urgencyDiff;
+
+      // Then sort by date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    })
+    .slice(0, 5);
 
   const navSections: NavSection[] = [
     {
@@ -132,11 +179,16 @@ export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayout
           </View>
           <View style={styles.topBarRight}>
             {/* Notifications */}
-            <TouchableOpacity style={styles.topBarIcon}>
+            <TouchableOpacity
+              style={styles.topBarIcon}
+              onPress={() => setShowNotifications(!showNotifications)}
+            >
               <MaterialIcons name="notifications" size={24} color={Colors.textSecondary} />
-              {notificationCount > 0 && (
+              {unresolvedNotesCount > 0 && (
                 <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>{notificationCount}</Text>
+                  <Text style={styles.notificationBadgeText}>
+                    {unresolvedNotesCount > 99 ? '99+' : unresolvedNotesCount}
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -161,6 +213,14 @@ export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayout
 
         {/* Page Content */}
         <View style={styles.content}>{children}</View>
+
+        {/* Notifications Dropdown */}
+        <NotificationsDropdown
+          visible={showNotifications}
+          notes={recentNotes}
+          residents={residents}
+          onClose={() => setShowNotifications(false)}
+        />
       </View>
     </View>
   );

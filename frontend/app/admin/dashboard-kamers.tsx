@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { AdminLayout, ConfirmationModal, AssignResidentModal } from '@/components/admin';
+import { AdminLayout, ConfirmationModal, AssignResidentModal, RoomsFilters } from '@/components/admin';
 import { RoomCard } from '@/components/admin/room-card';
 import { WarningBanner } from '@/components/admin/warning-banner';
 import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
@@ -27,6 +27,8 @@ export default function DashboardKamersScreen() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [floorFilter, setFloorFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showUnlinkModal, setShowUnlinkModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -66,6 +68,21 @@ export default function DashboardKamersScreen() {
 
     return residents.filter((r) => !assignedResidentIds.includes(r.resident_id));
   }, [rooms, residents]);
+
+  // Filter rooms based on floor and search query
+  const filteredRooms = useMemo(() => {
+    return rooms.filter((room) => {
+      // Floor filter
+      const matchesFloor = floorFilter === 'all' || room.floor_id.toString() === floorFilter;
+
+      // Search filter (room number)
+      const matchesSearch =
+        searchQuery === '' ||
+        room.room_number.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesFloor && matchesSearch;
+    });
+  }, [rooms, floorFilter, searchQuery]);
 
   // Get resident status based on notes
   const getResidentStatus = (residentId: number): 'Stabiel' | 'Aandacht' | 'Urgent' => {
@@ -187,9 +204,26 @@ export default function DashboardKamersScreen() {
                 />
               )}
 
+              {/* Filters */}
+              <RoomsFilters
+                floorFilter={floorFilter}
+                searchQuery={searchQuery}
+                onFloorFilterChange={setFloorFilter}
+                onSearchChange={setSearchQuery}
+              />
+
               {/* Rooms Grid */}
-              <View style={styles.grid}>
-                {rooms.map((room) => {
+              {filteredRooms.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <MaterialIcons name="meeting-room" size={64} color={Colors.textSecondary} />
+                  <Text style={styles.emptyText}>Geen kamers gevonden</Text>
+                  <Text style={styles.emptySubtext}>
+                    Probeer je filters aan te passen of verwijder de zoekterm.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.grid}>
+                  {filteredRooms.map((room) => {
                   const isOccupied = room.resident_id !== null;
                   const residentName = getResidentName(room.resident_id);
                   const residentStatus = room.resident_id
@@ -199,7 +233,7 @@ export default function DashboardKamersScreen() {
                   return (
                     <View key={room.room_id} style={styles.cardWrapper}>
                       <RoomCard
-                        roomNumber={room.room_id.toString()}
+                        roomNumber={room.room_number}
                         isOccupied={isOccupied}
                         residentName={residentName}
                         residentStatus={residentStatus}
@@ -210,6 +244,7 @@ export default function DashboardKamersScreen() {
                   );
                 })}
               </View>
+              )}
             </>
           )}
         </View>
@@ -224,7 +259,7 @@ export default function DashboardKamersScreen() {
         }}
         onConfirm={confirmUnlinkResident}
         title="Bewoner Loskoppelen"
-        message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_id}? Deze actie kan later ongedaan worden gemaakt.`}
+        message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_number}? Deze actie kan later ongedaan worden gemaakt.`}
         confirmText="Loskoppelen"
         cancelText="Annuleren"
         isLoading={isProcessing}
@@ -240,7 +275,7 @@ export default function DashboardKamersScreen() {
           setSelectedResidentId(null);
         }}
         onConfirm={confirmAssignResident}
-        roomNumber={selectedRoom?.room_id.toString() || ''}
+        roomNumber={selectedRoom?.room_number || ''}
         availableResidents={residentsWithoutRooms}
         selectedResidentId={selectedResidentId}
         onSelectResident={handleSelectResident}
@@ -324,5 +359,27 @@ const styles = StyleSheet.create({
     color: Colors.background,
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
+  },
+  emptyState: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing['4xl'],
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 300,
+  },
+  emptyText: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.sm,
+  },
+  emptySubtext: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
 });
