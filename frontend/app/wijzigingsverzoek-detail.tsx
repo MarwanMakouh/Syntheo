@@ -13,31 +13,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
-import {
-  residents,
-  users,
-} from '@/Services/API';
-import { approveChangeRequest, rejectChangeRequest, fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { formatDate } from '@/utils/date';
 
-// Mapping functions for backend values to Dutch
-const mapStatus = (status: string): string => {
-  const mapping: Record<string, string> = {
-    'pending': 'In behandeling',
-    'approved': 'Goedgekeurd',
-    'rejected': 'Afgekeurd',
-  };
-  return mapping[status] || status;
-};
-
-const mapUrgency = (urgency: string): string => {
-  const mapping: Record<string, string> = {
-    'low': 'Laag',
-    'medium': 'Matig',
-    'high': 'Hoog',
-  };
-  return mapping[urgency] || urgency;
-};
+// backend callen
+const changeRequests: any[] = [];
+const changeFields: any[] = [];
+const residents: any[] = [];
+const users: any[] = [];
 
 export default function WijzigingsverzoekDetailScreen() {
   const router = useRouter();
@@ -92,46 +74,18 @@ export default function WijzigingsverzoekDetailScreen() {
     );
   }
 
-  if (error || !request) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <NavigationBar />
-        <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={48} color={Colors.error} />
-          <Text style={styles.errorText}>{error || 'Wijzigingsverzoek niet gevonden'}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const handleApprove = async () => {
-    try {
-      setIsApproving(true);
-      const reviewerId = 1; // TODO: Get from auth context
-      await approveChangeRequest(requestId, reviewerId);
-      alert('Wijzigingsverzoek succesvol goedgekeurd!');
-      router.back();
-    } catch (error) {
-      console.error('Error approving change request:', error);
-      alert('Fout bij goedkeuren van wijzigingsverzoek. Probeer opnieuw.');
-    } finally {
-      setIsApproving(false);
-    }
+  const handleApprove = () => {
+    // TODO: backend callen
+    console.log('Wijzigingsverzoek goedgekeurd:', requestId);
+    alert('Wijzigingsverzoek goedgekeurd! (Demo mode)');
+    router.back();
   };
 
-  const handleReject = async () => {
-    try {
-      setIsRejecting(true);
-      const reviewerId = 1; // TODO: Get from auth context
-      await rejectChangeRequest(requestId, reviewerId);
-      alert('Wijzigingsverzoek afgekeurd.');
-      router.back();
-    } catch (error) {
-      console.error('Error rejecting change request:', error);
-      alert('Fout bij afkeuren van wijzigingsverzoek. Probeer opnieuw.');
-    } finally {
-      setIsRejecting(false);
-    }
+  const handleReject = () => {
+    // TODO: backend callen
+    console.log('Wijzigingsverzoek afgekeurd:', requestId);
+    alert('Wijzigingsverzoek afgekeurd! (Demo mode)');
+    router.back();
   };
 
   const getUrgencyColor = (urgency: string) => {

@@ -12,32 +12,13 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
-import {
-  changeFields,
-  residents,
-  users,
-} from '@/Services/API';
-import { fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { formatDate } from '@/utils/date';
 
-// Mapping functions for backend values to Dutch
-const mapStatus = (status: string): string => {
-  const mapping: Record<string, string> = {
-    'pending': 'In behandeling',
-    'approved': 'Goedgekeurd',
-    'rejected': 'Afgekeurd',
-  };
-  return mapping[status] || status;
-};
-
-const mapUrgency = (urgency: string): string => {
-  const mapping: Record<string, string> = {
-    'low': 'Laag',
-    'medium': 'Matig',
-    'high': 'Hoog',
-  };
-  return mapping[urgency] || urgency;
-};
+// backend callen
+const changeRequests: any[] = [];
+const changeFields: any[] = [];
+const residents: any[] = [];
+const users: any[] = [];
 
 export default function WijzigingsverzookenScreen() {
   const router = useRouter();

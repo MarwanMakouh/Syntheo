@@ -6,16 +6,19 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  SafeAreaView,
-  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { AssignResidentModal } from '@/components/assign-resident-modal';
-import { residents, floors } from '@/Services/API';
-import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
+// backend callen
+const rooms: any[] = [];
+const residents: any[] = [];
+const floors: any[] = [];
 
 interface SelectedDisconnect {
   roomId: number;
@@ -358,11 +361,11 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Colors.backgroundTertiary,
-  },
+  } as ViewStyle,
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundTertiary,
-  },
+  } as ViewStyle,
   scrollContent: {
     padding: Spacing.xl,
     paddingTop: Spacing['2xl'],
@@ -374,27 +377,27 @@ const styles = StyleSheet.create({
         width: '100%',
       },
     }),
-  },
+  } as ViewStyle,
 
   // Header
   header: {
     marginBottom: Spacing['2xl'],
-  },
+  } as ViewStyle,
   headerTextContainer: {
     flex: 1,
-  },
+  } as ViewStyle,
   pageTitle: {
     ...Typography.h1,
     fontSize: FontSize['3xl'],
     color: Colors.textPrimary,
     fontWeight: FontWeight.semibold,
     marginBottom: Spacing.xs,
-  },
+  } as TextStyle,
   pageSubtitle: {
     ...Typography.body,
     fontSize: FontSize.md,
     color: Colors.textSecondary,
-  },
+  } as TextStyle,
 
   // Warning Banner
   warningBanner: {
@@ -407,20 +410,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ffd966',
     marginBottom: Spacing.xl,
-  },
+  } as ViewStyle,
   warningContent: {
     flex: 1,
-  },
+  } as ViewStyle,
   warningTitle: {
     fontSize: FontSize.md,
     color: Colors.textPrimary,
     fontWeight: FontWeight.semibold,
     marginBottom: Spacing.xs,
-  },
+  } as TextStyle,
   warningText: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
-  },
+  } as TextStyle,
 
   // Filter
   filterContainer: {
@@ -428,7 +431,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.md,
     marginBottom: Spacing['2xl'],
-  },
+  } as ViewStyle,
   filterButton: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
@@ -436,26 +439,26 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderWidth: 1,
     borderColor: Colors.border,
-  },
+  } as ViewStyle,
   filterButtonActive: {
     backgroundColor: Colors.success,
     borderColor: Colors.success,
-  },
+  } as ViewStyle,
   filterButtonText: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     fontWeight: FontWeight.medium,
-  },
+  } as TextStyle,
   filterButtonTextActive: {
     color: Colors.textOnPrimary,
-  },
+  } as TextStyle,
 
   // Rooms Grid
   roomsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.lg,
-  },
+  } as ViewStyle,
   roomCard: {
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.lg,
@@ -464,19 +467,19 @@ const styles = StyleSheet.create({
     minWidth: 280,
     ...Platform.select({
       web: {
-        width: 'calc(33.333% - 16px)',
+        width: 'calc(33.333% - 16px)' as any,
       },
       default: {
         width: '100%',
       },
     }),
-  },
+  } as ViewStyle,
   roomCardOccupied: {
     borderColor: '#dc2626',
-  },
+  } as ViewStyle,
   roomCardEmpty: {
     borderColor: '#10b981',
-  },
+  } as ViewStyle,
 
   // Room Header
   roomHeader: {
@@ -484,40 +487,40 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.md,
-  },
+  } as ViewStyle,
   roomTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-  },
+  } as ViewStyle,
   roomNumber: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
-  },
+  } as TextStyle,
 
   // Status Badge
   statusBadge: {
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.sm,
-  },
+  } as ViewStyle,
   statusBadgeOccupied: {
     backgroundColor: '#fee2e2',
-  },
+  } as ViewStyle,
   statusBadgeEmpty: {
     backgroundColor: '#d1fae5',
-  },
+  } as ViewStyle,
   statusBadgeText: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.semibold,
-  },
+  } as TextStyle,
   statusBadgeTextOccupied: {
     color: '#991b1b',
-  },
+  } as TextStyle,
   statusBadgeTextEmpty: {
     color: '#065f46',
-  },
+  } as TextStyle,
 
   // Resident
   residentName: {
@@ -525,7 +528,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: FontWeight.medium,
     marginBottom: Spacing.lg,
-  },
+  } as TextStyle,
 
   // Disconnect Button
   disconnectButton: {
@@ -537,12 +540,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     paddingTop: Spacing.md,
-  },
+  } as ViewStyle,
   disconnectButtonText: {
     fontSize: FontSize.sm,
     color: Colors.error,
     fontWeight: FontWeight.medium,
-  },
+  } as TextStyle,
 
   // Empty Room
   emptyRoomText: {
@@ -550,7 +553,7 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontStyle: 'italic',
     marginBottom: Spacing.lg,
-  },
+  } as TextStyle,
 
   // Assign Button
   assignButton: {
@@ -562,47 +565,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     paddingTop: Spacing.md,
-  },
+  } as ViewStyle,
   assignButtonText: {
     fontSize: FontSize.sm,
     color: Colors.success,
     fontWeight: FontWeight.medium,
-  },
-
-  // Loading State
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.lg,
-  },
-  loadingText: {
-    fontSize: FontSize.lg,
-    color: Colors.textSecondary,
-  },
-
-  // Error State
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.lg,
-    padding: Spacing.xl,
-  },
-  errorText: {
-    fontSize: FontSize.lg,
-    color: Colors.error,
-    textAlign: 'center',
-  },
-  retryButton: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    marginTop: Spacing.md,
-  },
-  retryButtonText: {
-    color: Colors.textOnPrimary,
-    fontWeight: FontWeight.semibold,
-  },
+  } as TextStyle,
 });

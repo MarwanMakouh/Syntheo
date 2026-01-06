@@ -62,7 +62,7 @@ const palette = {
 // Semantic colors - use these in components
 export const Colors = {
   // Brand
-  primary: palette.blue500,
+  primary: palette.green600,
   secondary: palette.purple500,
 
   // Status
@@ -95,7 +95,7 @@ export const Colors = {
   divider: palette.gray75,
 
   // Interactive states
-  selectedBackground: palette.blueLight,
+  selectedBackground: palette.green50,
   selectedBackgroundPurple: palette.purpleLight,
 
   // Urgency (for meldingen/notes)
@@ -119,14 +119,14 @@ export const Colors = {
   alertText: palette.red500,
 
   // Navigation
-  navActive: palette.blue500,
+  navActive: palette.green600,
   navInactive: palette.gray500,
   navAccent: palette.green700,
 
   // Icons
   iconDefault: palette.gray500,
   iconMuted: palette.gray300,
-  iconPrimary: palette.blue500,
+  iconPrimary: palette.green600,
 
   // Buttons
   buttonDisabled: palette.gray300,
@@ -144,7 +144,7 @@ export const Colors = {
   infoBackground: palette.green100,
 
   // Tab bar
-  tabActive: palette.blue500,
+  tabActive: palette.green600,
   tabInactive: palette.gray500,
 } as const;
 

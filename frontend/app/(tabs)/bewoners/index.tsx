@@ -13,11 +13,10 @@ import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SearchBar, BewonerCard } from '@/components';
 import { fetchResidents } from '@/Services/residentsApi';
-import { users } from '@/Services';
 import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
 
-// Simuleer ingelogde user (Jan Janssen)
-const CURRENT_USER = users[0]; // floor_id: 1
+// backend callen
+const DEFAULT_FLOOR_ID = 1;
 
 const FLOOR_OPTIONS = [
   { label: 'Verdieping 1', value: 1 },
@@ -30,7 +29,7 @@ export default function BewonersScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFloor, setSelectedFloor] = useState<number>(
-    CURRENT_USER.floor_id
+    DEFAULT_FLOOR_ID
   );
   const [allResidents, setAllResidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

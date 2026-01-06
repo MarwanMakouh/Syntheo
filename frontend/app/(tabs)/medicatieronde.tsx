@@ -5,11 +5,10 @@ import { DagdeelDropdown } from '@/components/DagdeelDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
 import { fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
 import { saveMedicationRoundsBulk, fetchMedicationRounds } from '@/Services/medicationRoundsApi';
-import { users } from '@/Services';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
 
-// Simuleer ingelogde user (Jan Janssen)
-const CURRENT_USER = users[0];
+// backend callen
+const CURRENT_USER_ID = 1;
 
 // Helper function to get today's date in YYYY-MM-DD format
 const getTodayDateString = () => {
@@ -233,7 +232,7 @@ export default function MedicatierondeScreen() {
       // Save to backend
       await saveMedicationRoundsBulk({
         resident_id: residentId,
-        given_by: CURRENT_USER.user_id,
+        given_by: CURRENT_USER_ID,
         medications: medications,
       });
 

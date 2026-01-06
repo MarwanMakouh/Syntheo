@@ -2,12 +2,14 @@ import { Image } from 'expo-image';
 import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
-import { users } from '@/Services';
 import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
 import { useRole } from '@/contexts/RoleContext';
 
-// Simuleer ingelogde user (Jan Janssen)
-const CURRENT_USER = users[0]; // Jan Janssen, verpleger
+// backend callen
+const CURRENT_USER = {
+  name: 'User',
+  role: 'Verpleegster'
+};
 
 export function NavigationBar() {
   const router = useRouter();
@@ -17,12 +19,12 @@ export function NavigationBar() {
   // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
   const isDetailPage =
     (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
-    segments.includes('wijzigingsverzoeken') ||
-    segments.includes('wijzigingsverzoek-detail') ||
-    segments.includes('kamerbeheer');
+    (segments as string[]).includes('wijzigingsverzoeken') ||
+    (segments as string[]).includes('wijzigingsverzoek-detail') ||
+    (segments as string[]).includes('kamerbeheer');
 
   const handleNotifications = () => {
-    // TODO: Handle notifications when backend is ready
+    // TODO: backend callen
     console.log('Notifications pressed');
   };
 

@@ -7,6 +7,7 @@ export interface User {
   name: string;
   role: UserRole;
   floor_id: number;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }

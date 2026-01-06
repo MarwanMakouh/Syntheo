@@ -23,13 +23,6 @@ import {
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
-import {
-  getResidentById,
-  getContactsForResident,
-  getMedicationForResident,
-  medicationRounds,
-  users,
-} from '@/Services';
 import { fetchNotesByResident, createNote } from '@/Services/notesApi';
 import { fetchRoomByResidentId } from '@/Services/roomsApi';
 import type { Note } from '@/types/note';
@@ -38,6 +31,14 @@ import { fetchResMedicationsByResident } from '@/Services/resMedicationsApi';
 import { createChangeRequest } from '@/Services/changeRequestsApi';
 import type { CreateChangeRequestData } from '@/types/changeRequest';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
+
+// backend calls
+const residents: any[] = [];
+const contacts: any[] = [];
+const medicationRounds: any[] = [];
+const users: any[] = [];
+const getResidentById = (id: number) => residents.find((r: any) => r.resident_id === id);
+const getContactsForResident = (id: number) => contacts.filter((c: any) => c.resident_id === id);
 
 export default function BewonerInfoScreen() {
   const { id } = useLocalSearchParams();
@@ -121,30 +122,30 @@ export default function BewonerInfoScreen() {
       const dateString = date.toISOString().split('T')[0];
 
       // Check medication rounds for this date
-      const dayRounds = medicationRounds.filter(round =>
+      const dayRounds = medicationRounds.filter((round: any) =>
         round.scheduled_time?.startsWith(dateString) &&
         round.status === 'Gegeven'
       );
 
-      const ochtend = dayRounds.some(round => {
+      const ochtend = dayRounds.some((round: any) => {
         if (!round.scheduled_time) return false;
         const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
         return hour >= 6 && hour < 10;
       });
 
-      const middag = dayRounds.some(round => {
+      const middag = dayRounds.some((round: any) => {
         if (!round.scheduled_time) return false;
         const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
         return hour >= 10 && hour < 14;
       });
 
-      const avond = dayRounds.some(round => {
+      const avond = dayRounds.some((round: any) => {
         if (!round.scheduled_time) return false;
         const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
         return hour >= 18 && hour < 22;
       });
 
-      const nacht = dayRounds.some(round => {
+      const nacht = dayRounds.some((round: any) => {
         if (!round.scheduled_time) return false;
         const hour = parseInt(round.scheduled_time.split('T')[1].split(':')[0]);
         return hour >= 22 || hour < 6;
@@ -232,7 +233,7 @@ export default function BewonerInfoScreen() {
                 </View>
                 <View style={styles.infoColumn}>
                   <Text style={styles.infoLabel}>Geboortedatum</Text>
-                  <Text style={styles.infoValue}>{formatDate(resident.date_of_birth)}</Text>
+                  <Text style={styles.infoValue}>{formatDate(resident.date_of_birth, 'dd-MM-yyyy')}</Text>
                 </View>
               </View>
 
@@ -251,7 +252,7 @@ export default function BewonerInfoScreen() {
             {/* Contactpersonen */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Contactpersonen</Text>
-              {contacts.map((contact) => (
+              {contacts.map((contact: any) => (
                 <ContactCard
                   key={contact.contact_id}
                   contact={contact}
@@ -278,7 +279,7 @@ export default function BewonerInfoScreen() {
               </View>
             ) : notes.length > 0 ? (
               notes.map((note) => {
-                const author = users.find(u => u.user_id === note.author_id);
+                const author = users.find((u: any) => u.user_id === note.author_id);
                 return (
                   <MeldingCard
                     key={note.note_id}

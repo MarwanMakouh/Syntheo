@@ -48,7 +48,9 @@ export default function RoleSelectionScreen() {
     setSelectedRole(role);
 
     // Navigate to the appropriate screen based on role
-    if (role === 'Hoofdverpleegster') {
+    if (role === 'Beheerder') {
+      router.replace('/admin/dashboard-home');
+    } else if (role === 'Hoofdverpleegster') {
       router.replace('/dashboard');
     } else {
       router.replace('/(tabs)/bewoners');

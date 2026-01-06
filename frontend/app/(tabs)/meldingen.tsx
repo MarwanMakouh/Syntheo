@@ -5,8 +5,12 @@ import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
-import { getResidentById, getUserById } from '@/Services/API';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
+
+// backend callen
+const getResidentById = (id: number): { resident_id: number; name: string } | undefined => undefined;
+const getUserById = (id: number): { user_id: number; name: string } | undefined => undefined;
+
 import { fetchResidents } from '@/Services/residentsApi';
 import type { Note } from '@/types/note';
 import type { Resident } from '@/types/resident';
