@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '@/constants';
 import type { Note } from '@/types/note';
 
@@ -7,9 +8,12 @@ interface NoteCardProps {
   residentName: string;
   authorName: string;
   onView: () => void;
+  onResolve?: () => void;
+  onUnresolve?: () => void;
+  onDelete?: () => void;
 }
 
-export function NoteCard({ note, residentName, authorName, onView }: NoteCardProps) {
+export function NoteCard({ note, residentName, authorName, onView, onResolve, onUnresolve, onDelete }: NoteCardProps) {
   const getUrgencyColor = () => {
     switch (note.urgency) {
       case 'Hoog':
@@ -64,6 +68,30 @@ export function NoteCard({ note, residentName, authorName, onView }: NoteCardPro
           <TouchableOpacity style={styles.viewButton} onPress={onView}>
             <Text style={styles.viewButtonText}>Bekijken</Text>
           </TouchableOpacity>
+          {onResolve && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.resolveButton]}
+              onPress={onResolve}
+            >
+              <MaterialIcons name="check-circle" size={18} color={Colors.background} />
+            </TouchableOpacity>
+          )}
+          {onUnresolve && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.unresolveButton]}
+              onPress={onUnresolve}
+            >
+              <MaterialIcons name="refresh" size={18} color={Colors.background} />
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={onDelete}
+            >
+              <MaterialIcons name="delete" size={18} color={Colors.background} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -184,5 +212,21 @@ const styles = StyleSheet.create({
   assigned: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resolveButton: {
+    backgroundColor: '#27AE60',
+  },
+  unresolveButton: {
+    backgroundColor: '#F39C12',
+  },
+  deleteButton: {
+    backgroundColor: '#E74C3C',
   },
 });

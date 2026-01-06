@@ -20,3 +20,5 @@ export { AuditLogsFilters } from './audit-logs-filters';
 export { AuditLogsTable, type AuditLog } from './audit-logs-table';
 export { UserFormModal } from './user-form-modal';
 export { ConfirmationModal } from './confirmation-modal';
+export { ResidentFormModal } from './resident-form-modal';
+export { AssignResidentModal } from './assign-resident-modal';

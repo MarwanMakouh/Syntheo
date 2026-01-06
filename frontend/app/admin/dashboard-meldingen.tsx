@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,23 +6,63 @@ import {
   ScrollView,
   Platform,
   Alert,
+  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { AdminLayout } from '@/components/admin';
+import { AdminLayout, ConfirmationModal } from '@/components/admin';
 import { StatsCard } from '@/components/admin/stats-card';
 import { NoteCard } from '@/components/admin/note-card';
 import { NotesFilters } from '@/components/admin/notes-filters';
-import { notes, residents, users } from '@/Services';
+import { fetchNotes, resolveNote, unresolveNote, deleteNote } from '@/Services/notesApi';
+import { fetchResidents } from '@/Services/residentsApi';
+import { fetchUsers } from '@/Services';
+import type { Note } from '@/types/note';
+import type { Resident } from '@/types/resident';
+import type { User } from '@/types/user';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function DashboardMeldingenScreen() {
   const router = useRouter();
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [urgencyFilter, setUrgencyFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load data from API
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [notesData, residentsData, usersData] = await Promise.all([
+        fetchNotes(),
+        fetchResidents(),
+        fetchUsers(),
+      ]);
+      setNotes(notesData);
+      setResidents(residentsData);
+      setUsers(usersData);
+    } catch (err) {
+      setError('Fout bij het laden van meldingen');
+      console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -71,7 +111,56 @@ export default function DashboardMeldingenScreen() {
   }, [urgencyFilter, categoryFilter, statusFilter, dateFilter, searchQuery]);
 
   const handleViewNote = (noteId: number) => {
-    Alert.alert('Melding Bekijken', `Details voor melding ${noteId}`);
+    const note = notes.find(n => n.note_id === noteId);
+    if (!note || !note.resident_id) return;
+
+    // Navigate to resident detail page
+    router.push(`/(tabs)/bewoners/${note.resident_id}` as any);
+  };
+
+  const handleResolveNote = async (noteId: number) => {
+    try {
+      await resolveNote(noteId);
+      await loadData();
+      Alert.alert('Succes', 'Melding succesvol afgehandeld');
+    } catch (err) {
+      console.error('Error resolving note:', err);
+      Alert.alert('Fout', 'Kon melding niet afhandelen');
+    }
+  };
+
+  const handleUnresolveNote = async (noteId: number) => {
+    try {
+      await unresolveNote(noteId);
+      await loadData();
+      Alert.alert('Succes', 'Melding succesvol heropend');
+    } catch (err) {
+      console.error('Error unresolving note:', err);
+      Alert.alert('Fout', 'Kon melding niet heropenen');
+    }
+  };
+
+  const handleDeleteNote = (note: Note) => {
+    setNoteToDelete(note);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (!noteToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteNote(noteToDelete.note_id);
+      await loadData();
+      setShowDeleteModal(false);
+      setNoteToDelete(null);
+      Alert.alert('Succes', 'Melding succesvol verwijderd');
+    } catch (err) {
+      console.error('Error deleting note:', err);
+      Alert.alert('Fout', 'Kon melding niet verwijderen');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getResidentName = (residentId: number) => {
@@ -95,53 +184,91 @@ export default function DashboardMeldingenScreen() {
             <Text style={styles.breadcrumb}>Home / Meldingen</Text>
           </View>
 
-          {/* Stats Cards */}
-          <View style={styles.statsContainer}>
-            <StatsCard label="Totaal" value={stats.total} color="#34C759" />
-            <StatsCard label="Open" value={stats.open} color="#E74C3C" />
-            <StatsCard label="In behandeling" value={stats.inProgress} color="#F39C12" />
-            <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
-            <StatsCard label="Urgent" value={stats.urgent} color="#E74C3C" />
-          </View>
-
-          {/* Filters */}
-          <NotesFilters
-            urgencyFilter={urgencyFilter}
-            categoryFilter={categoryFilter}
-            statusFilter={statusFilter}
-            dateFilter={dateFilter}
-            searchQuery={searchQuery}
-            onUrgencyFilterChange={setUrgencyFilter}
-            onCategoryFilterChange={setCategoryFilter}
-            onStatusFilterChange={setStatusFilter}
-            onDateFilterChange={setDateFilter}
-            onSearchChange={setSearchQuery}
-          />
-
-          {/* Notes List */}
-          {filteredNotes.length === 0 ? (
-            <View style={styles.emptyState}>
-              <MaterialIcons name="speaker-notes-off" size={64} color={Colors.textSecondary} />
-              <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
-              <Text style={styles.emptySubtext}>
-                Probeer je filters aan te passen of verwijder de zoekterm.
-              </Text>
+          {/* Loading State */}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Meldingen laden...</Text>
+            </View>
+          ) : error ? (
+            /* Error State */
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+              </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.notesList}>
-              {filteredNotes.map((note) => (
-                <NoteCard
-                  key={note.note_id}
-                  note={note}
-                  residentName={getResidentName(note.resident_id)}
-                  authorName={getAuthorName(note.author_id)}
-                  onView={() => handleViewNote(note.note_id)}
-                />
-              ))}
-            </View>
+            <>
+              {/* Stats Cards */}
+              <View style={styles.statsContainer}>
+                <StatsCard label="Totaal" value={stats.total} color="#34C759" />
+                <StatsCard label="Open" value={stats.open} color="#E74C3C" />
+                <StatsCard label="In behandeling" value={stats.inProgress} color="#F39C12" />
+                <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
+                <StatsCard label="Urgent" value={stats.urgent} color="#E74C3C" />
+              </View>
+
+              {/* Filters */}
+              <NotesFilters
+                urgencyFilter={urgencyFilter}
+                categoryFilter={categoryFilter}
+                statusFilter={statusFilter}
+                dateFilter={dateFilter}
+                searchQuery={searchQuery}
+                onUrgencyFilterChange={setUrgencyFilter}
+                onCategoryFilterChange={setCategoryFilter}
+                onStatusFilterChange={setStatusFilter}
+                onDateFilterChange={setDateFilter}
+                onSearchChange={setSearchQuery}
+              />
+
+              {/* Notes List */}
+              {filteredNotes.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <MaterialIcons name="speaker-notes-off" size={64} color={Colors.textSecondary} />
+                  <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
+                  <Text style={styles.emptySubtext}>
+                    Probeer je filters aan te passen of verwijder de zoekterm.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.notesList}>
+                  {filteredNotes.map((note) => (
+                    <NoteCard
+                      key={note.note_id}
+                      note={note}
+                      residentName={getResidentName(note.resident_id)}
+                      authorName={getAuthorName(note.author_id)}
+                      onView={() => handleViewNote(note.note_id)}
+                      onResolve={note.is_resolved ? undefined : () => handleResolveNote(note.note_id)}
+                      onUnresolve={note.is_resolved ? () => handleUnresolveNote(note.note_id) : undefined}
+                      onDelete={() => handleDeleteNote(note)}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </View>
       </ScrollView>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setNoteToDelete(null);
+        }}
+        onConfirm={confirmDeleteNote}
+        title="Melding Verwijderen"
+        message={`Weet je zeker dat je deze melding wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        isLoading={isDeleting}
+        type="danger"
+      />
     </AdminLayout>
   );
 }
@@ -209,5 +336,42 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
+  loadingText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
+  errorText: {
+    marginTop: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
+  },
+  retryButtonText: {
+    color: Colors.background,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
   },
 });
