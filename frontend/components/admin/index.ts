@@ -15,3 +15,6 @@ export { WarningBanner } from './warning-banner';
 export { StatsCard } from './stats-card';
 export { NoteCard } from './note-card';
 export { NotesFilters } from './notes-filters';
+export { ActionBadge } from './action-badge';
+export { AuditLogsFilters } from './audit-logs-filters';
+export { AuditLogsTable, type AuditLog } from './audit-logs-table';
