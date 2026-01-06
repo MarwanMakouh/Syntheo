@@ -27,8 +27,6 @@ import {
   getResidentById,
   getContactsForResident,
   getMedicationForResident,
-  getAllergiesForResident,
-  diets,
   medicationRounds,
   users,
 } from '@/Services';
@@ -36,6 +34,10 @@ import { fetchNotesByResident, createNote } from '@/Services/notesApi';
 import { fetchRoomByResidentId } from '@/Services/roomsApi';
 import type { Note } from '@/types/note';
 import type { Room } from '@/types/resident';
+import { fetchResMedicationsByResident } from '@/Services/resMedicationsApi';
+import { createChangeRequest } from '@/Services/changeRequestsApi';
+import type { Note } from '@/types/note';
+import type { CreateChangeRequestData } from '@/types/changeRequest';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function BewonerInfoScreen() {
@@ -46,12 +48,15 @@ export default function BewonerInfoScreen() {
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [roomData, setRoomData] = useState<Room | null>(null);
   const [loadingRoom, setLoadingRoom] = useState(false);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [loadingMedications, setLoadingMedications] = useState(false);
+  const [currentUserId] = useState(1); // TODO: Get from auth context
 
   const resident = getResidentById(Number(id));
   const contacts = getContactsForResident(Number(id));
-  const medications = getMedicationForResident(Number(id));
   const allergies = getAllergiesForResident(Number(id));
   const residentDiets = diets.filter(d => d.resident_id === Number(id));
+  const medications = getMedicationForResident(Number(id));
 
   // Load notes from backend when component mounts or when switching to Meldingen tab
   useEffect(() => {
@@ -76,6 +81,12 @@ export default function BewonerInfoScreen() {
       setLoadingRoom(false);
     }
   };
+  // Load medications from backend when component mounts or when switching to Medicatie tab
+  useEffect(() => {
+    if (activeTab === 'Medicatie') {
+      loadMedications();
+    }
+  }, [activeTab]);
 
   const loadNotes = async () => {
     try {
@@ -87,6 +98,19 @@ export default function BewonerInfoScreen() {
       Alert.alert('Fout', 'Kon meldingen niet laden. Controleer of de backend server draait.');
     } finally {
       setLoadingNotes(false);
+    }
+  };
+
+  const loadMedications = async () => {
+    try {
+      setLoadingMedications(true);
+      const fetchedMedications = await fetchResMedicationsByResident(Number(id));
+      setMedications(fetchedMedications);
+    } catch (error) {
+      console.error('Failed to load medications:', error);
+      Alert.alert('Fout', 'Kon medicatie niet laden. Controleer of de backend server draait.');
+    } finally {
+      setLoadingMedications(false);
     }
   };
 
@@ -181,10 +205,21 @@ export default function BewonerInfoScreen() {
     }
   };
 
-  const handleSaveDietChanges = (data: any) => {
-    // TODO: Save to backend when ready
-    console.log('Dieet wijzigingen:', data);
-    alert('Verzoek ingediend! De wijzigingen worden ter goedkeuring naar de hoofdverpleegkundige gestuurd.');
+  const handleSaveDietChanges = async (changeRequestData: CreateChangeRequestData) => {
+    try {
+      await createChangeRequest(changeRequestData);
+
+      Alert.alert(
+        'Succes',
+        'Wijzigingsverzoek ingediend! De wijzigingen worden ter goedkeuring naar de hoofdverpleegkundige gestuurd.'
+      );
+    } catch (error) {
+      console.error('Failed to create change request:', error);
+      Alert.alert(
+        'Fout',
+        'Kon wijzigingsverzoek niet indienen. Probeer opnieuw.'
+      );
+    }
   };
 
   const renderTabContent = () => {
@@ -266,15 +301,23 @@ export default function BewonerInfoScreen() {
       case 'Medicatie':
         return (
           <ScrollView style={styles.medicatieContainer}>
-            <MedicatieSchema medications={medications} />
-            <MedicatieHistoriek historiek={medicatieHistoriek} />
+            {loadingMedications ? (
+              <View style={styles.emptyMeldingen}>
+                <Text style={styles.emptyText}>Medicatie laden...</Text>
+              </View>
+            ) : (
+              <>
+                <MedicatieSchema medications={medications} />
+                <MedicatieHistoriek historiek={medicatieHistoriek} />
+              </>
+            )}
           </ScrollView>
         );
       case 'Dieet':
         return (
           <DieetInformatie
-            allergies={allergies}
-            diets={residentDiets}
+            residentId={Number(id)}
+            currentUserId={currentUserId}
             onSaveChanges={handleSaveDietChanges}
           />
         );

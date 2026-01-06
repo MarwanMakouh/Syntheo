@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
     return 'http://localhost:8000/api';
   } else {
     // For mobile devices, use your computer's local IP address
-    return 'http://192.168.1.26:8000/api';
+    return 'http://192.168.0.139:8000/api';
   }
 };
 
@@ -44,4 +44,19 @@ export const API_ENDPOINTS = {
   // Rooms
   rooms: '/rooms',
   roomById: (id: number) => `/rooms/${id}`,
+  // Diets
+  diets: '/diets',
+  dietByResident: (residentId: number) => `/diets/resident/${residentId}`,
+  dietById: (id: number) => `/diets/${id}`,
+
+  // Allergies
+  allergies: '/allergies',
+  allergiesByResident: (residentId: number) => `/allergies/resident/${residentId}`,
+  allergyById: (id: number) => `/allergies/${id}`,
+
+  // Change Requests
+  changeRequests: '/change-requests',
+  changeRequestById: (id: number) => `/change-requests/${id}`,
+  approveChangeRequest: (id: number) => `/change-requests/${id}/approve`,
+  rejectChangeRequest: (id: number) => `/change-requests/${id}/reject`,
 };
