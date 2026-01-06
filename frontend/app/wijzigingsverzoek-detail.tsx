@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -18,11 +19,33 @@ import {
   residents,
   users,
 } from '@/Services/API';
+import { approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
 import { formatDate } from '@/utils/date';
+
+// Mapping functions for backend values to Dutch
+const mapStatus = (status: string): string => {
+  const mapping: Record<string, string> = {
+    'pending': 'In behandeling',
+    'approved': 'Goedgekeurd',
+    'rejected': 'Afgekeurd',
+  };
+  return mapping[status] || status;
+};
+
+const mapUrgency = (urgency: string): string => {
+  const mapping: Record<string, string> = {
+    'low': 'Laag',
+    'medium': 'Matig',
+    'high': 'Hoog',
+  };
+  return mapping[urgency] || urgency;
+};
 
 export default function WijzigingsverzoekDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const requestId = Number(id);
   const request = changeRequests.find((r) => r.request_id === requestId);
@@ -44,18 +67,34 @@ export default function WijzigingsverzoekDetailScreen() {
     );
   }
 
-  const handleApprove = () => {
-    // TODO: Implement approval logic when backend is ready
-    console.log('Wijzigingsverzoek goedgekeurd:', requestId);
-    alert('Wijzigingsverzoek goedgekeurd! (Demo mode)');
-    router.back();
+  const handleApprove = async () => {
+    try {
+      setIsApproving(true);
+      const reviewerId = 1; // TODO: Get from auth context
+      await approveChangeRequest(requestId, reviewerId);
+      alert('Wijzigingsverzoek succesvol goedgekeurd!');
+      router.back();
+    } catch (error) {
+      console.error('Error approving change request:', error);
+      alert('Fout bij goedkeuren van wijzigingsverzoek. Probeer opnieuw.');
+    } finally {
+      setIsApproving(false);
+    }
   };
 
-  const handleReject = () => {
-    // TODO: Implement rejection logic when backend is ready
-    console.log('Wijzigingsverzoek afgekeurd:', requestId);
-    alert('Wijzigingsverzoek afgekeurd! (Demo mode)');
-    router.back();
+  const handleReject = async () => {
+    try {
+      setIsRejecting(true);
+      const reviewerId = 1; // TODO: Get from auth context
+      await rejectChangeRequest(requestId, reviewerId);
+      alert('Wijzigingsverzoek afgekeurd.');
+      router.back();
+    } catch (error) {
+      console.error('Error rejecting change request:', error);
+      alert('Fout bij afkeuren van wijzigingsverzoek. Probeer opnieuw.');
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -123,16 +162,16 @@ export default function WijzigingsverzoekDetailScreen() {
               <View
                 style={[
                   styles.urgencyBadge,
-                  { backgroundColor: getUrgencyBgColor(request.urgency) }
+                  { backgroundColor: getUrgencyBgColor(mapUrgency(request.urgency)) }
                 ]}
               >
                 <Text
                   style={[
                     styles.urgencyText,
-                    { color: getUrgencyColor(request.urgency) }
+                    { color: getUrgencyColor(mapUrgency(request.urgency)) }
                   ]}
                 >
-                  {request.urgency.toUpperCase()}
+                  {mapUrgency(request.urgency).toUpperCase()}
                 </Text>
               </View>
             </View>
@@ -197,8 +236,8 @@ export default function WijzigingsverzoekDetailScreen() {
             <View style={styles.cardContent}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Huidige status:</Text>
-                <Text style={[styles.statusText, { color: getStatusColor(request.status) }]}>
-                  {request.status}
+                <Text style={[styles.statusText, { color: getStatusColor(mapStatus(request.status)) }]}>
+                  {mapStatus(request.status)}
                 </Text>
               </View>
               {request.reviewed_at && (
@@ -221,22 +260,32 @@ export default function WijzigingsverzoekDetailScreen() {
           </View>
 
           {/* Action Buttons - Only show for pending requests */}
-          {request.status === 'In behandeling' && (
+          {request.status === 'pending' && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[styles.button, styles.rejectButton]}
                 onPress={handleReject}
                 activeOpacity={0.7}
+                disabled={isRejecting || isApproving}
               >
-                <MaterialIcons name="close" size={20} color={Colors.textOnPrimary} />
+                {isRejecting ? (
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+                ) : (
+                  <MaterialIcons name="close" size={20} color={Colors.textOnPrimary} />
+                )}
                 <Text style={styles.buttonText}>Afkeuren</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.approveButton]}
                 onPress={handleApprove}
                 activeOpacity={0.7}
+                disabled={isRejecting || isApproving}
               >
-                <MaterialIcons name="check" size={20} color={Colors.textOnPrimary} />
+                {isApproving ? (
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
+                ) : (
+                  <MaterialIcons name="check" size={20} color={Colors.textOnPrimary} />
+                )}
                 <Text style={styles.buttonText}>Goedkeuren</Text>
               </TouchableOpacity>
             </View>

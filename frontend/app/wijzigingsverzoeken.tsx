@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,21 +6,62 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { NavigationBar } from '@/components';
 import {
-  changeRequests,
   changeFields,
   residents,
   users,
 } from '@/Services/API';
+import { fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { formatDate } from '@/utils/date';
+
+// Mapping functions for backend values to Dutch
+const mapStatus = (status: string): string => {
+  const mapping: Record<string, string> = {
+    'pending': 'In behandeling',
+    'approved': 'Goedgekeurd',
+    'rejected': 'Afgekeurd',
+  };
+  return mapping[status] || status;
+};
+
+const mapUrgency = (urgency: string): string => {
+  const mapping: Record<string, string> = {
+    'low': 'Laag',
+    'medium': 'Matig',
+    'high': 'Hoog',
+  };
+  return mapping[urgency] || urgency;
+};
 
 export default function WijzigingsverzookenScreen() {
   const router = useRouter();
+  const [changeRequestsData, setChangeRequestsData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadChangeRequests();
+  }, []);
+
+  const loadChangeRequests = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchChangeRequests();
+      setChangeRequestsData(data);
+    } catch (err) {
+      console.error('Failed to load change requests:', err);
+      setError('Kan wijzigingsverzoeken niet laden');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleRequestPress = (requestId: number) => {
     router.push(`/wijzigingsverzoek-detail?id=${requestId}`);
@@ -64,13 +105,37 @@ export default function WijzigingsverzookenScreen() {
   };
 
   // Sort requests: pending first, then by date
-  const sortedRequests = [...changeRequests].sort((a, b) => {
+  const sortedRequests = [...changeRequestsData].sort((a, b) => {
     // Pending requests first
-    if (a.status === 'In behandeling' && b.status !== 'In behandeling') return -1;
-    if (a.status !== 'In behandeling' && b.status === 'In behandeling') return 1;
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
     // Then by date (newest first)
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <NavigationBar />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Laden...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <NavigationBar />
+        <View style={styles.errorContainer}>
+          <MaterialIcons name="error-outline" size={48} color={Colors.error} />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -94,8 +159,8 @@ export default function WijzigingsverzookenScreen() {
                 key={request.request_id}
                 style={[
                   styles.requestCard,
-                  request.status === 'In behandeling' && styles.requestCardPending,
-                  request.status !== 'In behandeling' && styles.requestCardProcessed,
+                  request.status === 'pending' && styles.requestCardPending,
+                  request.status !== 'pending' && styles.requestCardProcessed,
                 ]}
                 onPress={() => handleRequestPress(request.request_id)}
                 activeOpacity={0.7}
@@ -104,16 +169,16 @@ export default function WijzigingsverzookenScreen() {
                 <View
                   style={[
                     styles.urgencyBadge,
-                    { backgroundColor: getUrgencyBgColor(request.urgency) }
+                    { backgroundColor: getUrgencyBgColor(mapUrgency(request.urgency)) }
                   ]}
                 >
                   <Text
                     style={[
                       styles.urgencyText,
-                      { color: getUrgencyColor(request.urgency) }
+                      { color: getUrgencyColor(mapUrgency(request.urgency)) }
                     ]}
                   >
-                    {request.urgency.toUpperCase()}
+                    {mapUrgency(request.urgency).toUpperCase()}
                   </Text>
                 </View>
 
@@ -123,30 +188,30 @@ export default function WijzigingsverzookenScreen() {
                   <View style={styles.requestHeader}>
                     <Text style={[
                       styles.residentName,
-                      request.status !== 'In behandeling' && styles.textProcessed
+                      request.status !== 'pending' && styles.textProcessed
                     ]}>
                       {resident?.name || 'Onbekend'}
                     </Text>
                     <View style={styles.headerRight}>
-                      {request.status !== 'In behandeling' && (
+                      {request.status !== 'pending' && (
                         <View style={[
                           styles.statusBadge,
-                          request.status === 'Goedgekeurd' && styles.statusBadgeApproved,
-                          request.status === 'Afgekeurd' && styles.statusBadgeRejected,
+                          request.status === 'approved' && styles.statusBadgeApproved,
+                          request.status === 'rejected' && styles.statusBadgeRejected,
                         ]}>
                           <Text style={[
                             styles.statusText,
-                            request.status === 'Goedgekeurd' && styles.statusTextApproved,
-                            request.status === 'Afgekeurd' && styles.statusTextRejected,
+                            request.status === 'approved' && styles.statusTextApproved,
+                            request.status === 'rejected' && styles.statusTextRejected,
                           ]}>
-                            {request.status}
+                            {mapStatus(request.status)}
                           </Text>
                         </View>
                       )}
                       <MaterialIcons
                         name="chevron-right"
                         size={24}
-                        color={request.status !== 'In behandeling' ? Colors.iconMuted : Colors.textSecondary}
+                        color={request.status !== 'pending' ? Colors.iconMuted : Colors.textSecondary}
                       />
                     </View>
                   </View>
@@ -157,11 +222,11 @@ export default function WijzigingsverzookenScreen() {
                       <MaterialIcons
                         name="person"
                         size={16}
-                        color={request.status !== 'In behandeling' ? Colors.iconMuted : Colors.textSecondary}
+                        color={request.status !== 'pending' ? Colors.iconMuted : Colors.textSecondary}
                       />
                       <Text style={[
                         styles.infoText,
-                        request.status !== 'In behandeling' && styles.textProcessed
+                        request.status !== 'pending' && styles.textProcessed
                       ]}>
                         Door: {requester?.name || 'Onbekend'}
                       </Text>
@@ -170,11 +235,11 @@ export default function WijzigingsverzookenScreen() {
                       <MaterialIcons
                         name="access-time"
                         size={16}
-                        color={request.status !== 'In behandeling' ? Colors.iconMuted : Colors.textSecondary}
+                        color={request.status !== 'pending' ? Colors.iconMuted : Colors.textSecondary}
                       />
                       <Text style={[
                         styles.infoText,
-                        request.status !== 'In behandeling' && styles.textProcessed
+                        request.status !== 'pending' && styles.textProcessed
                       ]}>
                         {formatDate(request.created_at, 'dd-MM, HH:mm')}
                       </Text>
@@ -185,13 +250,13 @@ export default function WijzigingsverzookenScreen() {
                   <View style={styles.changesRow}>
                     <Text style={[
                       styles.changesLabel,
-                      request.status !== 'In behandeling' && styles.textProcessed
+                      request.status !== 'pending' && styles.textProcessed
                     ]}>
                       Wijzigingen:
                     </Text>
                     <Text style={[
                       styles.changesText,
-                      request.status !== 'In behandeling' && styles.textProcessed
+                      request.status !== 'pending' && styles.textProcessed
                     ]} numberOfLines={1}>
                       {changesText || 'Geen details'}
                     </Text>
@@ -201,7 +266,7 @@ export default function WijzigingsverzookenScreen() {
             );
           })}
 
-          {changeRequests.length === 0 && (
+          {changeRequestsData.length === 0 && (
             <View style={styles.emptyState}>
               <MaterialIcons name="inbox" size={64} color={Colors.iconMuted} />
               <Text style={styles.emptyText}>Geen wijzigingsverzoeken</Text>
@@ -359,5 +424,33 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.textMuted,
     marginTop: Spacing.lg,
+  },
+
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  loadingText: {
+    ...Typography.body,
+    fontSize: FontSize.lg,
+    color: Colors.textSecondary,
+  },
+
+  // Error State
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.lg,
+    padding: Spacing.xl,
+  },
+  errorText: {
+    ...Typography.body,
+    fontSize: FontSize.lg,
+    color: Colors.error,
+    textAlign: 'center',
   },
 });

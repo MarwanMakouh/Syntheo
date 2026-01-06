@@ -564,4 +564,41 @@ const styles = StyleSheet.create({
     color: Colors.success,
     fontWeight: FontWeight.medium,
   },
+
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  loadingText: {
+    fontSize: FontSize.lg,
+    color: Colors.textSecondary,
+  },
+
+  // Error State
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.lg,
+    padding: Spacing.xl,
+  },
+  errorText: {
+    fontSize: FontSize.lg,
+    color: Colors.error,
+    textAlign: 'center',
+  },
+  retryButton: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.md,
+  },
+  retryButtonText: {
+    color: Colors.textOnPrimary,
+    fontWeight: FontWeight.semibold,
+  },
 });
