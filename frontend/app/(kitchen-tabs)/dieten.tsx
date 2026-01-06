@@ -159,58 +159,64 @@ export default function DietenScreen() {
 
             {/* Expanded Content */}
             {expandedSections.has(group.diet_type) && (
-              <View style={styles.residentsList}>
+              <View style={styles.tableContainer}>
+                {/* Table Header */}
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderText, styles.colBewoner]}>Bewoner</Text>
+                  <Text style={[styles.tableHeaderText, styles.colKamer]}>Kamer</Text>
+                  <Text style={[styles.tableHeaderText, styles.colOpmerkingen]}>Opmerkingen</Text>
+                </View>
+
+                {/* Table Rows */}
                 {group.residents.map((resident) => (
-                  <View key={resident.resident_id} style={styles.residentCard}>
-                    <View style={styles.residentHeader}>
-                      <Text style={styles.residentName}>{resident.name}</Text>
-                      <Text style={styles.residentRoom}>
-                        {resident.room_number ? `Kamer ${resident.room_number}` : 'Geen kamer'}
-                      </Text>
-                    </View>
-
-                    {resident.description && (
-                      <View style={styles.descriptionSection}>
-                        <MaterialIcons name="info-outline" size={16} color={Colors.textSecondary} />
+                  <View key={resident.resident_id} style={styles.tableRow}>
+                    <Text style={[styles.tableCell, styles.colBewoner, styles.boldText]}>
+                      {resident.name}
+                    </Text>
+                    <Text style={[styles.tableCell, styles.colKamer]}>
+                      {resident.room_number || '-'}
+                    </Text>
+                    <View style={[styles.tableCell, styles.colOpmerkingen]}>
+                      {resident.description && (
                         <Text style={styles.descriptionText}>{resident.description}</Text>
-                      </View>
-                    )}
+                      )}
 
-                    {resident.preferences && (
-                      <View style={styles.preferencesSection}>
-                        {resident.preferences.likes && resident.preferences.likes.length > 0 && (
-                          <View style={styles.preferenceGroup}>
-                            <View style={styles.preferenceHeader}>
-                              <MaterialIcons name="thumb-up" size={14} color="#10B981" />
-                              <Text style={styles.preferenceLabel}>Houdt van:</Text>
+                      {resident.preferences && (
+                        <View style={styles.preferencesSection}>
+                          {resident.preferences.likes && resident.preferences.likes.length > 0 && (
+                            <View style={styles.preferenceGroup}>
+                              <View style={styles.preferenceHeader}>
+                                <MaterialIcons name="thumb-up" size={12} color="#10B981" />
+                                <Text style={styles.preferenceLabel}>Houdt van:</Text>
+                              </View>
+                              <View style={styles.preferenceItems}>
+                                {resident.preferences.likes.map((item, index) => (
+                                  <View key={index} style={styles.preferenceChip}>
+                                    <Text style={styles.preferenceChipText}>{item}</Text>
+                                  </View>
+                                ))}
+                              </View>
                             </View>
-                            <View style={styles.preferenceItems}>
-                              {resident.preferences.likes.map((item, index) => (
-                                <View key={index} style={styles.preferenceChip}>
-                                  <Text style={styles.preferenceChipText}>{item}</Text>
-                                </View>
-                              ))}
-                            </View>
-                          </View>
-                        )}
+                          )}
 
-                        {resident.preferences.dislikes && resident.preferences.dislikes.length > 0 && (
-                          <View style={styles.preferenceGroup}>
-                            <View style={styles.preferenceHeader}>
-                              <MaterialIcons name="thumb-down" size={14} color="#EF4444" />
-                              <Text style={styles.preferenceLabel}>Houdt niet van:</Text>
+                          {resident.preferences.dislikes && resident.preferences.dislikes.length > 0 && (
+                            <View style={styles.preferenceGroup}>
+                              <View style={styles.preferenceHeader}>
+                                <MaterialIcons name="thumb-down" size={12} color="#EF4444" />
+                                <Text style={styles.preferenceLabel}>Houdt niet van:</Text>
+                              </View>
+                              <View style={styles.preferenceItems}>
+                                {resident.preferences.dislikes.map((item, index) => (
+                                  <View key={index} style={[styles.preferenceChip, styles.dislikeChip]}>
+                                    <Text style={styles.preferenceChipText}>{item}</Text>
+                                  </View>
+                                ))}
+                              </View>
                             </View>
-                            <View style={styles.preferenceItems}>
-                              {resident.preferences.dislikes.map((item, index) => (
-                                <View key={index} style={[styles.preferenceChip, styles.dislikeChip]}>
-                                  <Text style={styles.preferenceChipText}>{item}</Text>
-                                </View>
-                              ))}
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                    )}
+                          )}
+                        </View>
+                      )}
+                    </View>
                   </View>
                 ))}
               </View>
@@ -293,59 +299,67 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     flex: 1,
   },
-  residentsList: {
+  tableContainer: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    padding: Spacing.md,
-    gap: Spacing.md,
   },
-  residentCard: {
-    backgroundColor: Colors.backgroundSecondary,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-  },
-  residentHeader: {
+  tableHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#334155',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
   },
-  residentName: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  residentRoom: {
+  tableHeaderText: {
+    color: '#FFFFFF',
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
+    fontWeight: '700',
   },
-  descriptionSection: {
+  tableRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.xs,
-    paddingTop: Spacing.xs,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    minHeight: 60,
+  },
+  tableCell: {
+    justifyContent: 'center',
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+  },
+  colBewoner: {
+    flex: 2,
+  },
+  colKamer: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  colOpmerkingen: {
+    flex: 4,
+  },
+  boldText: {
+    fontWeight: '700',
   },
   descriptionText: {
-    flex: 1,
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     lineHeight: 20,
+    marginBottom: Spacing.xs,
   },
   preferencesSection: {
-    gap: Spacing.sm,
-    paddingTop: Spacing.xs,
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
   },
   preferenceGroup: {
-    gap: Spacing.xs,
+    gap: 4,
   },
   preferenceHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 4,
   },
   preferenceLabel: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs,
     fontWeight: '600',
     color: Colors.textPrimary,
   },
