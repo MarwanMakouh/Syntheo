@@ -8,3 +8,7 @@ export { UsersFilters } from './users-filters';
 export { AllergyBadge } from './allergy-badge';
 export { ResidentCard } from './resident-card';
 export { ResidentsFilters } from './residents-filters';
+export { RoomStatusBadge } from './room-status-badge';
+export { ResidentStatusBadge } from './resident-status-badge';
+export { RoomCard } from './room-card';
+export { WarningBanner } from './warning-banner';
