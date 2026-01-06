@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DagdeelDropdown } from '@/components/DagdeelDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
@@ -429,6 +429,8 @@ const styles = StyleSheet.create({
     padding: Layout.screenPaddingLarge,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    ...(Platform.OS === 'web' && { overflow: 'visible', zIndex: 9999 }),
+    backgroundColor: Colors.background,
   },
   title: {
     fontSize: FontSize['3xl'],
@@ -438,6 +440,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(Platform.OS === 'web' && { zIndex: 1 }),
   },
   scrollContent: {
     padding: Layout.screenPaddingLarge,
