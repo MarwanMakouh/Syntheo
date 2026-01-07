@@ -33,9 +33,9 @@ export function MeldingCard({ note, authorName }: MeldingCardProps) {
   const getUrgencyLabel = (urgency: string) => {
     switch (urgency) {
       case 'Hoog':
-        return 'AANDACHT';
+        return 'URGENT';
       case 'Matig':
-        return 'MATIG';
+        return 'AANDACHT';
       case 'Laag':
         return 'INFO';
       default:
@@ -46,9 +46,9 @@ export function MeldingCard({ note, authorName }: MeldingCardProps) {
   const getUrgencyTextColor = (urgency: string) => {
     switch (urgency) {
       case 'Hoog':
-        return Colors.warningAlt;
+        return Colors.error;
       case 'Matig':
-        return Colors.urgencyMediumText;
+        return Colors.warningAlt;
       case 'Laag':
         return Colors.textSecondary;
       default:
