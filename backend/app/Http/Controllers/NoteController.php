@@ -67,7 +67,7 @@ class NoteController extends Controller
             'resident_id' => 'required|exists:residents,resident_id',
             'author_id' => 'required|exists:users,user_id',
             'category' => 'required|in:general,health,behavior,medication,social',
-            'urgency' => 'required|in:low,medium,high',
+            'urgency' => 'required|in:low,medium,high,Laag,Matig,Hoog',
             'content' => 'required|string',
         ]);
 
@@ -99,7 +99,7 @@ class NoteController extends Controller
 
         $validated = $request->validate([
             'category' => 'sometimes|in:general,health,behavior,medication,social',
-            'urgency' => 'sometimes|in:low,medium,high',
+            'urgency' => 'sometimes|in:low,medium,high,Laag,Matig,Hoog',
             'content' => 'sometimes|string',
         ]);
 

@@ -3,14 +3,14 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from '
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Shadows } from '@/constants';
 
-interface DagdeelDropdownProps {
+interface VerdiepingDropdownProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-const DAGDEEL_OPTIONS = ['Ochtend', 'Middag', 'Avond', 'Nacht'];
+const VERDIEPING_OPTIONS = ['Alle verdiepingen', 'Verdieping 1', 'Verdieping 2', 'Verdieping 3'];
 
-export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
+export function VerdiepingDropdown({ value, onChange }: VerdiepingDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (option: string) => {
@@ -20,7 +20,7 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
 
   return (
     <View style={[styles.container, isOpen && styles.containerOpen]}>
-      <Text style={styles.label}>Dagdeel:</Text>
+      <Text style={styles.label}>Verdieping:</Text>
       <View style={styles.dropdownWrapper}>
         <TouchableOpacity
           style={styles.dropdownButton}
@@ -38,7 +38,7 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
         {isOpen && (
           <View style={[styles.dropdownList, Platform.OS === 'web' && styles.dropdownListWeb]}>
             <ScrollView style={styles.scrollView} nestedScrollEnabled>
-              {DAGDEEL_OPTIONS.map((option) => (
+              {VERDIEPING_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option}
                   style={[
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   containerOpen: {
-    ...(Platform.OS === 'web' ? { zIndex: 10000 } : { zIndex: 2000 }),
+    ...(Platform.OS === 'web' ? { zIndex: 9999 } : { zIndex: 1999 }),
   },
   label: {
     fontSize: FontSize.lg,

@@ -117,7 +117,11 @@ export default function DashboardScreen() {
 
   // Get urgent residents from data (one entry per resident, latest urgent note)
   const urgentResidents = useMemo(() => {
-    const urgentNotes = notes.filter((note) => note.urgency === 'Hoog' && !note.is_resolved);
+    // ONLY filter notes with urgency 'Hoog' (urgent) and not resolved
+    const urgentNotes = notes.filter((note) => {
+      // Strict check: only 'Hoog' urgency, case-sensitive
+      return note.urgency === 'Hoog' && !note.is_resolved;
+    });
 
     // Group by resident_id and pick latest note per resident
     const byResident = new Map<number, any>();
@@ -134,16 +138,24 @@ export default function DashboardScreen() {
 
     const result: Array<any> = [];
     byResident.forEach((note, residentId) => {
+      // Double-check that the note is still urgent before adding to result
+      if (note.urgency !== 'Hoog' || note.is_resolved) {
+        return; // Skip this resident if note is not urgent or is resolved
+      }
+
       const resident = residents.find((r) => r.resident_id === residentId);
       const room = rooms.find((r) => r.resident_id === residentId);
-      const residentNotes = notes.filter((n) => n.resident_id === residentId && !n.is_resolved);
+      // Count only URGENT unresolved notes for this resident
+      const urgentResidentNotes = notes.filter(
+        (n) => n.resident_id === residentId && n.urgency === 'Hoog' && !n.is_resolved
+      );
 
       result.push({
         id: residentId,
         room: room?.room_number || room?.room_id || '-',
         name: resident?.name || 'Onbekend',
         incident: `${note.category} - ${formatDate(note.created_at, 'dd-MM, HH:mm')}`,
-        openNotes: residentNotes.length,
+        openNotes: urgentResidentNotes.length, // Show only count of urgent notes
       });
     });
 

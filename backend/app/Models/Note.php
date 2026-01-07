@@ -31,6 +31,34 @@ class Note extends Model
         'resolved_at' => 'datetime',
     ];
 
+    /**
+     * Get the urgency attribute and map English values to Dutch
+     */
+    public function getUrgencyAttribute($value)
+    {
+        $mapping = [
+            'high' => 'Hoog',
+            'medium' => 'Matig',
+            'low' => 'Laag',
+        ];
+
+        return $mapping[$value] ?? $value;
+    }
+
+    /**
+     * Set the urgency attribute and map Dutch values to English for database storage
+     */
+    public function setUrgencyAttribute($value)
+    {
+        $mapping = [
+            'Hoog' => 'high',
+            'Matig' => 'medium',
+            'Laag' => 'low',
+        ];
+
+        $this->attributes['urgency'] = $mapping[$value] ?? $value;
+    }
+
     public function resident()
     {
         return $this->belongsTo(Resident::class, 'resident_id', 'resident_id');

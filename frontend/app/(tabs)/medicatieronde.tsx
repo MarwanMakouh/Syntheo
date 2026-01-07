@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DagdeelDropdown } from '@/components/DagdeelDropdown';
+import { VerdiepingDropdown } from '@/components/VerdiepingDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
 import { fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
 import { saveMedicationRoundsBulk, fetchMedicationRounds } from '@/Services/medicationRoundsApi';
@@ -38,6 +39,7 @@ const getCurrentDagdeel = (): string => {
 
 export default function MedicatierondeScreen() {
     const [selectedDagdeel, setSelectedDagdeel] = useState(getCurrentDagdeel());
+  const [selectedVerdieping, setSelectedVerdieping] = useState('Alle verdiepingen');
   const [residents, setResidents] = useState<any[]>([]);
   const [residentStates, setResidentStates] = useState<ResidentStates>({});
   const [modalState, setModalState] = useState<{
@@ -160,6 +162,23 @@ export default function MedicatierondeScreen() {
   const handleDagdeelChange = (dagdeel: string) => {
     setSelectedDagdeel(dagdeel);
   };
+
+  const handleVerdiepingChange = (verdieping: string) => {
+    setSelectedVerdieping(verdieping);
+  };
+
+  // Filter residents by selected verdieping
+  const filteredResidents = residents.filter((resident: any) => {
+    if (selectedVerdieping === 'Alle verdiepingen') {
+      return true;
+    }
+
+    // Extract floor number from "Verdieping X"
+    const floorNumber = parseInt(selectedVerdieping.replace('Verdieping ', ''));
+
+    // Check if resident's room is on the selected floor
+    return resident.room?.floor_id === floorNumber;
+  });
 
   const handleToggle = (residentId: number) => {
     setResidentStates((prev) => ({
@@ -387,17 +406,19 @@ export default function MedicatierondeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <DagdeelDropdown value={selectedDagdeel} onChange={handleDagdeelChange} />
+        <VerdiepingDropdown value={selectedVerdieping} onChange={handleVerdiepingChange} />
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {residents.length === 0 ? (
+        {filteredResidents.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>
               Geen bewoners met medicatie voor {selectedDagdeel.toLowerCase()}
+              {selectedVerdieping !== 'Alle verdiepingen' && ` op ${selectedVerdieping.toLowerCase()}`}
             </Text>
           </View>
         ) : (
-          residents.map((resident: any) => (
+          filteredResidents.map((resident: any) => (
             <ResidentMedicationCard
               key={resident.resident_id}
               resident={resident}
@@ -429,8 +450,9 @@ const styles = StyleSheet.create({
     padding: Layout.screenPaddingLarge,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    ...(Platform.OS === 'web' && { overflow: 'visible', zIndex: 9999 }),
+    ...(Platform.OS === 'web' && { overflow: 'visible', zIndex: 900}),
     backgroundColor: Colors.background,
+    gap: Spacing.xl,
   },
   title: {
     fontSize: FontSize['3xl'],
