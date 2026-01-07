@@ -79,6 +79,7 @@ export default function MeldingenScreen() {
   const [selectedMelding, setSelectedMelding] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
+  const [filters, setFilters] = useState({ urgentie: 'all', status: 'all' });
 
   const { currentUser } = useAuth();
 
@@ -179,6 +180,27 @@ export default function MeldingenScreen() {
     }
   };
 
+  const handleFilterChange = (newFilters: { urgentie: string; status: string }) => {
+    setFilters(newFilters);
+  };
+
+  // Filter notes based on selected filters
+  const filteredNotes = notes.filter((note) => {
+    const noteStatus = getStatus(note);
+
+    // Filter by urgentie
+    if (filters.urgentie !== 'all' && note.urgency !== filters.urgentie) {
+      return false;
+    }
+
+    // Filter by status
+    if (filters.status !== 'all' && noteStatus !== filters.status) {
+      return false;
+    }
+
+    return true;
+  });
+
   // Show loading state
   if (loading) {
     return (
@@ -206,7 +228,7 @@ export default function MeldingenScreen() {
     <View style={styles.container}>
       {/* Header with Filter and New Button */}
       <View style={styles.header}>
-        <MeldingenFilterDropdown />
+        <MeldingenFilterDropdown onFilterChange={handleFilterChange} />
         <TouchableOpacity style={styles.newButton} onPress={handleNewMelding}>
           <MaterialIcons name="add" size={20} color="#FFFFFF" />
           <Text style={styles.newButtonText}>Nieuwe Melding</Text>
@@ -215,13 +237,13 @@ export default function MeldingenScreen() {
 
       {/* Meldingen List */}
       <ScrollView style={styles.meldingenList}>
-        {notes.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialIcons name="inbox" size={64} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
           </View>
         ) : (
-          notes.map((note) => {
+          filteredNotes.map((note) => {
             const resident = getResidentById(note.resident_id);
             const status = getStatus(note);
 

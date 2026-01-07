@@ -1,97 +1,60 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Shadows } from '@/constants';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 
 interface MeldingenFilterDropdownProps {
-  onFilterChange?: (filterType: string, value: string) => void;
+  onFilterChange?: (filters: { urgentie: string; status: string }) => void;
 }
 
-const FILTER_OPTIONS = [
-  { label: 'Alle meldingen', value: 'all', type: 'reset' },
-  { label: '---', value: 'divider1', type: 'divider' },
-  { label: 'Urgent', value: 'urgent', type: 'urgentie' },
-  { label: 'Aandacht', value: 'aandacht', type: 'urgentie' },
-  { label: 'Stabiel', value: 'stabiel', type: 'urgentie' },
-  { label: '---', value: 'divider2', type: 'divider' },
-  { label: 'Val', value: 'val', type: 'categorie' },
-  { label: 'Medicatie', value: 'medicatie', type: 'categorie' },
-  { label: 'Gedrag', value: 'gedrag', type: 'categorie' },
-  { label: 'Verzorging', value: 'verzorging', type: 'categorie' },
-  { label: 'Technisch', value: 'technisch', type: 'categorie' },
-  { label: 'Overig', value: 'overig', type: 'categorie' },
-  { label: '---', value: 'divider3', type: 'divider' },
-  { label: 'Open', value: 'open', type: 'status' },
-  { label: 'Behandeling', value: 'behandeling', type: 'status' },
-  { label: 'Afgehandeld', value: 'afgehandeld', type: 'status' },
-];
-
 export function MeldingenFilterDropdown({ onFilterChange }: MeldingenFilterDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('Alle meldingen');
+  const [urgentieFilter, setUrgentieFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  const handleSelect = (option: typeof FILTER_OPTIONS[0]) => {
-    if (option.type === 'divider') return;
-
-    setSelectedFilter(option.label);
-    setIsOpen(false);
-
+  const handleUrgentieChange = (value: string) => {
+    setUrgentieFilter(value);
     if (onFilterChange) {
-      onFilterChange(option.type, option.value);
+      onFilterChange({ urgentie: value, status: statusFilter });
+    }
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    if (onFilterChange) {
+      onFilterChange({ urgentie: urgentieFilter, status: value });
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.dropdownWrapper}>
-        <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={() => setIsOpen(!isOpen)}
+      {/* Urgentie Filter */}
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={urgentieFilter}
+          onValueChange={handleUrgentieChange}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
         >
-          <Text style={styles.dropdownButtonText}>Filters</Text>
-          <MaterialIcons
-            name={isOpen ? "arrow-drop-up" : "arrow-drop-down"}
-            size={24}
-            color={Colors.iconDefault}
-          />
-        </TouchableOpacity>
+          <Picker.Item label="Alle urgentie" value="all" />
+          <Picker.Item label="Urgent" value="Hoog" />
+          <Picker.Item label="Aandacht" value="Matig" />
+          <Picker.Item label="Stabiel" value="Laag" />
+        </Picker>
+      </View>
 
-        {isOpen && (
-          <View style={styles.dropdownList}>
-            <ScrollView style={styles.scrollView}>
-              {FILTER_OPTIONS.map((option, index) => {
-                if (option.type === 'divider') {
-                  return (
-                    <View key={option.value} style={styles.divider} />
-                  );
-                }
-
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.dropdownItem,
-                      selectedFilter === option.label && styles.dropdownItemSelected,
-                    ]}
-                    onPress={() => handleSelect(option)}
-                  >
-                    <Text
-                      style={[
-                        styles.dropdownItemText,
-                        selectedFilter === option.label && styles.dropdownItemTextSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {selectedFilter === option.label && (
-                      <MaterialIcons name="check" size={20} color={Colors.secondary} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        )}
+      {/* Status Filter */}
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={statusFilter}
+          onValueChange={handleStatusChange}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
+        >
+          <Picker.Item label="Alle statussen" value="all" />
+          <Picker.Item label="Open" value="open" />
+          <Picker.Item label="Behandeling" value="in_behandeling" />
+          <Picker.Item label="Afgehandeld" value="afgehandeld" />
+        </Picker>
       </View>
     </View>
   );
@@ -99,68 +62,52 @@ export function MeldingenFilterDropdown({ onFilterChange }: MeldingenFilterDropd
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  dropdownWrapper: {
-    position: 'relative',
-    zIndex: 1000,
-    maxWidth: 200,
-  },
-  dropdownButton: {
     flexDirection: 'row',
+    gap: Spacing.md,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
+  },
+  pickerWrapper: {
     borderWidth: 1,
     borderColor: Colors.borderMedium,
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.background,
+    overflow: 'hidden',
+    minWidth: 180,
+    height: 48,
+    justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        minWidth: 200,
+      },
+      ios: {
+        minWidth: 180,
+      },
+      android: {
+        minWidth: 180,
+      },
+    }),
   },
-  dropdownButtonText: {
-    fontSize: FontSize.lg,
+  picker: {
+    height: 48,
     color: Colors.textPrimary,
+    fontSize: FontSize.md,
+    backgroundColor: 'transparent',
+    ...Platform.select({
+      web: {
+        outline: 'none',
+        cursor: 'pointer',
+      },
+      ios: {
+        // iOS has native styling
+      },
+      android: {
+        marginLeft: Spacing.sm,
+      },
+    }),
   },
-  dropdownList: {
-    position: 'absolute',
-    top: 52,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.borderMedium,
-    borderRadius: BorderRadius.md,
-    ...Shadows.dropdown,
-    maxHeight: 500,
-    zIndex: 1001,
-    minWidth: 250,
-  },
-  scrollView: {
-    maxHeight: 500,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing['2xl'],
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  dropdownItemSelected: {
-    backgroundColor: Colors.selectedBackgroundPurple,
-  },
-  dropdownItemText: {
-    fontSize: FontSize.lg,
+  pickerItem: {
+    fontSize: FontSize.md,
     color: Colors.textPrimary,
-  },
-  dropdownItemTextSelected: {
-    fontWeight: FontWeight.semibold,
-    color: Colors.secondary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.borderLight,
-    marginVertical: Spacing.xs,
+    height: 120,
   },
 });
