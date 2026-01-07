@@ -19,33 +19,35 @@ class AuditLogController extends Controller
         'MedicationRound' => 'Medicatie Ronde',
     ];
 
+    // Map incoming action tokens (EN/NL) to the stored Dutch action value
     protected array $actionMap = [
-        // Dutch -> stored actions
-        'toevoegen' => 'created',
-        'toegevoegd' => 'created',
-        'toevoeging' => 'created',
-        'aanmaken' => 'created',
-        'maken' => 'created',
-        'toevoeg' => 'created',
+        // English -> Dutch
+        'created' => 'toegevoegd',
+        'updated' => 'bewerkt',
+        'deleted' => 'verwijderd',
+        'approved' => 'goedgekeurd',
+        'rejected' => 'afgekeurd',
+        'restored' => 'hersteld',
+        'force_deleted' => 'permanent verwijderd',
 
-        'verwijderen' => 'deleted',
-        'verwijderd' => 'deleted',
-        'delete' => 'deleted',
+        // Dutch variants -> Dutch
+        'toevoegen' => 'toegevoegd',
+        'toegevoegd' => 'toegevoegd',
+        'toevoeging' => 'toegevoegd',
+        'aanmaken' => 'toegevoegd',
 
-        'bewerkt' => 'updated',
-        'bewerken' => 'updated',
-        'bewerk' => 'updated',
+        'verwijderen' => 'verwijderd',
+        'verwijderd' => 'verwijderd',
 
-        'goedgekeurd' => 'approved',
-        'goedkeuren' => 'approved',
-        'approve' => 'approved',
+        'bewerkt' => 'bewerkt',
+        'bewerken' => 'bewerkt',
+        'bewerk' => 'bewerkt',
 
-        'afgekeurd' => 'rejected',
-        'afkeuren' => 'rejected',
-        'reject' => 'rejected',
+        'goedgekeurd' => 'goedgekeurd',
+        'goedkeuren' => 'goedgekeurd',
 
-        'restored' => 'restored',
-        'force_deleted' => 'force_deleted',
+        'afgekeurd' => 'afgekeurd',
+        'afkeuren' => 'afgekeurd',
     ];
 
     public function index(Request $request)
@@ -227,9 +229,22 @@ class AuditLogController extends Controller
             'message' => 'nullable|string',
         ]);
 
+        // translate action to Dutch before storing
+        $actionMap = [
+            'created' => 'toegevoegd',
+            'updated' => 'bewerkt',
+            'deleted' => 'verwijderd',
+            'approved' => 'goedgekeurd',
+            'rejected' => 'afgekeurd',
+            'restored' => 'hersteld',
+            'force_deleted' => 'permanent verwijderd',
+        ];
+        $providedAction = mb_strtolower((string) $data['action']);
+        $storedAction = $actionMap[$providedAction] ?? $data['action'];
+
         $createData = [
             'user_id' => $data['user_id'] ?? (auth()->check() ? auth()->id() : null),
-            'action' => $data['action'],
+            'action' => $storedAction,
             'auditable_type' => $data['auditable_type'] ?? null,
             'auditable_id' => $data['auditable_id'] ?? null,
             'old_values' => $data['old_values'] ?? null,

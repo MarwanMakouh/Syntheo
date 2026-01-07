@@ -82,11 +82,11 @@ export const Colors = {
   textOnPrimary: palette.white,
   textBody: palette.gray800,
 
-  // Backgrounds
+  // Backgrounds (use white app-wide instead of gray variants)
   background: palette.white,
-  backgroundSecondary: palette.gray50,
-  backgroundTertiary: palette.gray25,
-  backgroundMuted: palette.gray75,
+  backgroundSecondary: palette.white,
+  backgroundTertiary: palette.white,
+  backgroundMuted: palette.white,
 
   // Borders
   border: palette.gray100,

@@ -5,25 +5,53 @@ interface ActionBadgeProps {
   action: string;
 }
 
+// Use lowercased keys so matching is case-insensitive
 const actionColors: Record<string, string> = {
-  'CREATE': '#27AE60',
-  'UPDATE': '#3498DB',
-  'DELETE': '#E74C3C',
-  'APPROVE': '#27AE60',
-  'REJECT': '#E74C3C',
+  // Dutch
+  'toegevoegd': '#27AE60', // green
+  'bewerkt': '#3498DB', // blue
+  'verwijderd': '#E74C3C', // red
+  'goedgekeurd': '#27AE60',
+  'afgekeurd': '#E74C3C',
+
+  // English fallbacks
+  'create': '#27AE60',
+  'created': '#27AE60',
+  'update': '#3498DB',
+  'updated': '#3498DB',
+  'delete': '#E74C3C',
+  'deleted': '#E74C3C',
+  'approve': '#27AE60',
+  'approved': '#27AE60',
+  'reject': '#E74C3C',
+  'rejected': '#E74C3C',
 };
 
 const actionLabels: Record<string, string> = {
-  'CREATE': 'Toegevoegd',
-  'UPDATE': 'Bewerkt',
-  'DELETE': 'Verwijderd',
-  'APPROVE': 'Goedgekeurd',
-  'REJECT': 'Afgekeurd',
+  // Dutch labels (preferred)
+  'toegevoegd': 'Toegevoegd',
+  'bewerkt': 'Bewerkt',
+  'verwijderd': 'Verwijderd',
+  'goedgekeurd': 'Goedgekeurd',
+  'afgekeurd': 'Afgekeurd',
+
+  // English fallbacks
+  'create': 'Toegevoegd',
+  'created': 'Toegevoegd',
+  'update': 'Bewerkt',
+  'updated': 'Bewerkt',
+  'delete': 'Verwijderd',
+  'deleted': 'Verwijderd',
+  'approve': 'Goedgekeurd',
+  'approved': 'Goedgekeurd',
+  'reject': 'Afgekeurd',
+  'rejected': 'Afgekeurd',
 };
 
 export function ActionBadge({ action }: ActionBadgeProps) {
-  const backgroundColor = actionColors[action] || Colors.textSecondary;
-  const label = actionLabels[action] || action;
+  const key = (action || '').toString().toLowerCase().trim();
+  const backgroundColor = actionColors[key] || Colors.textSecondary;
+  const label = actionLabels[key] || action;
 
   return (
     <Text style={[styles.badge, { backgroundColor }]}>
