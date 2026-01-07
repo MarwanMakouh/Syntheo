@@ -5,7 +5,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
 import { useRole } from '@/contexts/RoleContext';
 import { useAnnouncements } from '@/contexts/AnnouncementsContext';
-import { AnnouncementsModal } from '@/components/announcements-modal';
+import { AnnouncementsDropdown } from '@/components/announcements-dropdown';
 import { useState } from 'react';
 
 // backend callen
@@ -109,8 +109,8 @@ export function NavigationBar() {
         </TouchableOpacity>
       </View>
 
-      {/* Announcements Modal */}
-      <AnnouncementsModal
+      {/* Announcements Dropdown */}
+      <AnnouncementsDropdown
         visible={announcementsModalVisible}
         onClose={() => setAnnouncementsModalVisible(false)}
       />
