@@ -22,6 +22,7 @@ interface UserFormModalProps {
     email: string;
     password?: string;
     role: UserRole;
+    floor_id?: number | null;
   }) => void | Promise<void>;
   isLoading?: boolean;
   user?: User; // If provided, modal is in edit mode
@@ -48,6 +49,9 @@ export function UserFormModal({
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('Verpleegster');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [floors, setFloors] = useState<Array<{ floor_id: number; name?: string }>>([]);
+  const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null);
+  const [showFloorDropdown, setShowFloorDropdown] = useState(false);
 
   // Map old/English roles to Dutch roles
   const mapRoleToDutch = (role: string): UserRole => {
@@ -70,9 +74,27 @@ export function UserFormModal({
       setName(user.name);
       setEmail(user.email);
       setPassword('');
-      setSelectedRole(mapRoleToDutch(user.role));
+      setSelectedRole(user.role);
+      setSelectedFloorId(user.floor_id ?? null);
     }
   }, [user, visible]);
+
+  useEffect(() => {
+    // fetch floors for dropdown
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/floors`);
+        if (res.ok) {
+          const json = await res.json();
+          // API returns { data: [...] } or array
+          const list = Array.isArray(json) ? json : (json.data || []);
+          setFloors(list || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch floors:', e);
+      }
+    })();
+  }, []);
 
   const handleRoleChange = (role: UserRole) => {
     setSelectedRole(role);
@@ -114,10 +136,18 @@ export function UserFormModal({
       return;
     }
 
+    // If role requires floor, validate selection
+    const roleNeedsFloor = selectedRole === 'Verpleegster' || selectedRole === 'Hoofdverpleegster';
+    if (roleNeedsFloor && (!selectedFloorId || selectedFloorId <= 0)) {
+      alert('Kies een verdieping voor dit personeelslid');
+      return;
+    }
+
     const userData: any = {
       name: name.trim(),
       email: email.trim(),
       role: selectedRole,
+      floor_id: selectedFloorId ?? null,
     };
 
     // Only include password if it's provided
@@ -135,6 +165,7 @@ export function UserFormModal({
     setEmail('');
     setPassword('');
     setSelectedRole('Verpleegster');
+    setSelectedFloorId(null);
   };
 
   const handleClose = () => {
@@ -258,6 +289,54 @@ export function UserFormModal({
               </View>
             )}
           </View>
+
+          {/* Floor Dropdown - only for nurses/head nurses (fixed choices 1,2,3) */}
+          {(selectedRole === 'Verpleegster' || selectedRole === 'Hoofdverpleegster') && (
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Verdieping *</Text>
+              <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowFloorDropdown(!showFloorDropdown)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.dropdownText}>{
+                  selectedFloorId ? `Verdieping ${selectedFloorId}` : 'Selecteer verdieping'
+                }</Text>
+                <Ionicons
+                  name={showFloorDropdown ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+              {showFloorDropdown && (
+                <View style={styles.dropdownMenu}>
+                  {[1, 2, 3].map((floorNum) => (
+                    <TouchableOpacity
+                      key={floorNum}
+                      style={[
+                        styles.dropdownItem,
+                        selectedFloorId === floorNum && styles.dropdownItemSelected,
+                      ]}
+                      onPress={() => { setSelectedFloorId(floorNum); setShowFloorDropdown(false); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownItemText,
+                          selectedFloorId === floorNum && styles.dropdownItemTextSelected,
+                        ]}
+                      >
+                        {`Verdieping ${floorNum}`}
+                      </Text>
+                      {selectedFloorId === floorNum && (
+                        <Ionicons name="check" size={20} color={Colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
         </ScrollView>
 

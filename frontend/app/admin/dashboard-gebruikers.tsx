@@ -77,6 +77,7 @@ export default function DashboardGebruikersScreen() {
     email: string;
     password?: string;
     role: string;
+    floor_id?: number | null;
   }) => {
     try {
       setIsCreating(true);
@@ -84,15 +85,11 @@ export default function DashboardGebruikersScreen() {
 
       if (editingUser) {
         // Update existing user
-        console.log('Updating user:', editingUser.user_id);
-        const result = await updateUser(editingUser.user_id, { ...userData, floor_id: 1 } as any);
-        console.log('Update result:', result);
+        await updateUser(editingUser.user_id, { ...userData } as any);
         Alert.alert('Succes', 'Personeelslid succesvol bijgewerkt');
       } else {
         // Create new user
-        console.log('Creating new user');
-        const result = await createUser({ ...userData, password: userData.password!, floor_id: 1 } as any);
-        console.log('Create result:', result);
+        await createUser({ ...userData, password: userData.password! } as any);
         Alert.alert('Succes', 'Personeelslid succesvol toegevoegd');
       }
 
