@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\RecordsAudit;
 
 class ResMedication extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsAudit;
 
     protected $table = 'res_medication';
     protected $primaryKey = 'res_medication_id';

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\RecordsAudit;
 
 class ChangeRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsAudit;
 
     protected $table = 'change_requests';
     protected $primaryKey = 'request_id';
