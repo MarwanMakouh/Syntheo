@@ -58,21 +58,29 @@ export const fetchUserById = async (userId: number): Promise<User> => {
  */
 export const createUser = async (data: any): Promise<User> => {
   try {
+    console.log('API: Creating user with data:', data);
+    console.log('API: Sending to URL:', `${API_BASE_URL}${API_ENDPOINTS.users}`);
+
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.users}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(data),
     });
 
+    console.log('API: Response status:', response.status);
+    console.log('API: Response ok:', response.ok);
+
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('API: Error response data:', errorData);
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     const result: ApiResponse<User> = await response.json();
+    console.log('API: Success response:', result);
     return result.data;
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error('API: Error creating user:', error);
     throw error;
   }
 };
@@ -82,21 +90,29 @@ export const createUser = async (data: any): Promise<User> => {
  */
 export const updateUser = async (userId: number, data: any): Promise<User> => {
   try {
+    console.log('API: Updating user', userId, 'with data:', data);
+    console.log('API: Sending to URL:', `${API_BASE_URL}${API_ENDPOINTS.userById(userId)}`);
+
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.userById(userId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(data),
     });
 
+    console.log('API: Response status:', response.status);
+    console.log('API: Response ok:', response.ok);
+
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('API: Error response data:', errorData);
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     const result: ApiResponse<User> = await response.json();
+    console.log('API: Success response:', result);
     return result.data;
   } catch (error) {
-    console.error(`Error updating user ${userId}:`, error);
+    console.error(`API: Error updating user ${userId}:`, error);
     throw error;
   }
 };

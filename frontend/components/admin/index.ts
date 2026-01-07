@@ -21,6 +21,7 @@ export { AuditLogsTable, type AuditLog } from './audit-logs-table';
 export { UserFormModal } from './user-form-modal';
 export { ConfirmationModal } from './confirmation-modal';
 export { ResidentFormModal } from './resident-form-modal';
+export { ResidentDetailsModal } from './resident-details-modal';
 export { AssignResidentModal } from './assign-resident-modal';
 export { RoomsFilters } from './rooms-filters';
 export { NotificationsDropdown } from './notifications-dropdown';
