@@ -52,7 +52,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role' => 'required|string|in:Verpleegster,Hoofdverpleegster,Beheerder,Keukenpersoneel',
-            'floor_id' => 'nullable|exists:floors,floor_id'
+            'floor_id' => 'required_if:role,Verpleegster,Hoofdverpleegster|exists:floors,floor_id'
         ]);
 
         $user = User::create([
@@ -95,6 +95,22 @@ class UserController extends Controller
             'role' => 'sometimes|string|in:Verpleegster,Hoofdverpleegster,Beheerder,Keukenpersoneel',
             'floor_id' => 'nullable|exists:floors,floor_id'
         ]);
+
+        // Ensure floor_id is present for nurse roles. Determine role after validation
+        $newRole = $validated['role'] ?? $user->role;
+        $roleRequiresFloor = in_array($newRole, ['Verpleegster', 'Hoofdverpleegster']);
+
+        if ($roleRequiresFloor) {
+            $hasFloorInPayload = array_key_exists('floor_id', $validated) && !is_null($validated['floor_id']);
+            $hasExistingFloor = !empty($user->floor_id);
+
+            if (! $hasFloorInPayload && ! $hasExistingFloor) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verpleegkundige-rollen moeten gekoppeld zijn aan een verdieping (floor_id)'
+                ], 422);
+            }
+        }
 
         // Update password only if provided
         if (isset($validated['password'])) {

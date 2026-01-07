@@ -77,17 +77,18 @@ export default function DashboardGebruikersScreen() {
     email: string;
     password?: string;
     role: string;
+    floor_id?: number | null;
   }) => {
     try {
       setIsCreating(true);
 
       if (editingUser) {
         // Update existing user
-        await updateUser(editingUser.user_id, { ...userData, floor_id: 1 } as any);
+        await updateUser(editingUser.user_id, { ...userData } as any);
         Alert.alert('Succes', 'Personeelslid succesvol bijgewerkt');
       } else {
         // Create new user
-        await createUser({ ...userData, password: userData.password!, floor_id: 1 } as any);
+        await createUser({ ...userData, password: userData.password! } as any);
         Alert.alert('Succes', 'Personeelslid succesvol toegevoegd');
       }
 
