@@ -118,7 +118,18 @@ export default function WijzigingsverzoekDetailScreen() {
         const reviewerId = currentUser?.user_id || 1;
         await approveChangeRequest(requestId, reviewerId);
         alert('Wijzigingsverzoek goedgekeurd');
-        router.back();
+        // Navigate back to the list and force a full reload on web so the list refreshes
+        try {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            await router.push('/wijzigingsverzoeken');
+            setTimeout(() => window.location.reload(), 250);
+          } else {
+            router.back();
+          }
+        } catch (e) {
+          // fallback
+          router.back();
+        }
       } catch (e) {
         console.error('Failed to approve request:', e);
         alert('Kon verzoek niet goedkeuren');
@@ -135,7 +146,17 @@ export default function WijzigingsverzoekDetailScreen() {
         const reviewerId = currentUser?.user_id || 1;
         await rejectChangeRequest(requestId, reviewerId);
         alert('Wijzigingsverzoek afgekeurd');
-        router.back();
+        // Navigate back to the list and force a full reload on web so the list refreshes
+        try {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            await router.push('/wijzigingsverzoeken');
+            setTimeout(() => window.location.reload(), 250);
+          } else {
+            router.back();
+          }
+        } catch (e) {
+          router.back();
+        }
       } catch (e) {
         console.error('Failed to reject request:', e);
         alert('Kon verzoek niet afkeuren');
