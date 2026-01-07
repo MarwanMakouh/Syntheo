@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class AuditLog extends Model
 {
@@ -13,6 +14,8 @@ class AuditLog extends Model
     protected $casts = [
         'old_values' => 'array',
         'new_values' => 'array',
+        'details' => 'array',
+        'timestamp' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -21,39 +24,16 @@ class AuditLog extends Model
     {
         return $this->belongsTo(User::class);
     }
-}
-<?php
 
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class AuditLog extends Model
-{
-    use HasFactory;
-
-    protected $table = 'audit_logs';
-    protected $primaryKey = 'log_id';
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'user_id',
-        'entity_type',
-        'entity_id',
-        'action',
-        'details',
-        'timestamp',
-    ];
-
-    protected $casts = [
-        'details' => 'array',
-        'timestamp' => 'datetime',
-    ];
-
-    public function user()
+    /**
+     * Support legacy tables that used `log_id` as primary key.
+     */
+    public function getKeyName()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        if (Schema::hasColumn($this->getTable(), 'log_id')) {
+            return 'log_id';
+        }
+
+        return parent::getKeyName();
     }
 }

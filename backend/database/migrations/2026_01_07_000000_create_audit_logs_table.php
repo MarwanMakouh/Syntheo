@@ -16,12 +16,22 @@ class CreateAuditLogsTable extends Migration
         if (!Schema::hasTable('audit_logs')) {
             Schema::create('audit_logs', function (Blueprint $table) {
                 $table->bigIncrements('id');
-                $table->unsignedBigInteger('user_id')->nullable();
-                $table->string('action');
-                $table->string('auditable_type')->nullable();
-                $table->unsignedBigInteger('auditable_id')->nullable();
+                $table->unsignedBigInteger('user_id')->nullable()->index();
+                $table->string('action')->index();
+                // store short entity name (e.g. User, Resident) for easier display
+                $table->string('auditable_type')->nullable()->index();
+                $table->unsignedBigInteger('auditable_id')->nullable()->index();
+
+                // human readable details / message
+                $table->text('details')->nullable();
+
+                // also keep structured old/new values for diffs
                 $table->json('old_values')->nullable();
                 $table->json('new_values')->nullable();
+
+                // timestamp used for display (can differ from created_at)
+                $table->timestamp('timestamp')->useCurrent()->index();
+
                 $table->string('ip_address')->nullable();
                 $table->text('user_agent')->nullable();
                 $table->timestamps();

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Schema;
 
 class AuditLogger
 {
@@ -16,13 +17,15 @@ class AuditLogger
      * @param array|null $old
      * @param array|null $new
      * @param array $meta
-     * @return AuditLog|null
+    * @return \App\Models\AuditLog|null
      */
     public static function log(string $action, $model = null, $user = null, $old = null, $new = null, array $meta = [])
     {
         try {
             $userId = null;
-            if ($user && is_object($user)) {
+            if (is_numeric($user)) {
+                $userId = (int) $user;
+            } elseif ($user && is_object($user)) {
                 if (method_exists($user, 'getKey')) {
                     $userId = $user->getKey();
                 } elseif (property_exists($user, 'id')) {
@@ -38,7 +41,8 @@ class AuditLogger
             $auditableId = null;
 
             if (is_object($model)) {
-                $auditableType = get_class($model);
+                // store short class name for easier display (e.g. Resident, Note)
+                $auditableType = class_basename($model);
                 if (method_exists($model, 'getKey')) {
                     $auditableId = $model->getKey();
                 } elseif (isset($model->id)) {
@@ -48,16 +52,44 @@ class AuditLogger
                 }
             }
 
-            $entry = AuditLog::create([
-                'user_id' => $userId,
-                'action' => $action,
-                'auditable_type' => $auditableType,
-                'auditable_id' => $auditableId,
-                'old_values' => $old,
-                'new_values' => $new,
-                'ip_address' => Request::ip(),
-                'user_agent' => Request::header('User-Agent'),
-            ]);
+            // Build payload only for columns that actually exist in DB
+            $data = [];
+            if (Schema::hasColumn('audit_logs', 'user_id')) {
+                $data['user_id'] = $userId;
+            }
+            if (Schema::hasColumn('audit_logs', 'action')) {
+                $data['action'] = $action;
+            }
+            if (Schema::hasColumn('audit_logs', 'auditable_type')) {
+                $data['auditable_type'] = $auditableType;
+            } elseif (Schema::hasColumn('audit_logs', 'entity_type')) {
+                $data['entity_type'] = $auditableType;
+            }
+            if (Schema::hasColumn('audit_logs', 'auditable_id')) {
+                $data['auditable_id'] = $auditableId;
+            } elseif (Schema::hasColumn('audit_logs', 'entity_id')) {
+                $data['entity_id'] = $auditableId;
+            }
+            if (Schema::hasColumn('audit_logs', 'details')) {
+                $data['details'] = $meta['details'] ?? null;
+            }
+            if (Schema::hasColumn('audit_logs', 'old_values')) {
+                $data['old_values'] = $old;
+            }
+            if (Schema::hasColumn('audit_logs', 'new_values')) {
+                $data['new_values'] = $new;
+            }
+            if (Schema::hasColumn('audit_logs', 'timestamp')) {
+                $data['timestamp'] = $meta['timestamp'] ?? now();
+            }
+            if (Schema::hasColumn('audit_logs', 'ip_address')) {
+                $data['ip_address'] = Request::ip();
+            }
+            if (Schema::hasColumn('audit_logs', 'user_agent')) {
+                $data['user_agent'] = Request::header('User-Agent');
+            }
+
+            $entry = AuditLog::create($data);
 
             return $entry;
         } catch (\Throwable $e) {

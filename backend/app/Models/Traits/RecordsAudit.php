@@ -10,7 +10,8 @@ trait RecordsAudit
     {
         static::created(function ($model) {
             try {
-                AuditLogger::log('created', $model, auth()->check() ? auth()->user() : null, null, $model->getAttributes());
+                $userId = function_exists('auth') && auth()->check() ? auth()->id() : null;
+                AuditLogger::log('created', $model, $userId, null, $model->getAttributes());
             } catch (\Throwable $e) {
             }
         });
@@ -19,30 +20,36 @@ trait RecordsAudit
             try {
                 $old = $model->getOriginal();
                 $changes = $model->getChanges();
-                AuditLogger::log('updated', $model, auth()->check() ? auth()->user() : null, $old, $changes);
+                $userId = function_exists('auth') && auth()->check() ? auth()->id() : null;
+                AuditLogger::log('updated', $model, $userId, $old, $changes);
             } catch (\Throwable $e) {
             }
         });
 
         static::deleted(function ($model) {
             try {
-                AuditLogger::log('deleted', $model, auth()->check() ? auth()->user() : null, $model->getAttributes(), null);
+                $userId = function_exists('auth') && auth()->check() ? auth()->id() : null;
+                AuditLogger::log('deleted', $model, $userId, $model->getAttributes(), null);
             } catch (\Throwable $e) {
             }
         });
 
         // Register restore/forceDeleted only for models using SoftDeletes
         if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive(static::class))) {
-            static::restored(function ($model) {
+            // Use the event dispatcher to avoid calling the magic static::restored which
+            // can trigger BadMethodCallException on some model boot sequences.
+            \Illuminate\Support\Facades\Event::listen('eloquent.restored: ' . static::class, function ($model) {
                 try {
-                    AuditLogger::log('restored', $model, auth()->check() ? auth()->user() : null, null, $model->getAttributes());
+                    $userId = function_exists('auth') && auth()->check() ? auth()->id() : null;
+                    AuditLogger::log('restored', $model, $userId, null, $model->getAttributes());
                 } catch (\Throwable $e) {
                 }
             });
 
-            static::forceDeleted(function ($model) {
+            \Illuminate\Support\Facades\Event::listen('eloquent.forceDeleted: ' . static::class, function ($model) {
                 try {
-                    AuditLogger::log('force_deleted', $model, auth()->check() ? auth()->user() : null, $model->getAttributes(), null);
+                    $userId = function_exists('auth') && auth()->check() ? auth()->id() : null;
+                    AuditLogger::log('force_deleted', $model, $userId, $model->getAttributes(), null);
                 } catch (\Throwable $e) {
                 }
             });
