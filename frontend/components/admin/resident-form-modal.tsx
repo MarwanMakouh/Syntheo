@@ -83,10 +83,7 @@ export function ResidentFormModal({
 
     await onSubmit(residentData);
 
-    // Only reset if not loading (onSubmit might have failed)
-    if (!isLoading) {
-      resetForm();
-    }
+    // Form will be reset when modal closes via handleClose
   };
 
   const resetForm = () => {

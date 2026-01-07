@@ -1,8 +1,11 @@
 import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import { AdminLayout, ActionCard, ActivityTimeline, type ActivityItem } from '@/components/admin';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function DashboardHomeScreen() {
+  const router = useRouter();
+
   // Mock data - later te vervangen met echte API data
   const recentActivities: ActivityItem[] = [
     {
@@ -26,18 +29,15 @@ export default function DashboardHomeScreen() {
   ];
 
   const handleBewonersBeheren = () => {
-    // Navigate to bewoners management
-    console.log('Navigate to bewoners management');
+    router.push('/admin/dashboard-bewoners');
   };
 
   const handlePersoneelBeheren = () => {
-    // Navigate to personeel management
-    console.log('Navigate to personeel management');
+    router.push('/admin/dashboard-gebruikers');
   };
 
   const handleAuditlogboek = () => {
-    // Navigate to audit log
-    console.log('Navigate to audit log');
+    router.push('/admin/dashboard-audit-logs');
   };
 
   return (
@@ -51,20 +51,20 @@ export default function DashboardHomeScreen() {
           <View style={styles.cardsContainer}>
             <View style={styles.cardWrapper}>
               <ActionCard
-                title="Bewoners Beheren"
-                description="Bewoners toevoegen, bewerken of verwijderen"
-                icon="group"
-                iconColor={Colors.success}
-                onPress={handleBewonersBeheren}
-              />
-            </View>
-            <View style={styles.cardWrapper}>
-              <ActionCard
                 title="Personeel Beheren"
                 description="Gebruikersaccounts toevoegen en beheren"
                 icon="person-add"
                 iconColor={Colors.success}
                 onPress={handlePersoneelBeheren}
+              />
+            </View>
+            <View style={styles.cardWrapper}>
+              <ActionCard
+                title="Bewoners Beheren"
+                description="Bewoners toevoegen, bewerken of verwijderen"
+                icon="group"
+                iconColor={Colors.success}
+                onPress={handleBewonersBeheren}
               />
             </View>
             <View style={styles.cardWrapper}>

@@ -81,6 +81,7 @@ export default function DashboardGebruikersScreen() {
   }) => {
     try {
       setIsCreating(true);
+      console.log('Submitting user data:', userData);
 
       if (editingUser) {
         // Update existing user
@@ -95,10 +96,12 @@ export default function DashboardGebruikersScreen() {
       setShowUserModal(false);
       setEditingUser(null);
       // Reload users list
-      loadUsers();
-    } catch (err) {
-      Alert.alert('Fout', editingUser ? 'Kon personeelslid niet bijwerken' : 'Kon personeelslid niet toevoegen');
-      console.error('Error saving user:', err);
+      await loadUsers();
+    } catch (err: any) {
+      console.error('Error saving user - Full error:', err);
+      console.error('Error message:', err.message);
+      console.error('Error details:', JSON.stringify(err));
+      Alert.alert('Fout', `${editingUser ? 'Kon personeelslid niet bijwerken' : 'Kon personeelslid niet toevoegen'}: ${err.message || 'Onbekende fout'}`);
     } finally {
       setIsCreating(false);
     }
