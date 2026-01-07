@@ -80,24 +80,31 @@ export default function DashboardGebruikersScreen() {
   }) => {
     try {
       setIsCreating(true);
+      console.log('Submitting user data:', userData);
 
       if (editingUser) {
         // Update existing user
-        await updateUser(editingUser.user_id, { ...userData, floor_id: 1 } as any);
+        console.log('Updating user:', editingUser.user_id);
+        const result = await updateUser(editingUser.user_id, { ...userData, floor_id: 1 } as any);
+        console.log('Update result:', result);
         Alert.alert('Succes', 'Personeelslid succesvol bijgewerkt');
       } else {
         // Create new user
-        await createUser({ ...userData, password: userData.password!, floor_id: 1 } as any);
+        console.log('Creating new user');
+        const result = await createUser({ ...userData, password: userData.password!, floor_id: 1 } as any);
+        console.log('Create result:', result);
         Alert.alert('Succes', 'Personeelslid succesvol toegevoegd');
       }
 
       setShowUserModal(false);
       setEditingUser(null);
       // Reload users list
-      loadUsers();
-    } catch (err) {
-      Alert.alert('Fout', editingUser ? 'Kon personeelslid niet bijwerken' : 'Kon personeelslid niet toevoegen');
-      console.error('Error saving user:', err);
+      await loadUsers();
+    } catch (err: any) {
+      console.error('Error saving user - Full error:', err);
+      console.error('Error message:', err.message);
+      console.error('Error details:', JSON.stringify(err));
+      Alert.alert('Fout', `${editingUser ? 'Kon personeelslid niet bijwerken' : 'Kon personeelslid niet toevoegen'}: ${err.message || 'Onbekende fout'}`);
     } finally {
       setIsCreating(false);
     }

@@ -10,8 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
-import { AdminLayout, ResidentFormModal, ConfirmationModal } from '@/components/admin';
+import { AdminLayout, ResidentFormModal, ConfirmationModal, ResidentDetailsModal } from '@/components/admin';
 import { ResidentCard } from '@/components/admin/resident-card';
 import { ResidentsFilters } from '@/components/admin/residents-filters';
 import { fetchResidents, createResident, updateResident, deleteResident } from '@/Services/residentsApi';
@@ -19,7 +18,6 @@ import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/c
 import type { Resident } from '@/types/resident';
 
 export default function DashboardBewonersScreen() {
-  const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +31,8 @@ export default function DashboardBewonersScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [residentToDelete, setResidentToDelete] = useState<Resident | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [viewingResident, setViewingResident] = useState<Resident | null>(null);
 
   // Fetch residents from API
   useEffect(() => {
@@ -195,7 +195,8 @@ export default function DashboardBewonersScreen() {
   };
 
   const handleViewResident = (resident: Resident) => {
-    router.push(`/(tabs)/bewoners/${resident.resident_id}` as any);
+    setViewingResident(resident);
+    setShowDetailsModal(true);
   };
 
 
@@ -301,6 +302,18 @@ export default function DashboardBewonersScreen() {
         cancelText="Annuleren"
         isLoading={isDeleting}
         type="danger"
+      />
+
+      {/* Resident Details Modal */}
+      <ResidentDetailsModal
+        visible={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setViewingResident(null);
+        }}
+        resident={viewingResident}
+        roomNumber={viewingResident ? getRoomForResident(viewingResident)?.room_id.toString() : undefined}
+        age={viewingResident ? calculateAge(viewingResident.date_of_birth) : undefined}
       />
     </AdminLayout>
   );

@@ -49,13 +49,28 @@ export function UserFormModal({
   const [selectedRole, setSelectedRole] = useState<UserRole>('Verpleegster');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
+  // Map old/English roles to Dutch roles
+  const mapRoleToDutch = (role: string): UserRole => {
+    const roleMap: Record<string, UserRole> = {
+      'admin': 'Beheerder',
+      'Beheerder': 'Beheerder',
+      'nurse': 'Verpleegster',
+      'Verpleegster': 'Verpleegster',
+      'head_nurse': 'Hoofdverpleegster',
+      'Hoofdverpleegster': 'Hoofdverpleegster',
+      'kitchen_staff': 'Keukenpersoneel',
+      'Keukenpersoneel': 'Keukenpersoneel',
+    };
+    return roleMap[role] || 'Verpleegster';
+  };
+
   // Load user data when modal opens in edit mode
   useEffect(() => {
     if (user && visible) {
       setName(user.name);
       setEmail(user.email);
       setPassword('');
-      setSelectedRole(user.role);
+      setSelectedRole(mapRoleToDutch(user.role));
     }
   }, [user, visible]);
 
@@ -112,10 +127,7 @@ export function UserFormModal({
 
     await onSubmit(userData);
 
-    // Only reset if not loading (onSubmit might have failed)
-    if (!isLoading) {
-      resetForm();
-    }
+    // Form will be reset when modal closes via handleClose
   };
 
   const resetForm = () => {
