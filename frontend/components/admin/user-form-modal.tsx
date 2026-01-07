@@ -278,7 +278,7 @@ export function UserFormModal({
             )}
           </View>
 
-          {/* Floor Dropdown - only for nurses/head nurses */}
+          {/* Floor Dropdown - only for nurses/head nurses (fixed choices 1,2,3) */}
           {(selectedRole === 'Verpleegster' || selectedRole === 'Hoofdverpleegster') && (
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Verdieping *</Text>
@@ -288,7 +288,7 @@ export function UserFormModal({
                 activeOpacity={0.7}
               >
                 <Text style={styles.dropdownText}>{
-                  selectedFloorId ? (floors.find(f => f.floor_id === selectedFloorId)?.name || `Verdieping ${selectedFloorId}`) : 'Selecteer verdieping'
+                  selectedFloorId ? `Verdieping ${selectedFloorId}` : 'Selecteer verdieping'
                 }</Text>
                 <Ionicons
                   name={showFloorDropdown ? 'chevron-up' : 'chevron-down'}
@@ -298,25 +298,25 @@ export function UserFormModal({
               </TouchableOpacity>
               {showFloorDropdown && (
                 <View style={styles.dropdownMenu}>
-                  {floors.map((floor) => (
+                  {[1, 2, 3].map((floorNum) => (
                     <TouchableOpacity
-                      key={floor.floor_id}
+                      key={floorNum}
                       style={[
                         styles.dropdownItem,
-                        selectedFloorId === floor.floor_id && styles.dropdownItemSelected,
+                        selectedFloorId === floorNum && styles.dropdownItemSelected,
                       ]}
-                      onPress={() => { setSelectedFloorId(floor.floor_id); setShowFloorDropdown(false); }}
+                      onPress={() => { setSelectedFloorId(floorNum); setShowFloorDropdown(false); }}
                       activeOpacity={0.7}
                     >
                       <Text
                         style={[
                           styles.dropdownItemText,
-                          selectedFloorId === floor.floor_id && styles.dropdownItemTextSelected,
+                          selectedFloorId === floorNum && styles.dropdownItemTextSelected,
                         ]}
                       >
-                        {floor.name ?? `Verdieping ${floor.floor_id}`}
+                        {`Verdieping ${floorNum}`}
                       </Text>
-                      {selectedFloorId === floor.floor_id && (
+                      {selectedFloorId === floorNum && (
                         <Ionicons name="check" size={20} color={Colors.primary} />
                       )}
                     </TouchableOpacity>
