@@ -19,33 +19,35 @@ class AuditLogController extends Controller
         'MedicationRound' => 'Medicatie Ronde',
     ];
 
+    // Map incoming action tokens (EN/NL) to the stored Dutch action value
     protected array $actionMap = [
-        // Dutch -> stored actions
-        'toevoegen' => 'created',
-        'toegevoegd' => 'created',
-        'toevoeging' => 'created',
-        'aanmaken' => 'created',
-        'maken' => 'created',
-        'toevoeg' => 'created',
+        // English -> Dutch
+        'created' => 'toegevoegd',
+        'updated' => 'bewerkt',
+        'deleted' => 'verwijderd',
+        'approved' => 'goedgekeurd',
+        'rejected' => 'afgekeurd',
+        'restored' => 'hersteld',
+        'force_deleted' => 'permanent verwijderd',
 
-        'verwijderen' => 'deleted',
-        'verwijderd' => 'deleted',
-        'delete' => 'deleted',
+        // Dutch variants -> Dutch
+        'toevoegen' => 'toegevoegd',
+        'toegevoegd' => 'toegevoegd',
+        'toevoeging' => 'toegevoegd',
+        'aanmaken' => 'toegevoegd',
 
-        'bewerkt' => 'updated',
-        'bewerken' => 'updated',
-        'bewerk' => 'updated',
+        'verwijderen' => 'verwijderd',
+        'verwijderd' => 'verwijderd',
 
-        'goedgekeurd' => 'approved',
-        'goedkeuren' => 'approved',
-        'approve' => 'approved',
+        'bewerkt' => 'bewerkt',
+        'bewerken' => 'bewerkt',
+        'bewerk' => 'bewerkt',
 
-        'afgekeurd' => 'rejected',
-        'afkeuren' => 'rejected',
-        'reject' => 'rejected',
+        'goedgekeurd' => 'goedgekeurd',
+        'goedkeuren' => 'goedgekeurd',
 
-        'restored' => 'restored',
-        'force_deleted' => 'force_deleted',
+        'afgekeurd' => 'afgekeurd',
+        'afkeuren' => 'afgekeurd',
     ];
 
     public function index(Request $request)
@@ -109,8 +111,21 @@ class AuditLogController extends Controller
             // id handling (support either id or log_id)
             $id = $item->log_id ?? $item->id ?? null;
 
-            // timestamp / created_at
-            $createdAt = $item->timestamp ?? ($item->created_at ?? null);
+            // timestamp / created_at -> format to 'YYYY-MM-DD HH:MM' for frontend
+            $createdAtRaw = $item->timestamp ?? ($item->created_at ?? null);
+            $createdAt = null;
+            if ($createdAtRaw) {
+                if ($createdAtRaw instanceof \DateTimeInterface) {
+                    $createdAt = $createdAtRaw->format('Y-m-d H:i');
+                } else {
+                    try {
+                        $dt = new \DateTime($createdAtRaw);
+                        $createdAt = $dt->format('Y-m-d H:i');
+                    } catch (\Exception $e) {
+                        $createdAt = (string) $createdAtRaw;
+                    }
+                }
+            }
 
             // user name
             $userName = null;
@@ -133,10 +148,31 @@ class AuditLogController extends Controller
             // entity id / auditable_id
             $entityId = $item->entity_id ?? $item->auditable_id ?? null;
 
-            // details: prefer `details` column, otherwise new_values / old_values
+            // details: prefer `details` column, try to extract friendly message
             $details = null;
-            if (isset($item->details)) {
-                $details = is_array($item->details) ? json_encode($item->details, JSON_UNESCAPED_UNICODE) : (string) $item->details;
+            if (isset($item->details) && $item->details) {
+                $raw = $item->details;
+                $decoded = null;
+                if (is_array($raw)) {
+                    $decoded = $raw;
+                } elseif (is_string($raw)) {
+                    $temp = json_decode($raw, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($temp)) {
+                        $decoded = $temp;
+                    }
+                }
+
+                if (is_array($decoded)) {
+                    if (isset($decoded['message'])) {
+                        $details = $decoded['message'];
+                    } elseif (isset($decoded['field']) && array_key_exists('old_value', $decoded) && array_key_exists('new_value', $decoded)) {
+                        $details = sprintf("%s gewijzigd: %s → %s", $decoded['field'], $decoded['old_value'], $decoded['new_value']);
+                    } else {
+                        $details = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+                    }
+                } else {
+                    $details = (string) $raw;
+                }
             } elseif (isset($item->new_values) && $item->new_values) {
                 $details = json_encode($item->new_values, JSON_UNESCAPED_UNICODE);
             } elseif (isset($item->old_values) && $item->old_values) {
@@ -190,18 +226,39 @@ class AuditLogController extends Controller
             'old_values' => 'nullable|array',
             'new_values' => 'nullable|array',
             'user_id' => 'nullable|integer',
+            'message' => 'nullable|string',
         ]);
 
-        $log = AuditLog::create([
+        // translate action to Dutch before storing
+        $actionMap = [
+            'created' => 'toegevoegd',
+            'updated' => 'bewerkt',
+            'deleted' => 'verwijderd',
+            'approved' => 'goedgekeurd',
+            'rejected' => 'afgekeurd',
+            'restored' => 'hersteld',
+            'force_deleted' => 'permanent verwijderd',
+        ];
+        $providedAction = mb_strtolower((string) $data['action']);
+        $storedAction = $actionMap[$providedAction] ?? $data['action'];
+
+        $createData = [
             'user_id' => $data['user_id'] ?? (auth()->check() ? auth()->id() : null),
-            'action' => $data['action'],
+            'action' => $storedAction,
             'auditable_type' => $data['auditable_type'] ?? null,
             'auditable_id' => $data['auditable_id'] ?? null,
             'old_values' => $data['old_values'] ?? null,
             'new_values' => $data['new_values'] ?? null,
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent'),
-        ]);
+        ];
+
+        // If a plain message was provided, prefer storing it in `details` as JSON
+        if (!empty($data['message']) && \Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'details')) {
+            $createData['details'] = json_encode(['message' => $data['message']], JSON_UNESCAPED_UNICODE);
+        }
+
+        $log = AuditLog::create($createData);
 
         return response()->json($log, 201);
     }

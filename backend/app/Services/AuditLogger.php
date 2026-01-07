@@ -58,7 +58,18 @@ class AuditLogger
                 $data['user_id'] = $userId;
             }
             if (Schema::hasColumn('audit_logs', 'action')) {
-                $data['action'] = $action;
+                // ensure action is stored in Dutch
+                $map = [
+                    'created' => 'toegevoegd',
+                    'updated' => 'bewerkt',
+                    'deleted' => 'verwijderd',
+                    'approved' => 'goedgekeurd',
+                    'rejected' => 'afgekeurd',
+                    'restored' => 'hersteld',
+                    'force_deleted' => 'permanent verwijderd',
+                ];
+                $key = mb_strtolower((string) $action);
+                $data['action'] = $map[$key] ?? $action;
             }
             if (Schema::hasColumn('audit_logs', 'auditable_type')) {
                 $data['auditable_type'] = $auditableType;
@@ -71,7 +82,29 @@ class AuditLogger
                 $data['entity_id'] = $auditableId;
             }
             if (Schema::hasColumn('audit_logs', 'details')) {
-                $data['details'] = $meta['details'] ?? null;
+                // Prefer explicit message in meta
+                if (isset($meta['message']) && $meta['message'] !== null) {
+                    $data['details'] = json_encode(['message' => (string) $meta['message']], JSON_UNESCAPED_UNICODE);
+                } elseif (isset($meta['details'])) {
+                    $d = $meta['details'];
+                    if (is_array($d)) {
+                        if (isset($d['message'])) {
+                            $data['details'] = json_encode($d, JSON_UNESCAPED_UNICODE);
+                        } else {
+                            $data['details'] = json_encode(['message' => json_encode($d, JSON_UNESCAPED_UNICODE)], JSON_UNESCAPED_UNICODE);
+                        }
+                    } else {
+                        // string or other -> wrap as message
+                        $data['details'] = json_encode(['message' => (string) $d], JSON_UNESCAPED_UNICODE);
+                    }
+                } else {
+                    // Build a fallback message like "Bewerkt: Resident #123" or "Toegevoegd: Notitie"
+                    $act = $data['action'] ?? $action;
+                    $entity = $auditableType ?? 'item';
+                    $idpart = $auditableId ? ' #' . $auditableId : '';
+                    $fallback = sprintf('%s: %s%s', ucfirst((string)$act), $entity, $idpart);
+                    $data['details'] = json_encode(['message' => $fallback], JSON_UNESCAPED_UNICODE);
+                }
             }
             if (Schema::hasColumn('audit_logs', 'old_values')) {
                 $data['old_values'] = $old;
