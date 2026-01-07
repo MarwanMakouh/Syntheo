@@ -7,12 +7,29 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+// Normalize various status values (English / Dutch / capitalized variants)
+function normalizeStatus(raw?: string): 'pending' | 'approved' | 'rejected' {
+  const s = (raw ?? '').toString().toLowerCase().trim();
+  if (!s) return 'pending';
+  // Approved variants
+  if (['approved', 'goedgekeurd', 'goedkeurd'].includes(s)) return 'approved';
+  // Rejected variants
+  if (['rejected', 'afgewezen'].includes(s)) return 'rejected';
+  // Pending / waiting variants
+  if (['pending', 'in afwachting', 'in_afwachting', 'inafwachting', 'open'].includes(s)) return 'pending';
+  // Fallback: try to detect keywords
+  if (s.includes('goed')) return 'approved';
+  if (s.includes('afge')) return 'rejected';
+  return 'pending';
+}
+
 // Transform snake_case API response to camelCase for frontend
 function transformChangeRequest(data: any): ChangeRequest {
   return {
     ...data,
+    status: normalizeStatus(data.status),
     changeFields: data.change_fields || data.changeFields || [],
-  };
+  } as ChangeRequest;
 }
 
 function transformChangeRequests(data: any[]): ChangeRequest[] {

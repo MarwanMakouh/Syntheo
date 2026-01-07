@@ -98,7 +98,9 @@ export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayout
     {
       title: 'COMMUNICATIE',
       items: [
+        { id: 'wijzigingsverzoeken', label: 'Wijzigingsverzoeken', icon: 'edit', route: '/admin/dashboard-wijzigingsverzoeken' },
         { id: 'meldingen', label: 'Meldingen', icon: 'message', route: '/admin/dashboard-meldingen' },
+        { id: 'announcements', label: 'Announcements', icon: 'campaign', route: '/admin/dashboard-announcements' },
       ],
     },
     {

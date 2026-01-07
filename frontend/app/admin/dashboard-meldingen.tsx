@@ -73,7 +73,7 @@ export default function DashboardMeldingenScreen() {
     const urgent = notes.filter((n) => n.urgency === 'Hoog').length;
 
     return { total, open, inProgress, resolved, urgent };
-  }, []);
+  }, [notes]);
 
   // Filter notes
   const filteredNotes = useMemo(() => {
@@ -108,10 +108,10 @@ export default function DashboardMeldingenScreen() {
 
       return matchesUrgency && matchesCategory && matchesStatus && matchesSearch && matchesDate;
     });
-  }, [urgencyFilter, categoryFilter, statusFilter, dateFilter, searchQuery]);
+  }, [notes, residents, users, urgencyFilter, categoryFilter, statusFilter, dateFilter, searchQuery]);
 
   const handleViewNote = (noteId: number) => {
-    const note = notes.find(n => n.note_id === noteId);
+    const note = notes.find((n) => n.note_id === noteId);
     if (!note || !note.resident_id) return;
 
     // Navigate to resident detail page
@@ -205,7 +205,6 @@ export default function DashboardMeldingenScreen() {
               <View style={styles.statsContainer}>
                 <StatsCard label="Totaal" value={stats.total} color="#34C759" />
                 <StatsCard label="Open" value={stats.open} color="#E74C3C" />
-                <StatsCard label="In behandeling" value={stats.inProgress} color="#F39C12" />
                 <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
                 <StatsCard label="Urgent" value={stats.urgent} color="#E74C3C" />
               </View>

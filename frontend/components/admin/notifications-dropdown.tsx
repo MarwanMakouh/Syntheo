@@ -63,6 +63,7 @@ export function NotificationsDropdown({
 
   const handleViewAll = () => {
     onClose();
+    // View all should go to the Meldingen tab (notes)
     router.push('/admin/dashboard-meldingen' as any);
   };
 

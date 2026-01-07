@@ -27,15 +27,30 @@ export function NoteCard({ note, residentName, authorName, onView, onResolve, on
     }
   };
 
+  const isAssigned = (n: any) => {
+    const val = n?.assigned_to ?? n?.assignedTo ?? n?.assignee ?? n?.assigned_user ?? n?.assigned_user_id ?? n?.assignedName ?? n?.assigned?.name;
+    if (val === null || val === undefined) return false;
+    if (typeof val === 'string') return val.trim() !== '';
+    return !!val;
+  };
+
   const getStatusInfo = () => {
     if (note.is_resolved) {
       return { label: 'Afgehandeld', color: '#27AE60' };
     }
-    // Check if assigned (you might need to add this field to Note type)
-    if ((note as any).assigned_to) {
+    if (isAssigned(note)) {
       return { label: 'In behandeling', color: '#F39C12' };
     }
     return { label: 'Open', color: '#E74C3C' };
+  };
+
+  const getAssignedName = (n: any) => {
+    const val = n?.assigned_to ?? n?.assignedTo ?? n?.assignee ?? n?.assigned_user ?? n?.assigned_user_id ?? n?.assignedName ?? n?.assigned?.name;
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number') return String(val);
+    if (typeof val === 'object') return val.name ?? val.email ?? JSON.stringify(val);
+    return String(val);
   };
 
   const statusInfo = getStatusInfo();
@@ -101,11 +116,11 @@ export function NoteCard({ note, residentName, authorName, onView, onResolve, on
         <Text style={styles.author}>{authorName}</Text>
         <Text style={styles.separator}>•</Text>
         <Text style={styles.time}>{getTimeAgo(note.created_at)}</Text>
-        {(note as any).assigned_to && (
+        {isAssigned(note) && (
           <>
             <Text style={styles.separator}>•</Text>
             <Text style={styles.assigned}>
-              Toegewezen aan: {(note as any).assigned_to}
+              Toegewezen aan: {getAssignedName(note)}
             </Text>
           </>
         )}
