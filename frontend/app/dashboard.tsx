@@ -18,12 +18,18 @@ import { fetchNotes } from '@/Services/notesApi';
 import { fetchRooms } from '@/Services/roomsApi';
 import { fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { fetchMedicationRounds } from '@/Services/medicationRoundsApi';
+import { fetchUsers } from '@/Services/usersApi';
+import { createAnnouncement } from '@/Services/announcementsApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAnnouncements } from '@/contexts/AnnouncementsContext';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 
 // component state (loaded from API)
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { currentUser } = useAuth();
+  const { refreshAnnouncements } = useAnnouncements();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
 
@@ -32,6 +38,7 @@ export default function DashboardScreen() {
   const [rooms, setRooms] = useState<any[]>([]);
   const [changeRequests, setChangeRequests] = useState<any[]>([]);
   const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -153,12 +160,13 @@ export default function DashboardScreen() {
       const today = new Date();
       const date = today.toISOString().split('T')[0];
 
-      const [residentsData, notesData, roomsData, changeReqsData, roundsData] = await Promise.all([
+      const [residentsData, notesData, roomsData, changeReqsData, roundsData, usersData] = await Promise.all([
         fetchResidents(),
         fetchNotes(),
         fetchRooms(),
         fetchChangeRequests(),
         fetchMedicationRounds({ date_from: date, date_to: date }),
+        fetchUsers(),
       ]);
 
       setResidents(residentsData || []);
@@ -166,6 +174,11 @@ export default function DashboardScreen() {
       setRooms(roomsData || []);
       setChangeRequests(changeReqsData || []);
       setMedicationRounds(roundsData || []);
+      setUsers(usersData || []);
+
+      // Debug: Log users to see what roles exist
+      console.log('Loaded users:', usersData);
+      console.log('User roles:', usersData.map((u: any) => ({ name: u.name, role: u.role })));
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     }
@@ -188,12 +201,125 @@ export default function DashboardScreen() {
     recipientCategory: string;
     recipientDetails?: string | string[];
   }) => {
-    console.log('Aankondiging verzonden:', announcement);
-    // TODO: Implement API call to send announcement
-    const recipientText = announcement.recipientDetails 
-      ? `${announcement.recipientCategory} (${Array.isArray(announcement.recipientDetails) ? announcement.recipientDetails.join(', ') : announcement.recipientDetails})`
-      : announcement.recipientCategory;
-    alert(`Aankondiging "${announcement.title}" verzonden naar ${recipientText}`);
+    if (!currentUser?.user_id) {
+      alert('Gebruiker niet ingelogd');
+      return;
+    }
+
+    setIsSendingAnnouncement(true);
+
+    try {
+      // Check if users are loaded
+      if (!users || users.length === 0) {
+        alert('Geen gebruikers geladen! Herlaad de pagina en probeer opnieuw.');
+        setIsSendingAnnouncement(false);
+        return;
+      }
+
+      // Determine recipient_type and recipient_ids based on category
+      let recipientType: 'all' | 'role' | 'floor' = 'all';
+      let recipientIds: number[] = [];
+      let floorId: number | null = null;
+
+      console.log('=== DEBUG ANNOUNCEMENT ===');
+      console.log('Category:', announcement.recipientCategory);
+      console.log('Details:', announcement.recipientDetails);
+      console.log('Total users:', users.length);
+      console.log('All users:', users.map(u => ({ name: u.name, role: u.role, floor_id: u.floor_id })));
+
+      if (announcement.recipientCategory === 'Iedereen') {
+        recipientType = 'all';
+        // All users get the announcement
+        recipientIds = users.map(user => user.user_id);
+        console.log('Iedereen selected - Recipients:', recipientIds);
+      } else if (announcement.recipientCategory === 'Verdieping') {
+        recipientType = 'floor';
+        // Extract floor number from "Verdieping X" string
+        const floorName = announcement.recipientDetails as string;
+        const floorNumber = parseInt(floorName.replace(/\D/g, ''));
+        floorId = floorNumber;
+        console.log('Floor selected:', floorNumber);
+        // Filter users by floor_id
+        recipientIds = users
+          .filter(user => user.floor_id === floorNumber)
+          .map(user => user.user_id);
+        console.log('Users on floor:', users.filter(user => user.floor_id === floorNumber));
+        console.log('Recipient IDs:', recipientIds);
+      } else if (announcement.recipientCategory === 'Afdeling') {
+        recipientType = 'role';
+        // Map department name to role(s) - flexible matching
+        const department = announcement.recipientDetails as string;
+
+        console.log('Department selected:', department);
+        console.log('All user roles:', users.map(u => u.role));
+
+        // Filter users by role using flexible matching
+        const matchedUsers = users.filter(user => {
+          const userRole = user.role.toLowerCase();
+
+          if (department === 'Keuken') {
+            // Match anything with "keuken" in the role name
+            return userRole.includes('keuken');
+          } else if (department === 'Verpleging') {
+            // Match anything with "verpleeg" or "verpleger" in the role name
+            return userRole.includes('verpleeg') || userRole.includes('verpleger') || userRole.includes('verpleegster');
+          } else if (department === 'Administratie') {
+            // Match anything with "admin" or "beheer" in the role name
+            return userRole.includes('admin') || userRole.includes('beheer');
+          }
+          return false;
+        });
+
+        console.log('Matched users:', matchedUsers);
+        recipientIds = matchedUsers.map(user => user.user_id);
+        console.log('Recipient IDs:', recipientIds);
+      } else if (announcement.recipientCategory === 'Individuele mensen') {
+        recipientType = 'role'; // Use 'role' as default for individual selection
+        // For now, we'll use names to match users (not ideal but works with current setup)
+        const selectedNames = announcement.recipientDetails as string[];
+        console.log('Individual people selected:', selectedNames);
+        recipientIds = users
+          .filter(user => selectedNames.includes(user.name))
+          .map(user => user.user_id);
+        console.log('Matched users:', users.filter(user => selectedNames.includes(user.name)));
+        console.log('Recipient IDs:', recipientIds);
+      }
+
+      // Ensure we have at least one recipient
+      if (recipientIds.length === 0) {
+        console.error('No recipients found!');
+        alert('Geen ontvangers gevonden voor deze selectie. Check de console voor details.');
+        setIsSendingAnnouncement(false);
+        return;
+      }
+
+      // Create the announcement via API
+      await createAnnouncement({
+        author_id: currentUser.user_id,
+        title: announcement.title,
+        message: announcement.message,
+        recipient_type: recipientType,
+        floor_id: floorId,
+        recipient_ids: recipientIds,
+      });
+
+      // Refresh announcements to show the new one
+      await refreshAnnouncements();
+
+      // Show success message
+      const recipientText = announcement.recipientDetails
+        ? `${announcement.recipientCategory} (${Array.isArray(announcement.recipientDetails) ? announcement.recipientDetails.join(', ') : announcement.recipientDetails})`
+        : announcement.recipientCategory;
+      alert(`Aankondiging "${announcement.title}" succesvol verzonden naar ${recipientText} (${recipientIds.length} ${recipientIds.length === 1 ? 'ontvanger' : 'ontvangers'})`);
+
+      // Close modal
+      setAnnouncementModalVisible(false);
+    } catch (error) {
+      console.error('Error sending announcement:', error);
+      alert('Fout bij het verzenden van aankondiging. Probeer opnieuw.');
+    } finally {
+      setIsSendingAnnouncement(false);
+    }
   };
 
   const handleViewResident = (residentId: number) => {

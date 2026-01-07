@@ -17,6 +17,25 @@ export interface Announcement {
   created_at: string;
 }
 
+export interface AnnouncementRecipient {
+  recipient_id: number;
+  announcement_id: number;
+  user_id: number;
+  is_read: boolean;
+  read_at: string | null;
+}
+
+export interface AnnouncementWithRecipient {
+  announcement_id: number;
+  author_id: number;
+  title: string;
+  message: string;
+  recipient_type: 'all' | 'role' | 'floor';
+  floor_id: number | null;
+  created_at: string;
+  recipients: AnnouncementRecipient[];
+}
+
 export interface CreateAnnouncementData {
   author_id: number;
   title: string;
@@ -77,7 +96,7 @@ export const fetchAnnouncements = async (): Promise<Announcement[]> => {
 /**
  * Fetch announcements for a specific user
  */
-export const fetchUserAnnouncements = async (userId: number): Promise<Announcement[]> => {
+export const fetchUserAnnouncements = async (userId: number): Promise<AnnouncementWithRecipient[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/announcements/user/${userId}`);
 
@@ -85,10 +104,37 @@ export const fetchUserAnnouncements = async (userId: number): Promise<Announceme
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result: ApiResponse<Announcement[]> = await response.json();
+    const result: ApiResponse<AnnouncementWithRecipient[]> = await response.json();
     return result.data || [];
   } catch (error) {
     console.error(`Error fetching announcements for user ${userId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Mark an announcement as read for a specific user
+ */
+export const markAnnouncementAsRead = async (
+  announcementId: number,
+  userId: number
+): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/announcements/${announcementId}/mark-read`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error marking announcement ${announcementId} as read:`, error);
     throw error;
   }
 };
