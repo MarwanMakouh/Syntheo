@@ -64,7 +64,13 @@ class AuditLogSeeder extends Seeder
                 $data['new_values'] = null;
             }
             if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'timestamp')) {
-                $data['timestamp'] = $row['timestamp'];
+                // Store timestamp with zeroed seconds so frontend can show only Y-m-d H:i
+                $ts = $row['timestamp'];
+                if ($ts instanceof \DateTimeInterface) {
+                    $data['timestamp'] = $ts->format('Y-m-d H:i:00');
+                } else {
+                    $data['timestamp'] = $ts;
+                }
             }
             if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'ip_address')) {
                 $data['ip_address'] = '127.0.0.1';
