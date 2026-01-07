@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
+import { fetchUsers, User } from '@/Services/usersApi';
 
 interface AnnouncementCreateModalProps {
   visible: boolean;
@@ -38,15 +39,6 @@ const FLOORS = ['Verdieping 1', 'Verdieping 2', 'Verdieping 3', 'Verdieping 4'];
 
 const DEPARTMENTS = ['Keuken', 'Admin', 'Verplegers'];
 
-// Dit zou later uit een API of database kunnen komen
-const INDIVIDUALS = [
-  'Jan de Vries',
-  'Maria Jansen',
-  'Piet Bakker',
-  'Anna Vermeulen',
-  'Kees van Dam',
-];
-
 export function AnnouncementCreateModal({
   visible,
   onClose,
@@ -60,6 +52,30 @@ export function AnnouncementCreateModal({
   const [selectedIndividuals, setSelectedIndividuals] = useState<string[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Load users when modal becomes visible
+  useEffect(() => {
+    if (visible && users.length === 0) {
+      loadUsers();
+    }
+  }, [visible]);
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const fetchedUsers = await fetchUsers();
+      setUsers(fetchedUsers);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Get individual user names from the loaded users
+  const INDIVIDUALS = users.map(user => user.name);
 
   const handleCategoryChange = (category: RecipientCategory) => {
     setSelectedCategory(category);
