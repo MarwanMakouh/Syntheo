@@ -159,14 +159,6 @@ export function AnnouncementsDropdown({ visible, onClose, anchorPosition }: Anno
                 })}
               </ScrollView>
             )}
-
-            {/* Footer */}
-            {announcements.length > 0 && (
-              <TouchableOpacity style={styles.footer} onPress={onClose}>
-                <Text style={styles.footerText}>Bekijk alle meldingen</Text>
-                <MaterialIcons name="arrow-forward" size={18} color={Colors.success} />
-              </TouchableOpacity>
-            )}
           </View>
         </Pressable>
       </Modal>
@@ -303,20 +295,5 @@ const styles = StyleSheet.create({
   urgencyLabel: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.semibold,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.background,
-  },
-  footerText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.success,
-    marginRight: Spacing.xs,
   },
 });
