@@ -6,42 +6,34 @@ type User = any;
 interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
+  setCurrentUser: (user: User | null) => void;
+  allUsers: User[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        // Try to fetch a /users/me endpoint first (common pattern)
-        let resp = null;
-        try {
-          resp = await fetch(`${API_BASE_URL}/users/me`);
-        } catch (e) {
-          resp = null;
-        }
+        // Fetch all users
+        const usersResp = await fetch(`${API_BASE_URL}${API_ENDPOINTS.users}`);
+        if (usersResp.ok) {
+          const usersJson = await usersResp.json();
+          const list = usersJson.data || [];
+          setAllUsers(list);
 
-        if (resp && resp.ok) {
-          const json = await resp.json();
-          setCurrentUser(json.data || null);
+          // Don't set a default user - let role selection handle it
         } else {
-          // Fallback: fetch users and pick the first one
-          const usersResp = await fetch(`${API_BASE_URL}${API_ENDPOINTS.users}`);
-          if (usersResp.ok) {
-            const usersJson = await usersResp.json();
-            const list = usersJson.data || [];
-            setCurrentUser(list.length > 0 ? list[0] : null);
-          } else {
-            setCurrentUser(null);
-          }
+          setAllUsers([]);
         }
       } catch (e) {
-        console.error('Failed to load current user for AuthContext:', e);
-        setCurrentUser(null);
+        console.error('Failed to load users for AuthContext:', e);
+        setAllUsers([]);
       } finally {
         setIsLoading(false);
       }
@@ -49,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, isLoading, setCurrentUser, allUsers }}>
       {children}
     </AuthContext.Provider>
   );

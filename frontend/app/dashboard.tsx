@@ -175,6 +175,10 @@ export default function DashboardScreen() {
       setChangeRequests(changeReqsData || []);
       setMedicationRounds(roundsData || []);
       setUsers(usersData || []);
+
+      // Debug: Log users to see what roles exist
+      console.log('Loaded users:', usersData);
+      console.log('User roles:', usersData.map((u: any) => ({ name: u.name, role: u.role })));
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     }
@@ -205,50 +209,86 @@ export default function DashboardScreen() {
     setIsSendingAnnouncement(true);
 
     try {
+      // Check if users are loaded
+      if (!users || users.length === 0) {
+        alert('Geen gebruikers geladen! Herlaad de pagina en probeer opnieuw.');
+        setIsSendingAnnouncement(false);
+        return;
+      }
+
       // Determine recipient_type and recipient_ids based on category
       let recipientType: 'all' | 'role' | 'floor' = 'all';
       let recipientIds: number[] = [];
       let floorId: number | null = null;
 
+      console.log('=== DEBUG ANNOUNCEMENT ===');
+      console.log('Category:', announcement.recipientCategory);
+      console.log('Details:', announcement.recipientDetails);
+      console.log('Total users:', users.length);
+      console.log('All users:', users.map(u => ({ name: u.name, role: u.role, floor_id: u.floor_id })));
+
       if (announcement.recipientCategory === 'Iedereen') {
         recipientType = 'all';
         // All users get the announcement
         recipientIds = users.map(user => user.user_id);
+        console.log('Iedereen selected - Recipients:', recipientIds);
       } else if (announcement.recipientCategory === 'Verdieping') {
         recipientType = 'floor';
         // Extract floor number from "Verdieping X" string
         const floorName = announcement.recipientDetails as string;
         const floorNumber = parseInt(floorName.replace(/\D/g, ''));
         floorId = floorNumber;
+        console.log('Floor selected:', floorNumber);
         // Filter users by floor_id
         recipientIds = users
           .filter(user => user.floor_id === floorNumber)
           .map(user => user.user_id);
+        console.log('Users on floor:', users.filter(user => user.floor_id === floorNumber));
+        console.log('Recipient IDs:', recipientIds);
       } else if (announcement.recipientCategory === 'Afdeling') {
         recipientType = 'role';
-        // Map department name to role
-        const roleMap: { [key: string]: string } = {
-          'Keuken': 'Keukenpersoneel',
-          'Admin': 'Admin',
-          'Verplegers': 'Verpleger',
-        };
-        const role = roleMap[announcement.recipientDetails as string];
-        // Filter users by role
-        recipientIds = users
-          .filter(user => user.role === role)
-          .map(user => user.user_id);
+        // Map department name to role(s) - flexible matching
+        const department = announcement.recipientDetails as string;
+
+        console.log('Department selected:', department);
+        console.log('All user roles:', users.map(u => u.role));
+
+        // Filter users by role using flexible matching
+        const matchedUsers = users.filter(user => {
+          const userRole = user.role.toLowerCase();
+
+          if (department === 'Keuken') {
+            // Match anything with "keuken" in the role name
+            return userRole.includes('keuken');
+          } else if (department === 'Verpleging') {
+            // Match anything with "verpleeg" or "verpleger" in the role name
+            return userRole.includes('verpleeg') || userRole.includes('verpleger') || userRole.includes('verpleegster');
+          } else if (department === 'Administratie') {
+            // Match anything with "admin" or "beheer" in the role name
+            return userRole.includes('admin') || userRole.includes('beheer');
+          }
+          return false;
+        });
+
+        console.log('Matched users:', matchedUsers);
+        recipientIds = matchedUsers.map(user => user.user_id);
+        console.log('Recipient IDs:', recipientIds);
       } else if (announcement.recipientCategory === 'Individuele mensen') {
         recipientType = 'role'; // Use 'role' as default for individual selection
         // For now, we'll use names to match users (not ideal but works with current setup)
         const selectedNames = announcement.recipientDetails as string[];
+        console.log('Individual people selected:', selectedNames);
         recipientIds = users
           .filter(user => selectedNames.includes(user.name))
           .map(user => user.user_id);
+        console.log('Matched users:', users.filter(user => selectedNames.includes(user.name)));
+        console.log('Recipient IDs:', recipientIds);
       }
 
       // Ensure we have at least one recipient
       if (recipientIds.length === 0) {
-        alert('Geen ontvangers gevonden voor deze selectie');
+        console.error('No recipients found!');
+        alert('Geen ontvangers gevonden voor deze selectie. Check de console voor details.');
         setIsSendingAnnouncement(false);
         return;
       }

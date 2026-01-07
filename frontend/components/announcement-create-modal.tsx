@@ -37,7 +37,7 @@ const RECIPIENT_CATEGORIES: RecipientCategory[] = [
 
 const FLOORS = ['Verdieping 1', 'Verdieping 2', 'Verdieping 3', 'Verdieping 4'];
 
-const DEPARTMENTS = ['Keuken', 'Admin', 'Verplegers'];
+const DEPARTMENTS = ['Verpleging', 'Administratie', 'Keuken'];
 
 export function AnnouncementCreateModal({
   visible,
