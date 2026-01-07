@@ -26,8 +26,8 @@ class CreateAuditLogsTable extends Migration
                 $table->text('details')->nullable();
 
                 // also keep structured old/new values for diffs
-                $table->json('old_values')->nullable();
-                $table->json('new_values')->nullable();
+                $table->jsonb('old_values')->nullable();
+                $table->jsonb('new_values')->nullable();
 
                 // timestamp used for display (can differ from created_at)
                 $table->timestamp('timestamp')->useCurrent()->index();

@@ -11,10 +11,10 @@ class AddFulltextIndexToAuditLogs extends Migration
     {
         if (Schema::hasTable('audit_logs') && Schema::hasColumn('audit_logs', 'details')) {
             try {
-                // MySQL fulltext on InnoDB is supported on modern MySQL/MariaDB.
-                DB::statement('ALTER TABLE `audit_logs` ADD FULLTEXT INDEX `audit_logs_details_fulltext` (`details`)');
+                // PostgreSQL full-text search using GIN index
+                DB::statement('CREATE INDEX audit_logs_details_fulltext ON audit_logs USING GIN (to_tsvector(\'english\', COALESCE(details, \'\')))');
             } catch (\Throwable $e) {
-                // ignore if index exists or DB doesn't support fulltext
+                // ignore if index exists or DB doesn't support it
             }
         }
     }
@@ -23,7 +23,7 @@ class AddFulltextIndexToAuditLogs extends Migration
     {
         if (Schema::hasTable('audit_logs')) {
             try {
-                DB::statement('ALTER TABLE `audit_logs` DROP INDEX `audit_logs_details_fulltext`');
+                DB::statement('DROP INDEX IF EXISTS audit_logs_details_fulltext');
             } catch (\Throwable $e) {
             }
         }

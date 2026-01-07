@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('diet_type');
             $table->foreignId('resident_id')->constrained('residents', 'resident_id')->onDelete('cascade');
             $table->text('description')->nullable();
-            $table->json('preferences')->nullable(); // Added preferences field for likes/dislikes
+            $table->jsonb('preferences')->nullable(); // Added preferences field for likes/dislikes
             $table->timestamp('created_at');
         });
     }
