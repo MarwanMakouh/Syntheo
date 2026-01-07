@@ -5,8 +5,13 @@ import { Platform } from 'react-native';
 // Web (computer browser): use localhost
 // Mobile (phone/tablet): use local network IP address
 const getApiBaseUrl = () => {
-  // Always use localhost for now - you can change IP here if needed
-  return 'http://localhost/api';
+  // For web, use localhost
+  if (Platform.OS === 'web') {
+    return 'http://localhost/api';
+  } else {
+    // Change this IP if your computer's IP changes on the network
+    return '(current IP)/api';
+  }
 };
 
 export const API_BASE_URL = getApiBaseUrl();
