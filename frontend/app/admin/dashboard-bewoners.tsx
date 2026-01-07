@@ -139,6 +139,7 @@ export default function DashboardBewonersScreen() {
     name: string;
     date_of_birth: string;
     photo_url?: string;
+    allergies?: Array<{ symptom: string; severity?: string }>;
   }) => {
     try {
       setIsCreating(true);
