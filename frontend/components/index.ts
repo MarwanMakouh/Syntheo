@@ -6,6 +6,10 @@ export * from './ui/search-bar';
 
 // Announcement Components
 export * from './announcement-create-modal';
+export * from './announcements-modal';
+export * from './announcement-list-item';
+export * from './announcements-dropdown';
+export * from './announcement-detail-overlay';
 
 // Kamerbeheer Components
 export * from './disconnect-confirmation-modal';

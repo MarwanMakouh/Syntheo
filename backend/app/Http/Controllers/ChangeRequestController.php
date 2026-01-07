@@ -145,9 +145,24 @@ class ChangeRequestController extends Controller
             switch ($fieldName) {
                 case 'diet_type':
                     // Update or create diet record
-                    \DB::table('diets')
+                    $existingDiet = \DB::table('diets')
                         ->where('resident_id', $resident->resident_id)
-                        ->update(['diet_type' => $newValue, 'updated_at' => now()]);
+                        ->first();
+
+                    if ($existingDiet) {
+                        \DB::table('diets')
+                            ->where('resident_id', $resident->resident_id)
+                            ->update(['diet_type' => $newValue, 'updated_at' => now()]);
+                    } else {
+                        \DB::table('diets')
+                            ->insert([
+                                'resident_id' => $resident->resident_id,
+                                'diet_type' => $newValue,
+                                'preferences' => json_encode([]),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                    }
                     break;
 
                 case 'medication_dosage':
@@ -209,16 +224,27 @@ class ChangeRequestController extends Controller
                         ->where('resident_id', $resident->resident_id)
                         ->first();
 
+                    $likesArray = array_map('trim', explode(',', $newValue));
+
                     if ($diet) {
                         $preferences = json_decode($diet->preferences, true) ?? [];
-                        // Convert comma-separated string to array
-                        $preferences['likes'] = array_map('trim', explode(',', $newValue));
+                        $preferences['likes'] = $likesArray;
 
                         \DB::table('diets')
                             ->where('resident_id', $resident->resident_id)
                             ->update([
                                 'preferences' => json_encode($preferences),
                                 'updated_at' => now()
+                            ]);
+                    } else {
+                        $preferences = ['likes' => $likesArray, 'dislikes' => []];
+                        \DB::table('diets')
+                            ->insert([
+                                'resident_id' => $resident->resident_id,
+                                'diet_type' => null,
+                                'preferences' => json_encode($preferences),
+                                'created_at' => now(),
+                                'updated_at' => now(),
                             ]);
                     }
                     break;
@@ -229,16 +255,27 @@ class ChangeRequestController extends Controller
                         ->where('resident_id', $resident->resident_id)
                         ->first();
 
+                    $dislikesArray = array_map('trim', explode(',', $newValue));
+
                     if ($diet) {
                         $preferences = json_decode($diet->preferences, true) ?? [];
-                        // Convert comma-separated string to array
-                        $preferences['dislikes'] = array_map('trim', explode(',', $newValue));
+                        $preferences['dislikes'] = $dislikesArray;
 
                         \DB::table('diets')
                             ->where('resident_id', $resident->resident_id)
                             ->update([
                                 'preferences' => json_encode($preferences),
                                 'updated_at' => now()
+                            ]);
+                    } else {
+                        $preferences = ['likes' => [], 'dislikes' => $dislikesArray];
+                        \DB::table('diets')
+                            ->insert([
+                                'resident_id' => $resident->resident_id,
+                                'diet_type' => null,
+                                'preferences' => json_encode($preferences),
+                                'created_at' => now(),
+                                'updated_at' => now(),
                             ]);
                     }
                     break;

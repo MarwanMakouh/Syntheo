@@ -15,6 +15,7 @@ import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from 
 import { NavigationBar } from '@/components';
 import { formatDate } from '@/utils/date';
 import { fetchChangeRequests, approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchResidents } from '@/Services/residentsApi';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 import { mapUrgencyFromBackend } from '@/Services/noteMapper';
@@ -29,6 +30,8 @@ export default function WijzigingsverzoekDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [residents, setResidents] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+
+  const { currentUser } = useAuth();
 
   const requestId = Number(id);
 
@@ -112,8 +115,7 @@ export default function WijzigingsverzoekDetailScreen() {
     (async () => {
       try {
         setIsApproving(true);
-        // TODO: replace reviewerId with actual auth user id
-        const reviewerId = 1;
+        const reviewerId = currentUser?.user_id || 1;
         await approveChangeRequest(requestId, reviewerId);
         alert('Wijzigingsverzoek goedgekeurd');
         router.back();
@@ -130,7 +132,7 @@ export default function WijzigingsverzoekDetailScreen() {
     (async () => {
       try {
         setIsRejecting(true);
-        const reviewerId = 1;
+        const reviewerId = currentUser?.user_id || 1;
         await rejectChangeRequest(requestId, reviewerId);
         alert('Wijzigingsverzoek afgekeurd');
         router.back();

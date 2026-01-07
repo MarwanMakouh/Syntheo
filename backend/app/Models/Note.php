@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\RecordsAudit;
 
 class Note extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsAudit;
 
     protected $primaryKey = 'note_id';
 

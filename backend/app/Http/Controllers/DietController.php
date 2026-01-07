@@ -8,6 +8,49 @@ use Illuminate\Http\Request;
 class DietController extends Controller
 {
     /**
+     * Get diet overview grouped by diet type for kitchen staff
+     * Filters: ?search=naam
+     */
+    public function kitchenOverview(Request $request)
+    {
+        $search = $request->input('search', '');
+
+        // Get all diets with residents
+        $query = Diet::with(['resident.room']);
+
+        // Filter by resident name if search is provided
+        if ($search) {
+            $query->whereHas('resident', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $diets = $query->get();
+
+        // Group by diet_type
+        $groupedDiets = $diets->groupBy('diet_type')->map(function($dietGroup, $dietType) {
+            return [
+                'diet_type' => $dietType,
+                'count' => $dietGroup->count(),
+                'residents' => $dietGroup->map(function($diet) {
+                    return [
+                        'resident_id' => $diet->resident->resident_id,
+                        'name' => $diet->resident->name,
+                        'room_number' => $diet->resident->room ? $diet->resident->room->room_number : null,
+                        'description' => $diet->description,
+                        'preferences' => $diet->preferences,
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $groupedDiets
+        ]);
+    }
+
+    /**
      * Get diet information for a specific resident
      */
     public function show($residentId)

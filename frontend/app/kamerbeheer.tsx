@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
   ViewStyle,
   TextStyle,
 } from 'react-native';
@@ -15,10 +16,8 @@ import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from 
 import { NavigationBar } from '@/components';
 import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
 import { AssignResidentModal } from '@/components/assign-resident-modal';
-// backend callen
-const rooms: any[] = [];
-const residents: any[] = [];
-const floors: any[] = [];
+import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
+import { fetchResidents } from '@/Services/residentsApi';
 
 interface SelectedDisconnect {
   roomId: number;
@@ -34,6 +33,8 @@ export default function KamerBeheerScreen() {
   const [selectedRoomForAssign, setSelectedRoomForAssign] = useState<number | null>(null);
   const [selectedRoomNumberForAssign, setSelectedRoomNumberForAssign] = useState<number | null>(null);
   const [roomsData, setRoomsData] = useState<any[]>([]);
+  const [residents, setResidents] = useState<any[]>([]);
+  const [floors, setFloors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -47,7 +48,19 @@ export default function KamerBeheerScreen() {
       setIsLoading(true);
       setError(null);
       const data = await fetchRooms();
-      setRoomsData(data);
+      setRoomsData(data || []);
+
+      // also load residents for showing occupant names
+      try {
+        const residentsData = await fetchResidents();
+        setResidents(residentsData || []);
+      } catch (e) {
+        console.error('Failed to load residents for kamerbeheer:', e);
+      }
+
+      // compute floors from rooms
+      const floorIds = Array.from(new Set((data || []).map((r: any) => r.floor_id))).sort((a, b) => a - b);
+      setFloors(floorIds.map((id: number) => ({ floor_id: id })));
     } catch (err) {
       console.error('Failed to load rooms:', err);
       setError('Kan kamers niet laden');
@@ -570,5 +583,44 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.success,
     fontWeight: FontWeight.medium,
+  } as TextStyle,
+
+  // Loading
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  } as ViewStyle,
+  loadingText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+  } as TextStyle,
+
+  // Error
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  } as ViewStyle,
+  errorText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
+    textAlign: 'center',
+  } as TextStyle,
+  retryButton: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+  } as ViewStyle,
+  retryButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.textOnPrimary,
+    fontWeight: FontWeight.semibold,
   } as TextStyle,
 });

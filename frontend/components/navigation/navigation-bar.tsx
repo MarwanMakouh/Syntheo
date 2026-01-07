@@ -4,6 +4,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
 import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
 import { useRole } from '@/contexts/RoleContext';
+import { useAnnouncements } from '@/contexts/AnnouncementsContext';
+import { AnnouncementsDropdown } from '@/components/announcements-dropdown';
+import { useState } from 'react';
 
 // backend callen
 const CURRENT_USER = {
@@ -15,6 +18,8 @@ export function NavigationBar() {
   const router = useRouter();
   const segments = useSegments();
   const { selectedRole, clearRole } = useRole();
+  const { unreadCount } = useAnnouncements();
+  const [announcementsModalVisible, setAnnouncementsModalVisible] = useState(false);
 
   // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
   const isDetailPage =
@@ -24,8 +29,7 @@ export function NavigationBar() {
     (segments as string[]).includes('kamerbeheer');
 
   const handleNotifications = () => {
-    // TODO: backend callen
-    console.log('Notifications pressed');
+    setAnnouncementsModalVisible(true);
   };
 
   const handleLogout = () => {
@@ -86,6 +90,13 @@ export function NavigationBar() {
             size={26}
             color={Colors.iconDefault}
           />
+          {unreadCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Logout icon */}
@@ -97,6 +108,12 @@ export function NavigationBar() {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Announcements Dropdown */}
+      <AnnouncementsDropdown
+        visible={announcementsModalVisible}
+        onClose={() => setAnnouncementsModalVisible(false)}
+      />
     </View>
   );
 }
@@ -145,6 +162,25 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: Spacing.md,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#E74C3C',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: FontWeight.bold,
+    textAlign: 'center',
   },
   userInfo: {
     alignItems: 'flex-end',

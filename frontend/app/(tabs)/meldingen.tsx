@@ -6,6 +6,7 @@ import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
+import { useAuth } from '@/contexts/AuthContext';
 
 // backend callen
 const getResidentById = (id: number): { resident_id: number; name: string } | undefined => undefined;
@@ -79,6 +80,8 @@ export default function MeldingenScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
 
+  const { currentUser } = useAuth();
+
   // Fetch notes and residents from backend on mount
   useEffect(() => {
     loadData();
@@ -116,11 +119,13 @@ export default function MeldingenScreen() {
     resident_id?: number;
   }) => {
     try {
+      const authorId = currentUser?.user_id || 1;
       await createNote({
         resident_id: melding.resident_id,
         category: melding.type,
         urgency: melding.urgency,
         content: melding.content,
+        author_id: authorId,
       });
       setShowNewMeldingModal(false);
       // Refresh the notes list
@@ -159,7 +164,7 @@ export default function MeldingenScreen() {
       // Map status to API action
       if (status === 'Afgehandeld') {
         // Resolve the note
-        await resolveNote(noteId);
+        await resolveNote(noteId, currentUser?.user_id || 1);
       } else if (status === 'Open') {
         // Unresolve the note
         await unresolveNote(noteId);

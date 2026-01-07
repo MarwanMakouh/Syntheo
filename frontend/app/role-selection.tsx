@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRole } from '@/contexts/RoleContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Colors, Spacing, Typography, Shadows, BorderRadius } from '@/constants';
 import type { RoleOption, UserRole } from '@/types/user';
 
@@ -43,15 +44,43 @@ const roleOptions: RoleOption[] = [
 export default function RoleSelectionScreen() {
   const router = useRouter();
   const { setSelectedRole } = useRole();
+  const { allUsers, setCurrentUser } = useAuth();
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
+
+    // Find a user with this role and set as current user
+    const userWithRole = allUsers.find(user => {
+      const userRole = user.role.toLowerCase();
+      const selectedRole = role.toLowerCase();
+
+      // Match role (flexible matching)
+      if (selectedRole.includes('verpleegster') && !selectedRole.includes('hoofd')) {
+        return userRole.includes('verpleegster') && !userRole.includes('hoofd');
+      } else if (selectedRole.includes('hoofdverpleegster')) {
+        return userRole.includes('hoofdverpleegster') || userRole.includes('hoofd');
+      } else if (selectedRole.includes('beheerder')) {
+        return userRole.includes('beheerder') || userRole.includes('admin');
+      } else if (selectedRole.includes('keuken')) {
+        return userRole.includes('keuken');
+      }
+      return userRole === selectedRole;
+    });
+
+    if (userWithRole) {
+      setCurrentUser(userWithRole);
+      console.log('Selected user:', userWithRole);
+    } else {
+      console.warn('No user found with role:', role);
+    }
 
     // Navigate to the appropriate screen based on role
     if (role === 'Beheerder') {
       router.replace('/admin/dashboard-home');
     } else if (role === 'Hoofdverpleegster') {
       router.replace('/dashboard');
+    } else if (role === 'Keukenpersoneel') {
+      router.replace('/(kitchen-tabs)/allergieen');
     } else {
       router.replace('/(tabs)/bewoners');
     }

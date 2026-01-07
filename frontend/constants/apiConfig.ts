@@ -63,4 +63,8 @@ export const API_ENDPOINTS = {
   // Rooms operations
   linkResident: (roomId: number) => `/rooms/${roomId}/link-resident`,
   unlinkResident: (roomId: number) => `/rooms/${roomId}/unlink-resident`,
+  // Audit Logs
+  auditLogs: '/audit-logs',
+  auditLogById: (id: number) => `/audit-logs/${id}`,
+  auditLogsByEntity: (type: string, id: number) => `/audit-logs/entity/${type}/${id}`,
 };

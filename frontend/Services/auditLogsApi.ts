@@ -3,105 +3,91 @@
 // Replace with actual API calls when backend endpoint is available
 
 import type { AuditLog } from '@/components/admin/audit-logs-table';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants/apiConfig';
 
-// Mock data - will be replaced with API call
-const mockAuditLogs: AuditLog[] = [
-  {
-    id: 1,
-    timestamp: '06-01-2026 14:32',
-    user_name: 'Admin Gebruiker',
-    action: 'CREATE',
-    entity_type: 'Bewoner',
-    details: 'Nieuwe bewoner toegevoegd: Jan Pieters',
-  },
-  {
-    id: 2,
-    timestamp: '06-01-2026 13:15',
-    user_name: 'Verpleger A',
-    action: 'UPDATE',
-    entity_type: 'Melding',
-    details: 'Melding status bijgewerkt naar afgehandeld',
-  },
-  {
-    id: 3,
-    timestamp: '06-01-2026 11:45',
-    user_name: 'Admin Gebruiker',
-    action: 'APPROVE',
-    entity_type: 'Gebruiker',
-    details: 'Nieuwe verpleger goedgekeurd: Maria Van Den Berg',
-  },
-  {
-    id: 4,
-    timestamp: '06-01-2026 10:22',
-    user_name: 'Verzorger B',
-    action: 'UPDATE',
-    entity_type: 'Bewoner',
-    details: 'Dieetplan aangepast voor bewoner',
-  },
-  {
-    id: 5,
-    timestamp: '06-01-2026 09:18',
-    user_name: 'Admin Gebruiker',
-    action: 'DELETE',
-    entity_type: 'Gebruiker',
-    details: 'Gebruiker account verwijderd: Oud Personeel',
-  },
-  {
-    id: 6,
-    timestamp: '05-01-2026 16:55',
-    user_name: 'Verpleger C',
-    action: 'CREATE',
-    entity_type: 'Melding',
-    details: 'Nieuwe melding aangemaakt voor bewoner',
-  },
-  {
-    id: 7,
-    timestamp: '05-01-2026 15:30',
-    user_name: 'Admin Gebruiker',
-    action: 'REJECT',
-    entity_type: 'Gebruiker',
-    details: 'Nieuwe gebruiker aanvraag afgekeurd',
-  },
-  {
-    id: 8,
-    timestamp: '05-01-2026 14:12',
-    user_name: 'Verzorger A',
-    action: 'UPDATE',
-    entity_type: 'Kamer',
-    details: 'Kamer 201 schoonmaakstatus bijgewerkt',
-  },
-  {
-    id: 9,
-    timestamp: '05-01-2026 12:45',
-    user_name: 'Hoofdverpleegster',
-    action: 'CREATE',
-    entity_type: 'Medicatie',
-    details: 'Nieuwe medicatie toegevoegd aan bewoner',
-  },
-  {
-    id: 10,
-    timestamp: '05-01-2026 11:20',
-    user_name: 'Verpleger B',
-    action: 'UPDATE',
-    entity_type: 'Bewoner',
-    details: 'Contactinformatie bijgewerkt voor familie',
-  },
-];
+const mapBackendToFrontend = (item: any): AuditLog => {
+  const id = item.id;
+  const timestamp = item.created_at ?? item.timestamp ?? '';
+  const user_name = item.user?.name ?? item.user_name ?? (item.user_id ? `#${item.user_id}` : 'Systeem');
 
-/**
- * Fetch all audit logs
- *
- * TODO: Replace with actual API call when backend endpoint is available:
- * const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.auditLogs}`);
- * return await response.json();
- */
-export const fetchAuditLogs = async (): Promise<AuditLog[]> => {
+  // entity_type: try human-friendly name
+  let entity_type = item.auditable_type ?? item.entity_type ?? '';
+  if (entity_type && entity_type.includes('\\')) {
+    entity_type = entity_type.split('\\').pop() ?? entity_type;
+  }
+
+  // details: prefer a readable message, fall back to JSON of new_values
+  let details = item.details ?? '';
+  if (!details) {
+    if (item.new_values) {
+      try {
+        details = JSON.stringify(item.new_values);
+      } catch (e) {
+        details = String(item.new_values);
+      }
+    } else if (item.old_values) {
+      try {
+        details = JSON.stringify(item.old_values);
+      } catch (e) {
+        details = String(item.old_values);
+      }
+    } else {
+      details = `${item.action ?? ''} ${entity_type ?? ''}`.trim();
+    }
+  }
+
+  return {
+    id,
+    timestamp,
+    user_name,
+    action: (item.action ?? '').toString().toUpperCase(),
+    entity_type,
+    details,
+  };
+};
+
+export interface FetchAuditLogsOptions {
+  page?: number;
+  per_page?: number;
+  action?: string;
+  user_id?: number | string;
+  entity_type?: string;
+  entity_id?: number | string;
+  date_from?: string;
+  date_to?: string;
+}
+
+export const fetchAuditLogs = async (opts: FetchAuditLogsOptions = {}): Promise<{ items: AuditLog[]; meta: any }> => {
   try {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const params = new URLSearchParams();
+    if (opts.page) params.append('page', String(opts.page));
+    if (opts.per_page) params.append('per_page', String(opts.per_page));
+    if (opts.action) params.append('action', String(opts.action));
+    if (opts.user_id) params.append('user_id', String(opts.user_id));
+    if (opts.entity_type) params.append('auditable_type', String(opts.entity_type));
+    if (opts.entity_id) params.append('auditable_id', String(opts.entity_id));
+    if (opts.date_from) params.append('date_from', String(opts.date_from));
+    if (opts.date_to) params.append('date_to', String(opts.date_to));
 
-    // Return mock data
-    return mockAuditLogs;
+    const url = `${API_BASE_URL}${API_ENDPOINTS.auditLogs}${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const json = await res.json();
+
+    // Detect paginated response
+    const rawItems = Array.isArray(json) ? json : json.data ?? json.data?.data ?? json.data ?? [];
+
+    const items = rawItems.map(mapBackendToFrontend);
+
+    // meta from paginator
+    const meta = {
+      current_page: json.current_page ?? json.meta?.current_page ?? 1,
+      last_page: json.last_page ?? json.meta?.last_page ?? 1,
+      per_page: json.per_page ?? json.meta?.per_page ?? opts.per_page ?? 25,
+      total: json.total ?? json.meta?.total ?? items.length,
+    };
+
+    return { items, meta };
   } catch (error) {
     console.error('Error fetching audit logs:', error);
     throw error;

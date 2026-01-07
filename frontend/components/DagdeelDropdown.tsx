@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Shadows } from '@/constants';
 
@@ -25,6 +25,7 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
         <TouchableOpacity
           style={styles.dropdownButton}
           onPress={() => setIsOpen(!isOpen)}
+          activeOpacity={0.7}
         >
           <Text style={styles.dropdownButtonText}>{value}</Text>
           <MaterialIcons
@@ -35,8 +36,8 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
         </TouchableOpacity>
 
         {isOpen && (
-          <View style={styles.dropdownList}>
-            <ScrollView style={styles.scrollView}>
+          <View style={[styles.dropdownList, Platform.OS === 'web' && styles.dropdownListWeb]}>
+            <ScrollView style={styles.scrollView} nestedScrollEnabled>
               {DAGDEEL_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option}
@@ -45,6 +46,7 @@ export function DagdeelDropdown({ value, onChange }: DagdeelDropdownProps) {
                     value === option && styles.dropdownItemSelected,
                   ]}
                   onPress={() => handleSelect(option)}
+                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -81,7 +83,7 @@ const styles = StyleSheet.create({
   dropdownWrapper: {
     flex: 1,
     position: 'relative',
-    zIndex: 1000,
+    ...(Platform.OS === 'web' ? { zIndex: 9999 } : { zIndex: 1000 }),
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -109,7 +111,11 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     ...Shadows.dropdown,
     maxHeight: 200,
-    zIndex: 1001,
+    ...(Platform.OS === 'web' ? { zIndex: 10000 } : { zIndex: 1001 }),
+  },
+  dropdownListWeb: {
+    position: 'absolute' as any,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
   },
   scrollView: {
     maxHeight: 200,

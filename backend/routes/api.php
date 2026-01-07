@@ -105,6 +105,8 @@ Route::prefix('floors')->group(function () {
 
 // Allergy Management Routes
 Route::prefix('allergies')->group(function () {
+    // Kitchen staff allergy overview
+    Route::get('/kitchen-overview', [AllergyController::class, 'kitchenOverview']);
     Route::get('/resident/{residentId}', [AllergyController::class, 'index']);
     Route::get('/{id}', [AllergyController::class, 'show']);
     Route::post('/', [AllergyController::class, 'store']);
@@ -123,6 +125,8 @@ Route::prefix('contacts')->group(function () {
 
 // Diet Management Routes
 Route::prefix('diets')->group(function () {
+    // Kitchen staff diet overview
+    Route::get('/kitchen-overview', [DietController::class, 'kitchenOverview']);
     Route::get('/resident/{residentId}', [DietController::class, 'show']);
     Route::post('/', [DietController::class, 'store']);
     Route::put('/{id}', [DietController::class, 'update']);
