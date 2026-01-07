@@ -209,7 +209,23 @@ export default function DashboardWijzigingsverzoekenScreen() {
                     <View key={r.request_id} style={styles.requestCard}>
                       <View style={styles.requestHeader}>
                         <Text style={styles.requestTitle}>Verzoek #{r.request_id} — {getResidentName(r.resident_id)}</Text>
-                        <Text style={styles.requestMeta}>{r.urgency} • {r.status}</Text>
+                        <View style={styles.requestMetaRow}>
+                          <Text style={[
+                            r.urgency && r.urgency.toString().toLowerCase().includes('hoog') ? styles.urgencyHighText : r.urgency && (r.urgency.toString().toLowerCase().includes('matig') || r.urgency.toString().toLowerCase().includes('medium')) ? styles.urgencyMediumText : styles.urgencyLowText,
+                            { fontSize: FontSize.sm, fontWeight: FontWeight.semibold }
+                          ]}>
+                            {r.urgency === 'high' ? 'Hoog' : r.urgency === 'medium' ? 'Matig' : r.urgency === 'low' ? 'Laag' : r.urgency}
+                          </Text>
+                          <Text style={styles.requestMetaSeparator}>•</Text>
+                          <View style={[
+                            styles.statusBadge,
+                            r.status === 'approved' ? styles.statusApproved : r.status === 'rejected' ? styles.statusRejected : styles.statusPending,
+                          ]}>
+                            <Text style={styles.statusBadgeText}>
+                              {r.status === 'approved' ? 'Goedgekeurd' : r.status === 'rejected' ? 'Afgewezen' : 'In afwachting'}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
                       <View style={styles.requestBody}>
                         {r.changeFields?.map((f) => (
@@ -333,6 +349,68 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.lg,
+  },
+  metaRight: {
+    alignItems: 'flex-end',
+  },
+  requestMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  requestMetaSeparator: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginHorizontal: Spacing.xs,
+  },
+  requestUrgency: { fontSize: FontSize.xs, color: Colors.textSecondary, marginBottom: Spacing.xs },
+  statusBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.md,
+  },
+  statusBadgeText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.background,
+  },
+  statusApproved: {
+    backgroundColor: '#2ECC71',
+  },
+  statusRejected: {
+    backgroundColor: '#E74C3C',
+  },
+  statusPending: {
+    backgroundColor: '#F1C40F',
+  },
+  urgencyBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    marginRight: Spacing.sm,
+  },
+  urgencyText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.background,
+  },
+  urgencyHigh: {
+    backgroundColor: '#E74C3C',
+  },
+  urgencyMedium: {
+    backgroundColor: '#F39C12',
+  },
+  urgencyLow: {
+    backgroundColor: '#27AE60',
+  },
+  urgencyHighText: {
+    color: '#E74C3C',
+  },
+  urgencyMediumText: {
+    color: '#F39C12',
+  },
+  urgencyLowText: {
+    color: '#27AE60',
   },
   requestCard: {
     backgroundColor: Colors.background,

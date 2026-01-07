@@ -8,8 +8,6 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
-  Modal,
-  Pressable,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
@@ -24,14 +22,6 @@ import type { Note } from '@/types/note';
 import type { Resident } from '@/types/resident';
 import type { User } from '@/types/user';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
-
-  // Helper to detect if a note is assigned (handles multiple possible backend field names)
-  const isAssigned = (note: any) => {
-    const val = note?.assigned_to ?? note?.assignedTo ?? note?.assignee ?? note?.assigned_user ?? note?.assigned_user_id ?? note?.assignedName ?? note?.assigned?.name;
-    if (val === null || val === undefined) return false;
-    if (typeof val === 'string') return val.trim() !== '';
-    return !!val;
-  };
 
 export default function DashboardMeldingenScreen() {
   const router = useRouter();
@@ -48,8 +38,6 @@ export default function DashboardMeldingenScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [showNoteModal, setShowNoteModal] = useState(false);
 
   // Load data from API
   useEffect(() => {
@@ -79,17 +67,17 @@ export default function DashboardMeldingenScreen() {
   // Calculate statistics
   const stats = useMemo(() => {
     const total = notes.length;
-    const open = notes.filter((n) => !n.is_resolved && !isAssigned(n)).length;
-    const inProgress = notes.filter((n) => !n.is_resolved && isAssigned(n)).length;
+    const open = notes.filter((n) => !n.is_resolved && !(n as any).assigned_to).length;
+    const inProgress = notes.filter((n) => !n.is_resolved && (n as any).assigned_to).length;
     const resolved = notes.filter((n) => n.is_resolved).length;
     const urgent = notes.filter((n) => n.urgency === 'Hoog').length;
 
     return { total, open, inProgress, resolved, urgent };
   }, [notes]);
 
-  // Filter notes and sort so 'in behandeling' (assigned & not resolved) appear first
+  // Filter notes
   const filteredNotes = useMemo(() => {
-    const filtered = notes.filter((note) => {
+    return notes.filter((note) => {
       // Urgency filter
       const matchesUrgency = urgencyFilter === 'all' || note.urgency === urgencyFilter;
 
@@ -99,9 +87,9 @@ export default function DashboardMeldingenScreen() {
       // Status filter
       let matchesStatus = true;
       if (statusFilter === 'open') {
-        matchesStatus = !note.is_resolved && !isAssigned(note);
+        matchesStatus = !note.is_resolved && !(note as any).assigned_to;
       } else if (statusFilter === 'in_progress') {
-        matchesStatus = !note.is_resolved && isAssigned(note);
+        matchesStatus = !note.is_resolved && !!(note as any).assigned_to;
       } else if (statusFilter === 'resolved') {
         matchesStatus = note.is_resolved;
       }
@@ -120,32 +108,14 @@ export default function DashboardMeldingenScreen() {
 
       return matchesUrgency && matchesCategory && matchesStatus && matchesSearch && matchesDate;
     });
-
-    // Sorting: in_progress (assigned & not resolved) first, then open, then resolved
-    const statusPriority = (n: Note) => {
-      if (!n.is_resolved && isAssigned(n)) return 0; // in behandeling
-      if (!n.is_resolved && !isAssigned(n)) return 1; // open
-      return 2; // resolved
-    };
-
-    return filtered.slice().sort((a, b) => {
-      const pa = statusPriority(a);
-      const pb = statusPriority(b);
-      if (pa !== pb) return pa - pb;
-      // tie-break: newest first
-      const ta = new Date(a.created_at).getTime();
-      const tb = new Date(b.created_at).getTime();
-      return tb - ta;
-    });
   }, [notes, residents, users, urgencyFilter, categoryFilter, statusFilter, dateFilter, searchQuery]);
 
   const handleViewNote = (noteId: number) => {
     const note = notes.find((n) => n.note_id === noteId);
-    if (!note) return;
+    if (!note || !note.resident_id) return;
 
-    // Open detail modal for the note
-    setSelectedNote(note);
-    setShowNoteModal(true);
+    // Navigate to resident detail page
+    router.push(`/(tabs)/bewoners/${note.resident_id}` as any);
   };
 
   const handleResolveNote = async (noteId: number) => {
@@ -201,12 +171,6 @@ export default function DashboardMeldingenScreen() {
     return users.find((u) => u.user_id === authorId)?.name || 'Onbekend';
   };
 
-  // Close modal helper
-  const closeNoteModal = () => {
-    setShowNoteModal(false);
-    setSelectedNote(null);
-  };
-
   return (
     <AdminLayout activeRoute="meldingen">
       <ScrollView style={styles.container}>
@@ -241,7 +205,6 @@ export default function DashboardMeldingenScreen() {
               <View style={styles.statsContainer}>
                 <StatsCard label="Totaal" value={stats.total} color="#34C759" />
                 <StatsCard label="Open" value={stats.open} color="#E74C3C" />
-                <StatsCard label="In behandeling" value={stats.inProgress} color="#F39C12" />
                 <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
                 <StatsCard label="Urgent" value={stats.urgent} color="#E74C3C" />
               </View>
@@ -305,60 +268,6 @@ export default function DashboardMeldingenScreen() {
         isLoading={isDeleting}
         type="danger"
       />
-      {/* Note Detail Dialog (centered) */}
-      <Modal transparent visible={showNoteModal} animationType="fade" onRequestClose={closeNoteModal}>
-        <View style={modalStyles.overlay}>
-          <View style={modalStyles.dialog}>
-            <View style={modalStyles.dialogHeader}>
-              <Text style={modalStyles.title}>Melding Details</Text>
-              <Pressable onPress={closeNoteModal} style={modalStyles.closeButton}>
-                <Text style={modalStyles.closeText}>✕</Text>
-              </Pressable>
-            </View>
-
-            {selectedNote ? (
-              <ScrollView contentContainerStyle={modalStyles.dialogContent}>
-                <Text style={modalStyles.label}>Categorie</Text>
-                <Text style={modalStyles.value}>{selectedNote.category}</Text>
-
-                <Text style={modalStyles.label}>Urgentie</Text>
-                <Text style={modalStyles.value}>{selectedNote.urgency}</Text>
-
-                <Text style={modalStyles.label}>Resident</Text>
-                <Text style={modalStyles.value}>{getResidentName(selectedNote.resident_id)}</Text>
-
-                <Text style={modalStyles.label}>Aangemaakt door</Text>
-                <Text style={modalStyles.value}>{getAuthorName(selectedNote.author_id)}</Text>
-
-                <Text style={modalStyles.label}>Aangemaakt op</Text>
-                <Text style={modalStyles.value}>{new Date(selectedNote.created_at).toLocaleString()}</Text>
-
-                <Text style={modalStyles.label}>Inhoud</Text>
-                <Text style={modalStyles.contentText}>{selectedNote.content}</Text>
-
-                <Text style={modalStyles.label}>Status</Text>
-                <Text style={modalStyles.value}>{selectedNote.is_resolved ? `Afgehandeld op ${selectedNote.resolved_at ?? '-'}` : 'Open'}</Text>
-
-                <View style={modalStyles.actions}>
-                  {!selectedNote.is_resolved ? (
-                    <TouchableOpacity style={modalStyles.resolveButton} onPress={() => { handleResolveNote(selectedNote.note_id); closeNoteModal(); }}>
-                      <Text style={modalStyles.resolveButtonText}>Afhandelen</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity style={modalStyles.unresolveButton} onPress={() => { handleUnresolveNote(selectedNote.note_id); closeNoteModal(); }}>
-                      <Text style={modalStyles.unresolveButtonText}>Heropenen</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  <TouchableOpacity style={modalStyles.deleteButton} onPress={() => { setNoteToDelete(selectedNote); setShowDeleteModal(true); closeNoteModal(); }}>
-                    <Text style={modalStyles.deleteButtonText}>Verwijderen</Text>
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            ) : null}
-          </View>
-        </View>
-      </Modal>
     </AdminLayout>
   );
 }
@@ -464,48 +373,4 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
   },
-});
-
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  dialog: {
-    width: '92%',
-    maxWidth: 720,
-    maxHeight: '86%',
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  dialogHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
-  },
-  title: { fontSize: FontSize.lg, fontWeight: FontWeight.semibold, color: Colors.textPrimary },
-  closeButton: { padding: Spacing.xs },
-  closeText: { color: Colors.textSecondary, fontSize: FontSize.lg },
-  dialogContent: { padding: Spacing.lg, gap: Spacing.md },
-  label: { color: Colors.textSecondary, fontSize: FontSize.sm, marginTop: Spacing.sm },
-  value: { color: Colors.textPrimary, fontSize: FontSize.md, marginTop: Spacing.xs },
-  contentText: { color: Colors.textPrimary, fontSize: FontSize.md, marginTop: Spacing.sm, lineHeight: 20 },
-  actions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg, justifyContent: 'flex-end', paddingBottom: Spacing.lg },
-  resolveButton: { backgroundColor: '#27AE60', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.md },
-  resolveButtonText: { color: Colors.background },
-  unresolveButton: { backgroundColor: '#F39C12', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.md },
-  unresolveButtonText: { color: Colors.background },
-  deleteButton: { backgroundColor: '#E74C3C', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.md },
-  deleteButtonText: { color: Colors.background },
 });
