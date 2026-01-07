@@ -14,11 +14,11 @@ interface AuditLogsFiltersProps {
 
 const ACTION_OPTIONS = [
   { label: 'Alle acties', value: 'all' },
-  { label: 'Toegevoegd', value: 'CREATE' },
-  { label: 'Bewerkt', value: 'UPDATE' },
-  { label: 'Verwijderd', value: 'DELETE' },
-  { label: 'Goedgekeurd', value: 'APPROVE' },
-  { label: 'Afgekeurd', value: 'REJECT' },
+  { label: 'Toegevoegd', value: 'created' },
+  { label: 'Bewerkt', value: 'updated' },
+  { label: 'Verwijderd', value: 'deleted' },
+  { label: 'Goedgekeurd', value: 'approved' },
+  { label: 'Afgekeurd', value: 'rejected' },
 ];
 
 const USER_OPTIONS = [

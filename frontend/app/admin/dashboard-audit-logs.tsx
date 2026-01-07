@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout } from '@/components/admin';
-import { AuditLogsFilters } from '@/components/admin/audit-logs-filters';
 import { AuditLogsTable, type AuditLog } from '@/components/admin/audit-logs-table';
 import { fetchAuditLogs } from '@/Services/auditLogsApi';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
@@ -19,9 +18,6 @@ export default function DashboardAuditLogsScreen() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [actionFilter, setActionFilter] = useState('all');
-  const [userFilter, setUserFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
 
   // Load data from API
   useEffect(() => {
@@ -32,8 +28,10 @@ export default function DashboardAuditLogsScreen() {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchAuditLogs();
-      setAuditLogs(data);
+
+
+      const { items } = await fetchAuditLogs({ page: 1, per_page: 100 });
+      setAuditLogs(items);
     } catch (err) {
       setError('Fout bij het laden van audit logs');
       console.error('Error loading audit logs:', err);
@@ -43,20 +41,7 @@ export default function DashboardAuditLogsScreen() {
   };
 
   // Filter audit logs
-  const filteredLogs = useMemo(() => {
-    return auditLogs.filter((log) => {
-      // Action filter
-      const matchesAction = actionFilter === 'all' || log.action === actionFilter;
-
-      // User filter (for now just "all" - can be enhanced with user dropdown)
-      const matchesUser = userFilter === 'all';
-
-      // Date filter (basic - matches start of timestamp)
-      const matchesDate = dateFilter === '' || log.timestamp.startsWith(dateFilter);
-
-      return matchesAction && matchesUser && matchesDate;
-    });
-  }, [actionFilter, userFilter, dateFilter]);
+  const filteredLogs = auditLogs; // no filtering applied
 
   return (
     <AdminLayout activeRoute="audit-logs">
@@ -88,18 +73,14 @@ export default function DashboardAuditLogsScreen() {
             </View>
           ) : (
             <>
-              {/* Filters */}
-              <AuditLogsFilters
-                actionFilter={actionFilter}
-                userFilter={userFilter}
-                dateFilter={dateFilter}
-                onActionFilterChange={setActionFilter}
-                onUserFilterChange={setUserFilter}
-                onDateFilterChange={setDateFilter}
-              />
 
               {/* Audit Logs Table */}
               <AuditLogsTable logs={filteredLogs} />
+
+              {/* Pagination controls */}
+
+
+              {/* No pagination controls */}
             </>
           )}
         </View>
