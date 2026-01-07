@@ -5,13 +5,8 @@ import { Platform } from 'react-native';
 // Web (computer browser): use localhost
 // Mobile (phone/tablet): use local network IP address
 const getApiBaseUrl = () => {
-  if (Platform.OS === 'web') {
-    // For web/computer, use localhost
-    return 'http://localhost:8000/api';
-  } else {
-    // For mobile devices, use your computer's local IP address
-    return 'http://192.168.0.139:8000/api';
-  }
+  // Always use localhost for now - you can change IP here if needed
+  return 'http://127.0.0.1:8000/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -68,4 +63,8 @@ export const API_ENDPOINTS = {
   // Rooms operations
   linkResident: (roomId: number) => `/rooms/${roomId}/link-resident`,
   unlinkResident: (roomId: number) => `/rooms/${roomId}/unlink-resident`,
+  // Audit Logs
+  auditLogs: '/audit-logs',
+  auditLogById: (id: number) => `/audit-logs/${id}`,
+  auditLogsByEntity: (type: string, id: number) => `/audit-logs/entity/${type}/${id}`,
 };

@@ -10,7 +10,8 @@ interface ResidentCardProps {
   age?: number;
   hasAllergies: boolean;
   onView: () => void;
-  onInfo: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function ResidentCard({
@@ -19,7 +20,8 @@ export function ResidentCard({
   age,
   hasAllergies,
   onView,
-  onInfo,
+  onEdit,
+  onDelete,
 }: ResidentCardProps) {
   return (
     <View style={styles.card}>
@@ -42,13 +44,26 @@ export function ResidentCard({
       </View>
 
       {/* Actions */}
-      <View style={styles.actions}>
+      <View style={styles.actionsContainer}>
         <TouchableOpacity style={styles.viewButton} onPress={onView}>
           <Text style={styles.viewButtonText}>Bekijken</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.infoButton} onPress={onInfo}>
-          <MaterialIcons name="info" size={20} color={Colors.background} />
-        </TouchableOpacity>
+        {onEdit && (
+          <TouchableOpacity
+            style={[styles.iconButton, styles.editButton]}
+            onPress={onEdit}
+          >
+            <MaterialIcons name="edit" size={18} color={Colors.background} />
+          </TouchableOpacity>
+        )}
+        {onDelete && (
+          <TouchableOpacity
+            style={[styles.iconButton, styles.deleteButton]}
+            onPress={onDelete}
+          >
+            <MaterialIcons name="delete" size={18} color={Colors.background} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -95,10 +110,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     justifyContent: 'center',
   },
-  actions: {
+  actionsContainer: {
+    width: '100%',
     flexDirection: 'row',
     gap: Spacing.sm,
-    width: '100%',
+    alignItems: 'center',
   },
   viewButton: {
     flex: 1,
@@ -112,12 +128,17 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
   },
-  infoButton: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#95A5A6',
-    borderRadius: BorderRadius.md,
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#95A5A6',
+  },
+  deleteButton: {
+    backgroundColor: '#E74C3C',
   },
 });

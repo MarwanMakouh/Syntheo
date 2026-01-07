@@ -335,7 +335,6 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <Text style={styles.pageTitle}>Overzicht</Text>
-
         {/* Status Cards */}
         <View style={styles.statusCardsContainer}>
           {dynamicStatusCards.map((card) => (
