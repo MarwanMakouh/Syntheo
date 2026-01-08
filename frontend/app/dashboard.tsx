@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors, Spacing, Typography, Shadows, BorderRadius, FontSize, FontWeight } from '@/constants';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
 import { NavigationBar } from '@/components';
-import { AnnouncementCreateModal } from '@/components/announcement-create-modal';
+import { AnnouncementCreatePopup } from '@/components/announcement-create-popup';
+import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
 import { formatDate } from '@/utils/date';
 import { fetchResidents } from '@/Services/residentsApi';
 import { fetchNotes } from '@/Services/notesApi';
@@ -32,6 +33,8 @@ export default function DashboardScreen() {
   const { refreshAnnouncements } = useAnnouncements();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
+  const [residentModalVisible, setResidentModalVisible] = useState(false);
+  const [selectedResident, setSelectedResident] = useState<any>(null);
 
   const [residents, setResidents] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
@@ -335,7 +338,11 @@ export default function DashboardScreen() {
   };
 
   const handleViewResident = (residentId: number) => {
-    router.push(`/(tabs)/bewoners/${residentId}`);
+    const resident = residents.find((r) => r.resident_id === residentId);
+    if (resident) {
+      setSelectedResident(resident);
+      setResidentModalVisible(true);
+    }
   };
 
   return (
@@ -433,12 +440,24 @@ export default function DashboardScreen() {
         )}
       </ScrollView>
 
-      {/* Aankondiging Modal */}
-      <AnnouncementCreateModal
+      {/* Aankondiging Popup */}
+      <AnnouncementCreatePopup
         visible={announcementModalVisible}
         onClose={() => setAnnouncementModalVisible(false)}
         onSend={handleSendAnnouncement}
         isLoading={isSendingAnnouncement}
+      />
+
+      {/* Resident Quick View Popup */}
+      <ResidentQuickViewPopup
+        visible={residentModalVisible}
+        onClose={() => {
+          setResidentModalVisible(false);
+          setSelectedResident(null);
+        }}
+        resident={selectedResident}
+        roomNumber={selectedResident ? rooms.find((r) => r.resident_id === selectedResident.resident_id)?.room_number : undefined}
+        urgentNotes={selectedResident ? notes.filter((n) => n.resident_id === selectedResident.resident_id && n.urgency === 'Hoog' && !n.is_resolved) : []}
       />
     </View>
   );
@@ -447,26 +466,24 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundTertiary,
+    backgroundColor: Colors.backgroundSecondary,
   },
   scrollContent: {
-    padding: Spacing.xl,
-    paddingTop: Platform.OS === 'web' ? Spacing['2xl'] : 0,
+    padding: Layout.screenPaddingLarge,
     paddingBottom: Spacing['3xl'],
     ...Platform.select({
       web: {
         maxWidth: 1400,
-        marginHorizontal: 'auto',
+        alignSelf: 'center',
         width: '100%',
       },
     }),
   },
   pageTitle: {
-    ...Typography.h1,
     fontSize: FontSize['3xl'],
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     marginBottom: Spacing['2xl'],
-    fontWeight: FontWeight.semibold,
   },
 
   // Status Cards
@@ -490,14 +507,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   statusNumber: {
-    ...Typography.h1,
     fontSize: FontSize['4xl'],
+    fontWeight: FontWeight.bold,
     marginBottom: Spacing.xs,
   },
   statusLabel: {
-    ...Typography.body,
     fontSize: FontSize.md,
     fontWeight: FontWeight.medium,
+    color: Colors.textSecondary,
   },
 
   // Alert Banner
@@ -517,7 +534,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   alertText: {
-    ...Typography.body,
+    fontSize: FontSize.md,
     color: Colors.textPrimary,
     flex: 1,
   },
@@ -542,14 +559,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   actionTitle: {
-    ...Typography.h3,
     fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   actionSubtitle: {
-    ...Typography.body,
     fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
@@ -576,8 +592,8 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   urgentTitle: {
-    ...Typography.h2,
     fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
   },
   residentCard: {
@@ -592,19 +608,17 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   residentName: {
-    ...Typography.h3,
     fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   residentIncident: {
-    ...Typography.body,
     fontSize: FontSize.md,
     color: Colors.error,
     marginBottom: Spacing.xs,
   },
   residentNotes: {
-    ...Typography.body,
     fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
@@ -622,8 +636,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   actionButtonText: {
-    ...Typography.buttonMedium,
     fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
     color: Colors.textPrimary,
   },
 });

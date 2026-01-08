@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
-import { useAnnouncements } from '@/contexts/AnnouncementsContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAnnouncements, NotificationItem } from '@/contexts/AnnouncementsContext';
 import { AnnouncementWithRecipient } from '@/Services/announcementsApi';
 import { AnnouncementDetailOverlay } from './announcement-detail-overlay';
 
@@ -22,8 +21,7 @@ interface AnnouncementsDropdownProps {
 }
 
 export function AnnouncementsDropdown({ visible, onClose, anchorPosition }: AnnouncementsDropdownProps) {
-  const { announcements, isLoading } = useAnnouncements();
-  const { currentUser } = useAuth();
+  const { visibleNotifications, isLoading, dismissNotification } = useAnnouncements();
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementWithRecipient | null>(null);
 
   // Format time ago
@@ -43,17 +41,6 @@ export function AnnouncementsDropdown({ visible, onClose, anchorPosition }: Anno
     }
   };
 
-  // Get urgency label based on message content (simple heuristic)
-  const getUrgencyLabel = (title: string, message: string): string => {
-    const content = (title + ' ' + message).toLowerCase();
-    if (content.includes('urgent') || content.includes('dringend') || content.includes('spoedig')) {
-      return 'Hoog';
-    } else if (content.includes('belangrijk') || content.includes('aandacht')) {
-      return 'Matig';
-    }
-    return 'Algemeen';
-  };
-
   // Get urgency color
   const getUrgencyColor = (urgency: string): string => {
     switch (urgency) {
@@ -61,17 +48,43 @@ export function AnnouncementsDropdown({ visible, onClose, anchorPosition }: Anno
         return '#E74C3C';
       case 'Matig':
         return '#F39C12';
+      case 'Laag':
+        return '#3498DB';
       default:
         return '#3498DB';
     }
   };
 
-  const handleAnnouncementPress = (announcement: AnnouncementWithRecipient) => {
-    setSelectedAnnouncement(announcement);
+  // Get type icon
+  const getTypeIcon = (type: 'announcement' | 'note'): string => {
+    return type === 'announcement' ? 'campaign' : 'description';
+  };
+
+  // Get type label
+  const getTypeLabel = (notification: NotificationItem): string => {
+    if (notification.type === 'announcement') {
+      const ann = notification.originalData as AnnouncementWithRecipient;
+      if (ann.recipient_type === 'all') return 'Algemeen';
+      if (ann.recipient_type === 'floor') return `Verdieping ${ann.floor_id}`;
+      return 'Specifiek';
+    }
+    return notification.category || 'Melding';
+  };
+
+  const handleNotificationPress = (notification: NotificationItem) => {
+    // Only open detail for announcements
+    if (notification.type === 'announcement') {
+      setSelectedAnnouncement(notification.originalData as AnnouncementWithRecipient);
+    }
   };
 
   const handleCloseDetail = () => {
     setSelectedAnnouncement(null);
+  };
+
+  const handleDismiss = (e: any, notificationId: string) => {
+    e.stopPropagation(); // Prevent opening the detail view
+    dismissNotification(notificationId);
   };
 
   if (!visible) return null;
@@ -99,7 +112,7 @@ export function AnnouncementsDropdown({ visible, onClose, anchorPosition }: Anno
               <View style={styles.centerContent}>
                 <Text style={styles.loadingText}>Laden...</Text>
               </View>
-            ) : announcements.length === 0 ? (
+            ) : visibleNotifications.length === 0 ? (
               <View style={styles.centerContent}>
                 <MaterialIcons name="notifications-none" size={48} color={Colors.textSecondary} />
                 <Text style={styles.emptyText}>Geen meldingen</Text>
@@ -110,47 +123,60 @@ export function AnnouncementsDropdown({ visible, onClose, anchorPosition }: Anno
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {announcements.slice(0, 10).map((announcement) => {
-                  const userRecipient = announcement.recipients.find(
-                    recipient => recipient.user_id === currentUser?.user_id
-                  );
-                  const isRead = userRecipient?.is_read || false;
-                  const urgency = getUrgencyLabel(announcement.title, announcement.message);
-                  const urgencyColor = getUrgencyColor(urgency);
+                {visibleNotifications.slice(0, 20).map((notification) => {
+                  const urgencyColor = getUrgencyColor(notification.urgency);
+                  const typeIcon = getTypeIcon(notification.type);
+                  const typeLabel = getTypeLabel(notification);
 
                   return (
                     <TouchableOpacity
-                      key={announcement.announcement_id}
-                      style={[styles.announcementItem, !isRead && styles.announcementItemUnread]}
-                      onPress={() => handleAnnouncementPress(announcement)}
+                      key={notification.id}
+                      style={[styles.announcementItem, !notification.isRead && styles.announcementItemUnread]}
+                      onPress={() => handleNotificationPress(notification)}
                       activeOpacity={0.7}
                     >
-                      {/* Unread indicator dot */}
-                      <View style={[styles.urgencyDot, { backgroundColor: urgencyColor }]} />
+                      {/* Type icon */}
+                      <View style={styles.typeIconContainer}>
+                        <MaterialIcons name={typeIcon as any} size={20} color={urgencyColor} />
+                      </View>
 
                       {/* Content */}
                       <View style={styles.announcementContent}>
                         <View style={styles.announcementHeader}>
-                          <Text style={[styles.announcementTitle, !isRead && styles.announcementTitleUnread]}>
-                            {announcement.title}
+                          <Text style={[styles.announcementTitle, !notification.isRead && styles.announcementTitleUnread]}>
+                            {notification.title}
                           </Text>
-                          <Text style={styles.timeAgo}>
-                            {formatTimeAgo(announcement.created_at)}
-                          </Text>
+                          <View style={styles.announcementHeaderRight}>
+                            <Text style={styles.timeAgo}>
+                              {formatTimeAgo(notification.created_at)}
+                            </Text>
+                            <TouchableOpacity
+                              onPress={(e) => handleDismiss(e, notification.id)}
+                              style={styles.dismissButton}
+                              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                              <MaterialIcons name="close" size={18} color={Colors.textSecondary} />
+                            </TouchableOpacity>
+                          </View>
                         </View>
 
                         <Text style={styles.announcementMessage} numberOfLines={2}>
-                          {announcement.message}
+                          {notification.message}
                         </Text>
 
                         <View style={styles.announcementFooter}>
-                          <Text style={styles.categoryLabel}>
-                            {announcement.recipient_type === 'all' ? 'Algemeen' :
-                             announcement.recipient_type === 'floor' ? `Verdieping ${announcement.floor_id}` :
-                             'Specifiek'}
-                          </Text>
+                          <View style={styles.footerLeft}>
+                            <View style={[styles.typeBadge, notification.type === 'note' && styles.typeBadgeNote]}>
+                              <Text style={styles.typeBadgeText}>
+                                {notification.type === 'announcement' ? 'Aankondiging' : 'Melding'}
+                              </Text>
+                            </View>
+                            <Text style={styles.categoryLabel}>
+                              {typeLabel}
+                            </Text>
+                          </View>
                           <Text style={[styles.urgencyLabel, { color: urgencyColor }]}>
-                            {urgency}
+                            {notification.urgency}
                           </Text>
                         </View>
                       </View>
@@ -245,12 +271,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: Colors.primary,
   },
-  urgencyDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  typeIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.backgroundSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: Spacing.md,
-    marginTop: 6,
     flexShrink: 0,
   },
   announcementContent: {
@@ -261,6 +289,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: Spacing.xs,
+  },
+  announcementHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flexShrink: 0,
   },
   announcementTitle: {
     flex: 1,
@@ -275,7 +309,10 @@ const styles = StyleSheet.create({
   timeAgo: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
-    flexShrink: 0,
+  },
+  dismissButton: {
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.sm,
   },
   announcementMessage: {
     fontSize: FontSize.sm,
@@ -287,6 +324,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  typeBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.primary,
+  },
+  typeBadgeNote: {
+    backgroundColor: '#F39C12',
+  },
+  typeBadgeText: {
+    fontSize: 10,
+    fontWeight: FontWeight.semibold,
+    color: Colors.background,
   },
   categoryLabel: {
     fontSize: FontSize.xs,
