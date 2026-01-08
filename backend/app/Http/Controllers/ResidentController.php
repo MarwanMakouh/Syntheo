@@ -101,14 +101,33 @@ class ResidentController extends Controller
             'name' => 'required|string|max:255',
             'date_of_birth' => 'required|date',
             'photo_url' => 'nullable|string|max:255',
+            'allergies' => 'nullable|array',
+            'allergies.*.symptom' => 'required_with:allergies|string',
+            'allergies.*.severity' => 'nullable|string|in:low,medium,high',
         ]);
 
-        $resident = Resident::create($validated);
+        $resident = Resident::create([
+            'name' => $validated['name'],
+            'date_of_birth' => $validated['date_of_birth'],
+            'photo_url' => $validated['photo_url'] ?? null,
+        ]);
+
+        // If allergies provided, create them
+        if (!empty($validated['allergies']) && is_array($validated['allergies'])) {
+            foreach ($validated['allergies'] as $a) {
+                // Use Allergy model to create linked records
+                \App\Models\Allergy::create([
+                    'resident_id' => $resident->resident_id,
+                    'symptom' => $a['symptom'],
+                    'severity' => $a['severity'] ?? 'medium',
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Bewoner succesvol aangemaakt',
-            'data' => $resident
+            'data' => $resident->load('allergies')
         ], 201);
     }
 
@@ -130,14 +149,37 @@ class ResidentController extends Controller
             'name' => 'sometimes|string|max:255',
             'date_of_birth' => 'sometimes|date',
             'photo_url' => 'nullable|string|max:255',
+            'allergies' => 'nullable|array',
+            'allergies.*.symptom' => 'required_with:allergies|string',
+            'allergies.*.severity' => 'nullable|string|in:low,medium,high',
         ]);
 
-        $resident->update($validated);
+        $resident->update(array_filter([
+            'name' => $validated['name'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'photo_url' => $validated['photo_url'] ?? null,
+        ]));
+
+        // If allergies were provided, replace existing ones
+        if (array_key_exists('allergies', $validated)) {
+            // Delete existing allergies
+            \App\Models\Allergy::where('resident_id', $resident->resident_id)->delete();
+
+            if (!empty($validated['allergies']) && is_array($validated['allergies'])) {
+                foreach ($validated['allergies'] as $a) {
+                    \App\Models\Allergy::create([
+                        'resident_id' => $resident->resident_id,
+                        'symptom' => $a['symptom'],
+                        'severity' => $a['severity'] ?? 'medium',
+                    ]);
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Bewoner succesvol bijgewerkt',
-            'data' => $resident
+            'data' => $resident->load('allergies')
         ]);
     }
 

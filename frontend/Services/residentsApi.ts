@@ -53,6 +53,7 @@ export const createResident = async (residentData: {
   name: string;
   date_of_birth: string;
   photo_url?: string;
+  allergies?: Array<{ symptom: string; severity?: string }>;
 }): Promise<Resident> => {
   try {
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.residents}`, {

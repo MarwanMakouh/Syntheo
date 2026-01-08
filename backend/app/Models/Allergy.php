@@ -12,7 +12,8 @@ class Allergy extends Model
 
     protected $primaryKey = 'allergy_id';
 
-    public $timestamps = false;
+    // Use Eloquent timestamps (created_at, updated_at)
+    public $timestamps = true;
 
     protected $fillable = [
         'resident_id',

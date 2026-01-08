@@ -21,6 +21,7 @@ interface ResidentFormModalProps {
     name: string;
     date_of_birth: string;
     photo_url?: string;
+    allergies?: Array<{ symptom: string; severity?: string }>;
   }) => void | Promise<void>;
   isLoading?: boolean;
   resident?: Resident; // If provided, modal is in edit mode
@@ -38,6 +39,7 @@ export function ResidentFormModal({
   const [name, setName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [allergies, setAllergies] = useState<Array<{ symptom: string; severity?: string }>>([]);
 
   // Load resident data when modal opens in edit mode
   useEffect(() => {
@@ -45,6 +47,7 @@ export function ResidentFormModal({
       setName(resident.name);
       setDateOfBirth(resident.date_of_birth.split('T')[0]); // Format: YYYY-MM-DD
       setPhotoUrl(resident.photo_url || '');
+      setAllergies((resident.allergies || []).map(a => ({ symptom: a.symptom || '', severity: a.severity || 'medium' })));
     }
   }, [resident, visible]);
 
@@ -71,6 +74,7 @@ export function ResidentFormModal({
       name: string;
       date_of_birth: string;
       photo_url?: string;
+      allergies?: Array<{ symptom: string; severity?: string }>;
     } = {
       name: name.trim(),
       date_of_birth: dateOfBirth.trim(),
@@ -79,6 +83,15 @@ export function ResidentFormModal({
     // Only include photo_url if it's provided
     if (photoUrl.trim().length > 0) {
       residentData.photo_url = photoUrl.trim();
+    }
+
+    // Include allergies if provided and non-empty
+    const cleanedAllergies = allergies
+      .map(a => ({ symptom: (a.symptom || '').trim(), severity: a.severity }))
+      .filter(a => a.symptom.length > 0);
+
+    if (cleanedAllergies.length > 0) {
+      residentData.allergies = cleanedAllergies;
     }
 
     await onSubmit(residentData);
@@ -90,6 +103,23 @@ export function ResidentFormModal({
     setName('');
     setDateOfBirth('');
     setPhotoUrl('');
+    setAllergies([]);
+  };
+
+  const addAllergy = () => {
+    setAllergies(prev => [...prev, { symptom: '', severity: 'medium' }]);
+  };
+
+  const updateAllergy = (index: number, field: 'symptom' | 'severity', value: string) => {
+    setAllergies(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const removeAllergy = (index: number) => {
+    setAllergies(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleClose = () => {
@@ -165,6 +195,51 @@ export function ResidentFormModal({
               autoCapitalize="none"
               autoCorrect={false}
             />
+          </View>
+
+          {/* Allergieën */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Allergieën (optioneel)</Text>
+            {allergies.map((a, idx) => (
+              <View key={idx} style={{ marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    value={a.symptom}
+                    onChangeText={(text) => updateAllergy(idx, 'symptom', text)}
+                    placeholder="Symptoom (bijv. pinda)"
+                    placeholderTextColor={Colors.textMuted}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity onPress={() => removeAllergy(idx)} style={{ padding: 8 }}>
+                    <Ionicons name="trash" size={20} color={Colors.danger} />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ marginTop: 6 }}>
+                  <Text style={styles.helpText}>Ernst (optioneel)</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                    {['low', 'medium', 'high'].map(level => (
+                      <TouchableOpacity
+                        key={level}
+                        onPress={() => updateAllergy(idx, 'severity', level)}
+                        style={{
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: a.severity === level ? Colors.primary : '#EEE'
+                        }}
+                      >
+                        <Text style={{ color: a.severity === level ? Colors.textOnPrimary : Colors.textPrimary }}>{level}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            ))}
+
+            <TouchableOpacity onPress={addAllergy} style={{ marginTop: 8 }}>
+              <Text style={{ color: Colors.primary }}>+ Voeg allergie toe</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 

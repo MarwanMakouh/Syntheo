@@ -159,14 +159,14 @@ export function ResidentDetailsModal({
                   <View key={allergy.allergy_id || index} style={styles.allergyItem}>
                     <Ionicons name="warning-outline" size={20} color={Colors.error} />
                     <View style={styles.allergyInfo}>
-                      <Text style={styles.allergyName}>{allergy.substance}</Text>
+                      <Text style={styles.allergyName}>{allergy.symptom}</Text>
                       {allergy.severity && (
                         <Text style={styles.allergySeverity}>
                           Ernst: {allergy.severity}
                         </Text>
                       )}
-                      {allergy.symptoms && (
-                        <Text style={styles.allergySymptoms}>{allergy.symptoms}</Text>
+                      {allergy.notes && (
+                        <Text style={styles.allergySymptoms}>{allergy.notes}</Text>
                       )}
                     </View>
                   </View>
