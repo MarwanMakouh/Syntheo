@@ -52,8 +52,17 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role' => 'required|string|in:Verpleegster,Hoofdverpleegster,Beheerder,Keukenpersoneel',
-            'floor_id' => 'required_if:role,Verpleegster,Hoofdverpleegster|exists:floors,floor_id'
+            'floor_id' => 'nullable|exists:floors,floor_id'
         ]);
+
+        // Check if role requires floor_id
+        $roleRequiresFloor = in_array($validated['role'], ['Verpleegster', 'Hoofdverpleegster']);
+        if ($roleRequiresFloor && empty($validated['floor_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verpleegkundige-rollen moeten gekoppeld zijn aan een verdieping'
+            ], 422);
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -61,6 +70,7 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'floor_id' => $validated['floor_id'] ?? null,
+            'first_login' => true,
         ]);
 
         return response()->json([

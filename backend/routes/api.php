@@ -16,6 +16,8 @@ use App\Http\Controllers\MedicationRoundController;
 use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +29,10 @@ use App\Http\Controllers\AuditLogController;
 | will be assigned to the "api" middleware group.
 |
 */
+
+// Authentication Routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/change-password', [PasswordController::class, 'changePassword']);
 
 // Room Management Routes (Admin)
 Route::prefix('rooms')->group(function () {

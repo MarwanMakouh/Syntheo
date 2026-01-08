@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, API_BASE_URL } from '@/constants';
 import type { UserRole, User } from '@/types/user';
 
 interface UserFormModalProps {
@@ -68,14 +68,32 @@ export function UserFormModal({
     return roleMap[role] || 'Verpleegster';
   };
 
-  // Load user data when modal opens in edit mode
+  // Reset form helper
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+    setSelectedRole('Verpleegster');
+    setSelectedFloorId(null);
+  };
+
+  // Load user data when modal opens in edit mode OR reset when modal closes
   useEffect(() => {
-    if (user && visible) {
+    if (visible && user) {
+      // Edit mode - load user data
       setName(user.name);
       setEmail(user.email);
       setPassword('');
       setSelectedRole(user.role);
       setSelectedFloorId(user.floor_id ?? null);
+    } else if (visible && !user) {
+      // Create mode - ensure form is clean
+      resetForm();
+    } else if (!visible) {
+      // Modal closed - reset form
+      resetForm();
+      setShowRoleDropdown(false);
+      setShowFloorDropdown(false);
     }
   }, [user, visible]);
 
@@ -156,22 +174,12 @@ export function UserFormModal({
     }
 
     await onSubmit(userData);
-
-    // Form will be reset when modal closes via handleClose
-  };
-
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setSelectedRole('Verpleegster');
-    setSelectedFloorId(null);
+    // Form will be reset automatically when modal closes (visible becomes false)
   };
 
   const handleClose = () => {
-    resetForm();
-    setShowRoleDropdown(false);
     onClose();
+    // Form will be reset in useEffect when visible becomes false
   };
 
   return (

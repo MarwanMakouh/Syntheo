@@ -136,3 +136,35 @@ export const deleteUser = async (userId: number): Promise<void> => {
     throw error;
   }
 };
+
+/**
+ * Login with email and password
+ */
+export const login = async (email: string, password: string): Promise<User> => {
+  try {
+    console.log('API: Logging in with email:', email);
+    console.log('API: Sending to URL:', `${API_BASE_URL}/login`);
+
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    console.log('API: Response status:', response.status);
+    console.log('API: Response ok:', response.ok);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API: Error response data:', errorData);
+      throw new Error(errorData.message || 'Login mislukt');
+    }
+
+    const result: ApiResponse<User> = await response.json();
+    console.log('API: Login successful:', result);
+    return result.data;
+  } catch (error) {
+    console.error('API: Error logging in:', error);
+    throw error;
+  }
+};
