@@ -45,31 +45,32 @@ export function AssignResidentModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      animationType="fade"
+      transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Bewoner Toewijzen</Text>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close" size={28} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Bewoner Toewijzen</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
           {/* Info */}
           <View style={styles.infoContainer}>
-            <MaterialIcons name="meeting-room" size={48} color={Colors.primary} />
+            <MaterialIcons name="meeting-room" size={40} color={Colors.primary} />
             <Text style={styles.infoTitle}>Kamer {roomNumber}</Text>
             <Text style={styles.infoText}>
               Selecteer een bewoner om aan deze kamer toe te wijzen
@@ -79,7 +80,7 @@ export function AssignResidentModal({
           {/* Residents List */}
           {availableResidents.length === 0 ? (
             <View style={styles.emptyState}>
-              <MaterialIcons name="person-off" size={48} color={Colors.textSecondary} />
+              <MaterialIcons name="person-off" size={40} color={Colors.textSecondary} />
               <Text style={styles.emptyText}>Geen beschikbare bewoners</Text>
               <Text style={styles.emptySubtext}>
                 Alle bewoners zijn al toegewezen aan een kamer.
@@ -141,29 +142,50 @@ export function AssignResidentModal({
             )}
           </TouchableOpacity>
         </View>
+        </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  container: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.xl,
+    width: '100%',
+    maxWidth: 600,
+    maxHeight: '90%',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 10,
+      },
+    }),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing['2xl'],
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: Spacing.xl,
+    paddingVertical: Spacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    backgroundColor: Colors.background,
   },
   headerTitle: {
-    fontSize: FontSize['2xl'],
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
   },
@@ -171,29 +193,25 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   scrollView: {
-    flex: 1,
+    maxHeight: 500,
   },
   scrollContent: {
-    padding: Spacing['2xl'],
+    padding: Spacing.xl,
   },
   infoContainer: {
     alignItems: 'center',
-    marginBottom: Spacing['2xl'],
-    padding: Spacing.xl,
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    marginBottom: Spacing.xl,
+    paddingVertical: Spacing.md,
   },
   infoTitle: {
-    fontSize: FontSize['2xl'],
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   infoText: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
@@ -243,32 +261,28 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    padding: Spacing['4xl'],
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    padding: Spacing['2xl'],
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
   },
   emptyText: {
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   emptySubtext: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   actionContainer: {
     flexDirection: 'row',
-    padding: Spacing['2xl'],
-    paddingBottom: Platform.OS === 'ios' ? 40 : Spacing['2xl'],
-    gap: Spacing.lg,
+    padding: Spacing.xl,
+    gap: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    backgroundColor: Colors.background,
   },
   cancelButton: {
     flex: 1,

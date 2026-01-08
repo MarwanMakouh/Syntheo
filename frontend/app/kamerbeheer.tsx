@@ -1,371 +1,289 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
+  StyleSheet,
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Platform,
+  Alert,
   ActivityIndicator,
-  ViewStyle,
-  TextStyle,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { NavigationBar } from '@/components';
-import { DisconnectConfirmationModal } from '@/components/disconnect-confirmation-modal';
-import { AssignResidentModal } from '@/components/assign-resident-modal';
+import { ConfirmationModal, AssignResidentModal, RoomsFilters } from '@/components/admin';
+import { RoomCard } from '@/components/admin/room-card';
+import { WarningBanner } from '@/components/admin/warning-banner';
 import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
 import { fetchResidents } from '@/Services/residentsApi';
-
-interface SelectedDisconnect {
-  roomId: number;
-  residentName: string;
-  roomNumber: number;
-}
+import { fetchNotes } from '@/Services/notesApi';
+import type { Room } from '@/types/resident';
+import type { Resident } from '@/types/resident';
+import type { Note } from '@/types/note';
+import { Colors, FontSize, FontWeight, Spacing, Layout, BorderRadius } from '@/constants';
 
 export default function KamerBeheerScreen() {
-  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
-  const [disconnectModalVisible, setDisconnectModalVisible] = useState(false);
-  const [selectedDisconnect, setSelectedDisconnect] = useState<SelectedDisconnect | null>(null);
-  const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [selectedRoomForAssign, setSelectedRoomForAssign] = useState<number | null>(null);
-  const [selectedRoomNumberForAssign, setSelectedRoomNumberForAssign] = useState<number | null>(null);
-  const [roomsData, setRoomsData] = useState<any[]>([]);
-  const [residents, setResidents] = useState<any[]>([]);
-  const [floors, setFloors] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [floorFilter, setFloorFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUnlinkModal, setShowUnlinkModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Load data from API
   useEffect(() => {
-    loadRooms();
+    loadData();
   }, []);
 
-  const loadRooms = async () => {
+  const loadData = async () => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       setError(null);
-      const data = await fetchRooms();
-      setRoomsData(data || []);
-
-      // also load residents for showing occupant names
-      try {
-        const residentsData = await fetchResidents();
-        setResidents(residentsData || []);
-      } catch (e) {
-        console.error('Failed to load residents for kamerbeheer:', e);
-      }
-
-      // compute floors from rooms
-      const floorIds = Array.from(new Set((data || []).map((r: any) => r.floor_id))).sort((a, b) => a - b);
-      setFloors(floorIds.map((id: number) => ({ floor_id: id })));
+      const [roomsData, residentsData, notesData] = await Promise.all([
+        fetchRooms(),
+        fetchResidents(),
+        fetchNotes(),
+      ]);
+      setRooms(roomsData);
+      setResidents(residentsData);
+      setNotes(notesData);
     } catch (err) {
-      console.error('Failed to load rooms:', err);
-      setError('Kan kamers niet laden');
+      setError('Fout bij het laden van gegevens');
+      console.error('Error loading data:', err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Filter rooms by selected floor
-  const filteredRooms = selectedFloor
-    ? roomsData.filter((room) => room.floor_id === selectedFloor)
-    : roomsData;
+  // Get residents without rooms
+  const residentsWithoutRooms = useMemo(() => {
+    const assignedResidentIds = rooms
+      .filter((r) => r.resident_id !== null)
+      .map((r) => r.resident_id);
 
-  // Sort rooms by room number
-  const sortedRooms = [...filteredRooms].sort((a, b) => a.room_id - b.room_id);
+    return residents.filter((r) => !assignedResidentIds.includes(r.resident_id));
+  }, [rooms, residents]);
 
-  // Get unassigned and assigned residents
-  const { unassignedResidents, assignedResidents } = useMemo(() => {
-    const assignedResidentIds = roomsData
-      .filter((room) => room.resident_id !== null)
-      .map((room) => room.resident_id);
+  // Filter rooms based on floor and search query
+  const filteredRooms = useMemo(() => {
+    return rooms.filter((room) => {
+      // Floor filter
+      const matchesFloor = floorFilter === 'all' || room.floor_id.toString() === floorFilter;
 
-    const unassigned = residents
-      .filter((resident) => !assignedResidentIds.includes(resident.resident_id))
-      .map((resident) => ({
-        resident_id: resident.resident_id,
-        name: resident.name,
-      }));
+      // Search filter (room number)
+      const matchesSearch =
+        searchQuery === '' ||
+        room.room_number.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const assigned = residents
-      .filter((resident) => assignedResidentIds.includes(resident.resident_id))
-      .map((resident) => {
-        const room = roomsData.find((r) => r.resident_id === resident.resident_id);
-        return {
-          resident_id: resident.resident_id,
-          name: resident.name,
-          currentRoom: room?.room_id,
-        };
-      });
+      return matchesFloor && matchesSearch;
+    });
+  }, [rooms, floorFilter, searchQuery]);
 
-    return { unassignedResidents: unassigned, assignedResidents: assigned };
-  }, [roomsData]);
-
-  const handleDisconnect = (roomId: number, residentName: string, roomNumber: number) => {
-    setSelectedDisconnect({ roomId, residentName, roomNumber });
-    setDisconnectModalVisible(true);
-  };
-
-  const handleConfirmDisconnect = async () => {
-    if (selectedDisconnect) {
-      try {
-        setIsProcessing(true);
-        await unlinkResidentFromRoom(selectedDisconnect.roomId);
-        alert(`${selectedDisconnect.residentName} is succesvol losgekoppeld van Kamer ${selectedDisconnect.roomNumber}`);
-
-        // Refresh rooms list
-        await loadRooms();
-      } catch (error) {
-        console.error('Error disconnecting resident:', error);
-        alert('Fout bij loskoppelen van bewoner. Probeer opnieuw.');
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-    setDisconnectModalVisible(false);
-    setSelectedDisconnect(null);
-  };
-
-  const handleCancelDisconnect = () => {
-    setDisconnectModalVisible(false);
-    setSelectedDisconnect(null);
-  };
-
-  const handleAssignResident = (roomId: number, roomNumber: number) => {
-    setSelectedRoomForAssign(roomId);
-    setSelectedRoomNumberForAssign(roomNumber);
-    setAssignModalVisible(true);
-  };
-
-  const handleConfirmAssign = async (residentId: number) => {
-    if (selectedRoomForAssign) {
-      try {
-        setIsProcessing(true);
-        await linkResidentToRoom(selectedRoomForAssign, residentId);
-        const resident = residents.find((r) => r.resident_id === residentId);
-        alert(`${resident?.name} is succesvol toegewezen aan Kamer ${selectedRoomForAssign}`);
-
-        // Refresh rooms list
-        await loadRooms();
-      } catch (error) {
-        console.error('Error assigning resident:', error);
-        alert('Fout bij toewijzen van bewoner. Probeer opnieuw.');
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-    setAssignModalVisible(false);
-    setSelectedRoomForAssign(null);
-    setSelectedRoomNumberForAssign(null);
-  };
-
-  const handleCancelAssign = () => {
-    setAssignModalVisible(false);
-    setSelectedRoomForAssign(null);
-    setSelectedRoomNumberForAssign(null);
-  };
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <NavigationBar />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Laden...</Text>
-        </View>
-      </SafeAreaView>
+  // Get resident status based on notes
+  const getResidentStatus = (residentId: number): 'Stabiel' | 'Aandacht' | 'Urgent' => {
+    const residentNotes = notes.filter(
+      (n) => n.resident_id === residentId && !n.is_resolved
     );
-  }
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <NavigationBar />
-        <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={48} color={Colors.error} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadRooms}>
-            <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+    const hasUrgent = residentNotes.some((n) => n.urgency === 'Hoog');
+    const hasAttention = residentNotes.some((n) => n.urgency === 'Matig');
+
+    if (hasUrgent) return 'Urgent';
+    if (hasAttention) return 'Aandacht';
+    return 'Stabiel';
+  };
+
+  // Get resident name by ID
+  const getResidentName = (residentId: number | null) => {
+    if (!residentId) return undefined;
+    return residents.find((r) => r.resident_id === residentId)?.name;
+  };
+
+  const handleAssignResident = (roomId: number) => {
+    const room = rooms.find(r => r.room_id === roomId);
+    if (!room) return;
+
+    setSelectedRoom(room);
+    setShowAssignModal(true);
+  };
+
+  const handleSelectResident = (residentId: number) => {
+    setSelectedResidentId(residentId);
+  };
+
+  const confirmAssignResident = async () => {
+    if (!selectedRoom || !selectedResidentId) return;
+
+    try {
+      setIsProcessing(true);
+      await linkResidentToRoom(selectedRoom.room_id, selectedResidentId);
+      await loadData();
+      setShowAssignModal(false);
+      setSelectedRoom(null);
+      setSelectedResidentId(null);
+      Alert.alert('Succes', 'Bewoner succesvol toegewezen aan kamer');
+    } catch (err) {
+      console.error('Error linking resident to room:', err);
+      Alert.alert('Fout', 'Kon bewoner niet toewijzen aan kamer');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUnlinkResident = (roomId: number, residentName?: string) => {
+    const room = rooms.find(r => r.room_id === roomId);
+    if (!room) return;
+
+    setSelectedRoom(room);
+    setShowUnlinkModal(true);
+  };
+
+  const confirmUnlinkResident = async () => {
+    if (!selectedRoom) return;
+
+    try {
+      setIsProcessing(true);
+      await unlinkResidentFromRoom(selectedRoom.room_id);
+      await loadData();
+      setShowUnlinkModal(false);
+      setSelectedRoom(null);
+      Alert.alert('Succes', 'Bewoner succesvol losgekoppeld van kamer');
+    } catch (err) {
+      console.error('Error unlinking resident from room:', err);
+      Alert.alert('Fout', 'Kon bewoner niet loskoppelen van kamer');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const selectedResidentName = selectedRoom?.resident_id
+    ? getResidentName(selectedRoom.resident_id)
+    : undefined;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <NavigationBar />
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.pageTitle}>Kamerbeheer</Text>
-              <Text style={styles.pageSubtitle}>Beheer kamertoewijzingen van bewoners</Text>
-            </View>
+            <Text style={styles.pageTitle}>Kamerbeheer</Text>
+            <Text style={styles.pageSubtitle}>
+              Beheer kamertoewijzingen van bewoners
+            </Text>
           </View>
 
-          {/* Unassigned Residents Warning */}
-          {unassignedResidents.length > 0 && (
-            <View style={styles.warningBanner}>
-              <MaterialIcons name="warning" size={24} color={Colors.warning} />
-              <View style={styles.warningContent}>
-                <Text style={styles.warningTitle}>
-                  {unassignedResidents.length} bewoner{unassignedResidents.length > 1 ? 's' : ''} zonder kamertoewijzing
-                </Text>
-                <Text style={styles.warningText}>
-                  {unassignedResidents.map((r) => r.name).join(', ')}
-                </Text>
-              </View>
+          {/* Loading State */}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Kamers laden...</Text>
             </View>
-          )}
-
-          {/* Floor Filter */}
-          <View style={styles.filterContainer}>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                selectedFloor === null && styles.filterButtonActive,
-              ]}
-              onPress={() => setSelectedFloor(null)}
-            >
-              <Text
-                style={[
-                  styles.filterButtonText,
-                  selectedFloor === null && styles.filterButtonTextActive,
-                ]}
-              >
-                Alle verdiepingen
-              </Text>
-            </TouchableOpacity>
-            {floors.map((floor) => (
-              <TouchableOpacity
-                key={floor.floor_id}
-                style={[
-                  styles.filterButton,
-                  selectedFloor === floor.floor_id && styles.filterButtonActive,
-                ]}
-                onPress={() => setSelectedFloor(floor.floor_id)}
-              >
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    selectedFloor === floor.floor_id && styles.filterButtonTextActive,
-                  ]}
-                >
-                  Verdieping {floor.floor_id}
-                </Text>
+          ) : error ? (
+            /* Error State */
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
+          ) : (
+            <>
+              {/* Warning Banner */}
+              {residentsWithoutRooms.length > 0 && (
+                <WarningBanner
+                  message={`${residentsWithoutRooms.length} bewoner${
+                    residentsWithoutRooms.length > 1 ? 's' : ''
+                  } zonder kamertoewijzing`}
+                  badges={residentsWithoutRooms.map((r) => r.name)}
+                />
+              )}
 
-          {/* Rooms Grid */}
-          <View style={styles.roomsGrid}>
-            {sortedRooms.map((room) => {
-              const resident = residents.find((r) => r.resident_id === room.resident_id);
-              const isOccupied = room.resident_id !== null;
+              {/* Filters */}
+              <RoomsFilters
+                floorFilter={floorFilter}
+                searchQuery={searchQuery}
+                onFloorFilterChange={setFloorFilter}
+                onSearchChange={setSearchQuery}
+              />
 
-              return (
-                <View
-                  key={room.room_id}
-                  style={[
-                    styles.roomCard,
-                    isOccupied ? styles.roomCardOccupied : styles.roomCardEmpty,
-                  ]}
-                >
-                  {/* Room Header */}
-                  <View style={styles.roomHeader}>
-                    <View style={styles.roomTitleContainer}>
-                      <MaterialIcons
-                        name="meeting-room"
-                        size={20}
-                        color={isOccupied ? '#dc2626' : '#10b981'}
-                      />
-                      <Text style={styles.roomNumber}>Kamer {room.room_number}</Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        isOccupied ? styles.statusBadgeOccupied : styles.statusBadgeEmpty,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.statusBadgeText,
-                          isOccupied ? styles.statusBadgeTextOccupied : styles.statusBadgeTextEmpty,
-                        ]}
-                      >
-                        {isOccupied ? 'Bezet' : 'Vrij'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Resident Name */}
-                  {isOccupied && resident && (
-                    <>
-                      <Text style={styles.residentName}>{resident.name}</Text>
-
-                      {/* Disconnect Button */}
-                      <TouchableOpacity
-                        style={styles.disconnectButton}
-                        onPress={() => handleDisconnect(room.room_id, resident.name, parseInt(room.room_number))}
-                      >
-                        <MaterialIcons name="link-off" size={16} color={Colors.error} />
-                        <Text style={styles.disconnectButtonText}>Loskoppelen</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-
-                  {/* Empty state with Assign Button */}
-                  {!isOccupied && (
-                    <>
-                      <Text style={styles.emptyRoomText}>Geen bewoner toegewezen</Text>
-                      <TouchableOpacity
-                        style={styles.assignButton}
-                        onPress={() => handleAssignResident(room.room_id, parseInt(room.room_number))}
-                      >
-                        <MaterialIcons name="person-add" size={16} color={Colors.success} />
-                        <Text style={styles.assignButtonText}>Bewoner Toewijzen</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
+              {/* Rooms Grid */}
+              {filteredRooms.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <MaterialIcons name="meeting-room" size={64} color={Colors.textSecondary} />
+                  <Text style={styles.emptyText}>Geen kamers gevonden</Text>
+                  <Text style={styles.emptySubtext}>
+                    Probeer je filters aan te passen of verwijder de zoekterm.
+                  </Text>
                 </View>
-              );
-            })}
-          </View>
-        </ScrollView>
-      </View>
+              ) : (
+                <View style={styles.grid}>
+                  {filteredRooms.map((room) => {
+                  const isOccupied = room.resident_id !== null;
+                  const residentName = getResidentName(room.resident_id);
+                  const residentStatus = room.resident_id
+                    ? getResidentStatus(room.resident_id)
+                    : undefined;
 
-      {/* Disconnect Confirmation Modal */}
-      {selectedDisconnect && (
-        <DisconnectConfirmationModal
-          visible={disconnectModalVisible}
-          residentName={selectedDisconnect.residentName}
-          roomNumber={selectedDisconnect.roomNumber}
-          onCancel={handleCancelDisconnect}
-          onConfirm={handleConfirmDisconnect}
-          isProcessing={isProcessing}
-        />
-      )}
+                  return (
+                    <View key={room.room_id} style={styles.cardWrapper}>
+                      <RoomCard
+                        roomNumber={room.room_number}
+                        isOccupied={isOccupied}
+                        residentName={residentName}
+                        residentStatus={residentStatus}
+                        onAssign={() => handleAssignResident(room.room_id)}
+                        onUnlink={() => handleUnlinkResident(room.room_id, residentName)}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+              )}
+            </>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Unlink Confirmation Modal */}
+      <ConfirmationModal
+        visible={showUnlinkModal}
+        onClose={() => {
+          setShowUnlinkModal(false);
+          setSelectedRoom(null);
+        }}
+        onConfirm={confirmUnlinkResident}
+        title="Bewoner Loskoppelen"
+        message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_number}? Deze actie kan later ongedaan worden gemaakt.`}
+        confirmText="Loskoppelen"
+        cancelText="Annuleren"
+        isLoading={isProcessing}
+        type="warning"
+      />
 
       {/* Assign Resident Modal */}
-      {selectedRoomForAssign && selectedRoomNumberForAssign && (
-        <AssignResidentModal
-          visible={assignModalVisible}
-          roomNumber={selectedRoomNumberForAssign}
-          unassignedResidents={unassignedResidents}
-          assignedResidents={assignedResidents}
-          onCancel={handleCancelAssign}
-          onAssign={handleConfirmAssign}
-          isProcessing={isProcessing}
-        />
-      )}
+      <AssignResidentModal
+        visible={showAssignModal}
+        onClose={() => {
+          setShowAssignModal(false);
+          setSelectedRoom(null);
+          setSelectedResidentId(null);
+        }}
+        onConfirm={confirmAssignResident}
+        roomNumber={selectedRoom?.room_number || ''}
+        availableResidents={residentsWithoutRooms}
+        selectedResidentId={selectedResidentId}
+        onSelectResident={handleSelectResident}
+        isLoading={isProcessing}
+      />
     </SafeAreaView>
   );
 }
@@ -373,254 +291,102 @@ export default function KamerBeheerScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.backgroundTertiary,
-  } as ViewStyle,
+    backgroundColor: Colors.backgroundSecondary,
+  },
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundTertiary,
-  } as ViewStyle,
-  scrollContent: {
-    padding: Spacing.xl,
-    paddingTop: Spacing['2xl'],
-    paddingBottom: Spacing['3xl'],
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  content: {
+    padding: Layout.screenPaddingLarge,
     ...Platform.select({
       web: {
         maxWidth: 1400,
-        marginHorizontal: 'auto',
+        alignSelf: 'center',
         width: '100%',
       },
     }),
-  } as ViewStyle,
-
-  // Header
+  },
   header: {
     marginBottom: Spacing['2xl'],
-  } as ViewStyle,
-  headerTextContainer: {
-    flex: 1,
-  } as ViewStyle,
+  },
   pageTitle: {
-    ...Typography.h1,
     fontSize: FontSize['3xl'],
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
-    fontWeight: FontWeight.semibold,
     marginBottom: Spacing.xs,
-  } as TextStyle,
+  },
   pageSubtitle: {
-    ...Typography.body,
     fontSize: FontSize.md,
     color: Colors.textSecondary,
-  } as TextStyle,
-
-  // Warning Banner
-  warningBanner: {
+  },
+  grid: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-    backgroundColor: '#fff9e6',
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: '#ffd966',
+    flexWrap: 'wrap',
+    marginHorizontal: -Spacing.md,
+  },
+  cardWrapper: {
+    width: Platform.OS === 'web' ? '33.333%' : '100%',
+    paddingHorizontal: Spacing.md,
     marginBottom: Spacing.xl,
-  } as ViewStyle,
-  warningContent: {
-    flex: 1,
-  } as ViewStyle,
-  warningTitle: {
-    fontSize: FontSize.md,
-    color: Colors.textPrimary,
-    fontWeight: FontWeight.semibold,
-    marginBottom: Spacing.xs,
-  } as TextStyle,
-  warningText: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  } as TextStyle,
-
-  // Filter
-  filterContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-    marginBottom: Spacing['2xl'],
-  } as ViewStyle,
-  filterButton: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  } as ViewStyle,
-  filterButtonActive: {
-    backgroundColor: Colors.success,
-    borderColor: Colors.success,
-  } as ViewStyle,
-  filterButtonText: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    fontWeight: FontWeight.medium,
-  } as TextStyle,
-  filterButtonTextActive: {
-    color: Colors.textOnPrimary,
-  } as TextStyle,
-
-  // Rooms Grid
-  roomsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.lg,
-  } as ViewStyle,
-  roomCard: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 2,
-    padding: Spacing.lg,
-    minWidth: 280,
-    ...Platform.select({
-      web: {
-        width: 'calc(33.333% - 16px)' as any,
-      },
-      default: {
-        width: '100%',
-      },
-    }),
-  } as ViewStyle,
-  roomCardOccupied: {
-    borderColor: '#dc2626',
-  } as ViewStyle,
-  roomCardEmpty: {
-    borderColor: '#10b981',
-  } as ViewStyle,
-
-  // Room Header
-  roomHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  } as ViewStyle,
-  roomTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  } as ViewStyle,
-  roomNumber: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.textPrimary,
-  } as TextStyle,
-
-  // Status Badge
-  statusBadge: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-  } as ViewStyle,
-  statusBadgeOccupied: {
-    backgroundColor: '#fee2e2',
-  } as ViewStyle,
-  statusBadgeEmpty: {
-    backgroundColor: '#d1fae5',
-  } as ViewStyle,
-  statusBadgeText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semibold,
-  } as TextStyle,
-  statusBadgeTextOccupied: {
-    color: '#991b1b',
-  } as TextStyle,
-  statusBadgeTextEmpty: {
-    color: '#065f46',
-  } as TextStyle,
-
-  // Resident
-  residentName: {
-    fontSize: FontSize.md,
-    color: Colors.textPrimary,
-    fontWeight: FontWeight.medium,
-    marginBottom: Spacing.lg,
-  } as TextStyle,
-
-  // Disconnect Button
-  disconnectButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: Spacing.md,
-  } as ViewStyle,
-  disconnectButtonText: {
-    fontSize: FontSize.sm,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
-  } as TextStyle,
-
-  // Empty Room
-  emptyRoomText: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-    fontStyle: 'italic',
-    marginBottom: Spacing.lg,
-  } as TextStyle,
-
-  // Assign Button
-  assignButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: Spacing.md,
-  } as ViewStyle,
-  assignButtonText: {
-    fontSize: FontSize.sm,
-    color: Colors.success,
-    fontWeight: FontWeight.medium,
-  } as TextStyle,
-
-  // Loading
+  },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
-  } as ViewStyle,
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
   loadingText: {
+    marginTop: Spacing.lg,
     fontSize: FontSize.md,
     color: Colors.textSecondary,
-    marginTop: Spacing.md,
-  } as TextStyle,
-
-  // Error
+  },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
-  } as ViewStyle,
+    justifyContent: 'center',
+    padding: Spacing['4xl'],
+    minHeight: 400,
+  },
   errorText: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
+    marginTop: Spacing.lg,
+    fontSize: FontSize.lg,
+    color: Colors.error,
     textAlign: 'center',
-  } as TextStyle,
+    marginBottom: Spacing.xl,
+  },
   retryButton: {
+    backgroundColor: Colors.primary,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
-    backgroundColor: Colors.primary,
     borderRadius: BorderRadius.md,
-  } as ViewStyle,
+  },
   retryButtonText: {
+    color: Colors.background,
     fontSize: FontSize.md,
-    color: Colors.textOnPrimary,
     fontWeight: FontWeight.semibold,
-  } as TextStyle,
+  },
+  emptyState: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing['4xl'],
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 300,
+  },
+  emptyText: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.sm,
+  },
+  emptySubtext: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
 });

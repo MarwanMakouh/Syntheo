@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
 import { NavigationBar } from '@/components';
 import { formatDate } from '@/utils/date';
 import { fetchChangeRequests } from '@/Services/changeRequestsApi';
@@ -295,16 +295,15 @@ export default function WijzigingsverzookenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundTertiary,
+    backgroundColor: Colors.backgroundSecondary,
   },
   scrollContent: {
-    padding: Spacing.xl,
-    paddingTop: Platform.OS === 'web' ? Spacing['2xl'] : 0,
+    padding: Layout.screenPaddingLarge,
     paddingBottom: Spacing['3xl'],
     ...Platform.select({
       web: {
         maxWidth: 1000,
-        marginHorizontal: 'auto',
+        alignSelf: 'center',
         width: '100%',
       },
     }),
@@ -312,11 +311,10 @@ const styles = StyleSheet.create({
 
   // Header
   pageTitle: {
-    ...Typography.h1,
     fontSize: FontSize['3xl'],
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     marginBottom: Spacing['2xl'],
-    fontWeight: FontWeight.semibold,
   },
 
   // Request Card
@@ -362,10 +360,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   residentName: {
-    ...Typography.h3,
     fontSize: FontSize.lg,
-    color: Colors.textPrimary,
     fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
   },
   textProcessed: {
     color: Colors.textMuted,
@@ -404,7 +401,6 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   infoText: {
-    ...Typography.body,
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
   },
@@ -417,12 +413,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   changesLabel: {
-    ...Typography.label,
     fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     color: Colors.textSecondary,
   },
   changesText: {
-    ...Typography.body,
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     flex: 1,
@@ -435,7 +430,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing['6xl'],
   },
   emptyText: {
-    ...Typography.body,
     fontSize: FontSize.lg,
     color: Colors.textMuted,
     marginTop: Spacing.lg,
@@ -449,7 +443,6 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   loadingText: {
-    ...Typography.body,
     fontSize: FontSize.lg,
     color: Colors.textSecondary,
   },
@@ -463,7 +456,6 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   errorText: {
-    ...Typography.body,
     fontSize: FontSize.lg,
     color: Colors.error,
     textAlign: 'center',
