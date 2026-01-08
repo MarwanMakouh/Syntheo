@@ -21,6 +21,7 @@ interface ResidentState {
   isExpanded: boolean;
   checkedMedications: Set<number>;
   completedAt: Date | null;
+  medicationRounds: any[];
 }
 
 interface ResidentStates {
@@ -122,6 +123,9 @@ export default function MedicatierondeScreen() {
           isExpanded: false,
           checkedMedications: givenScheduleIds,
           completedAt: hasCompletedRounds ? completedAt : null,
+          medicationRounds: residentRounds.filter(round =>
+            allScheduleIds.includes(round.schedule_id)
+          ),
         };
       });
 
@@ -249,7 +253,7 @@ export default function MedicatierondeScreen() {
       });
 
       // Save to backend
-      await saveMedicationRoundsBulk({
+      const savedRounds = await saveMedicationRoundsBulk({
         resident_id: residentId,
         given_by: CURRENT_USER_ID,
         medications: medications,
@@ -262,6 +266,7 @@ export default function MedicatierondeScreen() {
           ...prev[residentId],
           isExpanded: false,
           completedAt: new Date(),
+          medicationRounds: savedRounds,
         },
       }));
 
@@ -331,6 +336,28 @@ export default function MedicatierondeScreen() {
     if (checkedCount === 0) return 'not-started';
     if (checkedCount === totalMedications) return 'completed';
     return 'in-progress';
+  };
+
+  const getResidentRoundColor = (residentId: number): 'red' | 'green' | null => {
+    const state = residentStates[residentId];
+
+    if (!state?.completedAt || !state.medicationRounds || state.medicationRounds.length === 0) {
+      return null;
+    }
+
+    const hasIssues = state.medicationRounds.some(round =>
+      round.status === 'missed' ||
+      round.status === 'refused' ||
+      round.status === 'delayed'
+    );
+
+    if (hasIssues) return 'red';
+
+    const allGiven = state.medicationRounds.every(round =>
+      round.status === 'given'
+    );
+
+    return allGiven ? 'green' : null;
   };
 
   const renderUncheckedMedicationModal = () => {
@@ -426,6 +453,8 @@ export default function MedicatierondeScreen() {
               isExpanded={residentStates[resident.resident_id]?.isExpanded || false}
               checkedMedications={residentStates[resident.resident_id]?.checkedMedications || new Set()}
               completedAt={residentStates[resident.resident_id]?.completedAt || null}
+              roundColor={getResidentRoundColor(resident.resident_id)}
+              medicationRounds={residentStates[resident.resident_id]?.medicationRounds || []}
               onToggle={() => handleToggle(resident.resident_id)}
               onSave={() => handleSave(resident.resident_id)}
               onToggleMedication={(scheduleId) =>

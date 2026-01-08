@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StatusIndicator } from './StatusIndicator';
 import { MedicationCheckbox } from './MedicationCheckbox';
+import { MedicationRoundNotesModal } from './MedicationRoundNotesModal';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
+import type { MedicationRound } from '@/types/medication';
 
 interface ResidentMedicationCardProps {
   resident: {
@@ -19,6 +22,8 @@ interface ResidentMedicationCardProps {
   isExpanded: boolean;
   checkedMedications: Set<number>;
   completedAt: Date | null;
+  roundColor: 'red' | 'green' | null;
+  medicationRounds: MedicationRound[];
   onToggle: () => void;
   onSave: () => void;
   onToggleMedication: (scheduleId: number) => void;
@@ -30,10 +35,14 @@ export function ResidentMedicationCard({
   isExpanded,
   checkedMedications,
   completedAt,
+  roundColor,
+  medicationRounds,
   onToggle,
   onSave,
   onToggleMedication,
 }: ResidentMedicationCardProps) {
+  const [notesModalVisible, setNotesModalVisible] = useState(false);
+
   const medicationCount = resident.medications.reduce(
     (count: number, med: any) => count + med.schedules.length,
     0
@@ -47,7 +56,9 @@ export function ResidentMedicationCard({
   };
 
   const handleHeaderPress = () => {
-    if (status !== 'completed') {
+    if (status === 'completed') {
+      setNotesModalVisible(true);
+    } else {
       onToggle();
     }
   };
@@ -106,9 +117,19 @@ export function ResidentMedicationCard({
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[
+      styles.card,
+      roundColor === 'red' && styles.cardRed,
+      roundColor === 'green' && styles.cardGreen,
+    ]}>
       {renderHeader()}
       {renderMedicationList()}
+      <MedicationRoundNotesModal
+        visible={notesModalVisible}
+        onClose={() => setNotesModalVisible(false)}
+        resident={resident}
+        medicationRounds={medicationRounds}
+      />
     </View>
   );
 }
@@ -177,5 +198,15 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.textOnPrimary,
+  },
+  cardRed: {
+    borderColor: Colors.error,
+    borderWidth: 2,
+    backgroundColor: '#FFE5E5',
+  },
+  cardGreen: {
+    borderColor: Colors.success,
+    borderWidth: 2,
+    backgroundColor: '#E5F5E5',
   },
 });
