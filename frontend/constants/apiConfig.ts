@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
     return 'http://localhost:8000/api';
   } else {
     // Change this IP if your computer's IP changes on the network
-    return 'http://192.168.1.XXX:8000/api';
+    return 'http://192.168.1.26:8000/api';
   }
 };
 
