@@ -7,11 +7,6 @@ import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
 import { NieuweMeldingModal } from '@/components';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { useAuth } from '@/contexts/AuthContext';
-
-// backend callen
-const getResidentById = (id: number): { resident_id: number; name: string } | undefined => undefined;
-const getUserById = (id: number): { user_id: number; name: string } | undefined => undefined;
-
 import { fetchResidents } from '@/Services/residentsApi';
 import type { Note } from '@/types/note';
 import type { Resident } from '@/types/resident';
@@ -81,7 +76,16 @@ export default function MeldingenScreen() {
   const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
   const [filters, setFilters] = useState({ urgentie: 'all', status: 'all' });
 
-  const { currentUser } = useAuth();
+  const { currentUser, allUsers } = useAuth();
+
+  // Helper functions to get resident and user by ID
+  const getResidentById = (id: number): Resident | undefined => {
+    return residents.find(r => r.resident_id === id);
+  };
+
+  const getUserById = (id: number): { user_id: number; name: string } | undefined => {
+    return allUsers?.find(u => u.user_id === id);
+  };
 
   // Fetch notes and residents from backend on mount
   useEffect(() => {
