@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Modal, TouchableOpacity, ScrollView, Pressable } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 
@@ -35,18 +35,20 @@ export function MeldingDetailsModal({ visible, onClose, melding, onSave }: Meldi
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      transparent={false}
+      animationType="fade"
+      transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        <ScrollView style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <MaterialIcons name="close" size={28} color={Colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.popup} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.container}>
+            <ScrollView style={styles.content}>
+              {/* Header */}
+              <View style={styles.header}>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <MaterialIcons name="close" size={28} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
 
           {/* Content Grid */}
           <View style={styles.grid}>
@@ -127,21 +129,41 @@ export function MeldingDetailsModal({ visible, onClose, melding, onSave }: Meldi
               <Text style={styles.saveButtonText}>Opslaan</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </View>
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  popup: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.xl,
+    width: '100%',
+    maxWidth: 600,
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
     paddingHorizontal: Spacing['2xl'],
-    paddingTop: 60,
+    paddingTop: Spacing.xl,
   },
   header: {
     flexDirection: 'row',

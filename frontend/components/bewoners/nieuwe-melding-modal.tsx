@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
   FlatList,
+  Pressable,
 } from 'react-native';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '@/constants';
 import type { Resident } from '@/types';
@@ -93,14 +94,16 @@ export function NieuweMeldingModal({ visible, onClose, onSave, residentId, resid
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      animationType="fade"
+      transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={styles.container}>
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {/* Header */}
-          <Text style={styles.title}>Nieuwe Melding</Text>
+      <Pressable style={styles.overlay} onPress={handleClose}>
+        <Pressable style={styles.popup} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.container}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+              {/* Header */}
+              <Text style={styles.title}>Nieuwe Melding</Text>
 
           {/* Bewoner Selector - Only show if no residentId is provided */}
           {!residentId && residents && (
@@ -218,33 +221,53 @@ export function NieuweMeldingModal({ visible, onClose, onSave, residentId, resid
               ))}
             </View>
           </View>
-        </ScrollView>
+            </ScrollView>
 
-        {/* Action Buttons */}
-        <View style={styles.actionContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
-            <Text style={styles.cancelButtonText}>Annuleer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Opslaan</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            {/* Action Buttons */}
+            <View style={styles.actionContainer}>
+              <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
+                <Text style={styles.cancelButtonText}>Annuleer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveButtonText}>Opslaan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  popup: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.xl,
+    width: '100%',
+    maxWidth: 600,
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: Spacing['2xl'],
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Spacing.xl,
   },
   title: {
     fontSize: FontSize['2xl'],
