@@ -11,7 +11,8 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
 import { NavigationBar } from '@/components';
-import { AnnouncementCreateModal } from '@/components/announcement-create-modal';
+import { AnnouncementCreatePopup } from '@/components/announcement-create-popup';
+import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
 import { formatDate } from '@/utils/date';
 import { fetchResidents } from '@/Services/residentsApi';
 import { fetchNotes } from '@/Services/notesApi';
@@ -32,6 +33,8 @@ export default function DashboardScreen() {
   const { refreshAnnouncements } = useAnnouncements();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
+  const [residentModalVisible, setResidentModalVisible] = useState(false);
+  const [selectedResident, setSelectedResident] = useState<any>(null);
 
   const [residents, setResidents] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
@@ -335,7 +338,11 @@ export default function DashboardScreen() {
   };
 
   const handleViewResident = (residentId: number) => {
-    router.push(`/(tabs)/bewoners/${residentId}`);
+    const resident = residents.find((r) => r.resident_id === residentId);
+    if (resident) {
+      setSelectedResident(resident);
+      setResidentModalVisible(true);
+    }
   };
 
   return (
@@ -433,12 +440,24 @@ export default function DashboardScreen() {
         )}
       </ScrollView>
 
-      {/* Aankondiging Modal */}
-      <AnnouncementCreateModal
+      {/* Aankondiging Popup */}
+      <AnnouncementCreatePopup
         visible={announcementModalVisible}
         onClose={() => setAnnouncementModalVisible(false)}
         onSend={handleSendAnnouncement}
         isLoading={isSendingAnnouncement}
+      />
+
+      {/* Resident Quick View Popup */}
+      <ResidentQuickViewPopup
+        visible={residentModalVisible}
+        onClose={() => {
+          setResidentModalVisible(false);
+          setSelectedResident(null);
+        }}
+        resident={selectedResident}
+        roomNumber={selectedResident ? rooms.find((r) => r.resident_id === selectedResident.resident_id)?.room_number : undefined}
+        urgentNotes={selectedResident ? notes.filter((n) => n.resident_id === selectedResident.resident_id && n.urgency === 'Hoog' && !n.is_resolved) : []}
       />
     </View>
   );

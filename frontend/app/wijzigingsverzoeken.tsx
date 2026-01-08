@@ -12,21 +12,28 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
 import { NavigationBar } from '@/components';
+import { ChangeRequestPopup } from '@/components/change-request-popup';
 import { formatDate } from '@/utils/date';
-import { fetchChangeRequests } from '@/Services/changeRequestsApi';
+import { fetchChangeRequests, approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
 import { fetchResidents } from '@/Services/residentsApi';
 import { mapUrgencyFromBackend } from '@/Services/noteMapper';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 // component state (loaded from API)
 
 export default function WijzigingsverzookenScreen() {
   const router = useRouter();
+  const { currentUser } = useAuth();
   const [changeRequestsData, setChangeRequestsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [residents, setResidents] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
     loadChangeRequests();
@@ -67,7 +74,49 @@ export default function WijzigingsverzookenScreen() {
   };
 
   const handleRequestPress = (requestId: number) => {
-    router.push(`/wijzigingsverzoek-detail?id=${requestId}`);
+    const request = changeRequestsData.find((r) => r.request_id === requestId);
+    if (request) {
+      setSelectedRequest(request);
+      setPopupVisible(true);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!selectedRequest || !currentUser) return;
+
+    try {
+      setIsApproving(true);
+      await approveChangeRequest(selectedRequest.request_id, currentUser.user_id);
+      alert('Wijzigingsverzoek goedgekeurd');
+      setPopupVisible(false);
+      setSelectedRequest(null);
+      // Reload data
+      await loadChangeRequests();
+    } catch (e) {
+      console.error('Failed to approve request:', e);
+      alert('Kon verzoek niet goedkeuren');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedRequest || !currentUser) return;
+
+    try {
+      setIsRejecting(true);
+      await rejectChangeRequest(selectedRequest.request_id, currentUser.user_id);
+      alert('Wijzigingsverzoek afgekeurd');
+      setPopupVisible(false);
+      setSelectedRequest(null);
+      // Reload data
+      await loadChangeRequests();
+    } catch (e) {
+      console.error('Failed to reject request:', e);
+      alert('Kon verzoek niet afkeuren');
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -288,6 +337,23 @@ export default function WijzigingsverzookenScreen() {
             </View>
           )}
       </ScrollView>
+
+      {/* Change Request Popup */}
+      <ChangeRequestPopup
+        visible={popupVisible}
+        onClose={() => {
+          setPopupVisible(false);
+          setSelectedRequest(null);
+        }}
+        request={selectedRequest}
+        resident={selectedRequest ? residents.find((r) => r.resident_id === selectedRequest.resident_id) : null}
+        requester={selectedRequest ? users.find((u) => u.user_id === selectedRequest.requester_id) : null}
+        reviewer={selectedRequest?.reviewer_id ? users.find((u) => u.user_id === selectedRequest.reviewer_id) : undefined}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        isApproving={isApproving}
+        isRejecting={isRejecting}
+      />
     </View>
   );
 }
