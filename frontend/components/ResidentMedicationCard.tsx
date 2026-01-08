@@ -67,11 +67,10 @@ export function ResidentMedicationCard({
     <TouchableOpacity
       style={styles.header}
       onPress={handleHeaderPress}
-      disabled={status === 'completed'}
-      activeOpacity={status === 'completed' ? 1 : 0.7}
+      activeOpacity={0.7}
     >
       <View style={styles.headerLeft}>
-        <StatusIndicator status={status} />
+        <StatusIndicator status={status} roundColor={roundColor} />
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
             {resident.room ? `Kamer ${resident.room.room_number}` : 'Kamer onbekend'} - {resident.name}
