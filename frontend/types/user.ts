@@ -8,6 +8,7 @@ export interface User {
   role: UserRole;
   floor_id: number;
   is_active?: boolean;
+  first_login?: boolean;
   created_at: string;
   updated_at: string;
 }

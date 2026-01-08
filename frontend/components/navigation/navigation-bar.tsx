@@ -1,25 +1,20 @@
 import { Image } from 'expo-image';
-import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Platform, Modal, Pressable } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
-import { Colors, Spacing, FontSize, FontWeight, LineHeight } from '@/constants';
-import { useRole } from '@/contexts/RoleContext';
+import { Colors, Spacing, FontSize, FontWeight, LineHeight, BorderRadius } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/contexts/AnnouncementsContext';
 import { AnnouncementsDropdown } from '@/components/announcements-dropdown';
 import { useState } from 'react';
 
-// backend callen
-const CURRENT_USER = {
-  name: 'User',
-  role: 'Verpleegster'
-};
-
 export function NavigationBar() {
   const router = useRouter();
   const segments = useSegments();
-  const { selectedRole, clearRole } = useRole();
+  const { currentUser, setCurrentUser } = useAuth();
   const { unreadCount } = useAnnouncements();
   const [announcementsModalVisible, setAnnouncementsModalVisible] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
   const isDetailPage =
@@ -32,9 +27,18 @@ export function NavigationBar() {
     setAnnouncementsModalVisible(true);
   };
 
-  const handleLogout = () => {
-    clearRole();
-    router.replace('/role-selection');
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(false);
+    setCurrentUser(null);
+    router.replace('/login');
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
   };
 
   const handleBack = () => {
@@ -61,10 +65,10 @@ export function NavigationBar() {
       {Platform.OS !== 'web' && (
         <View style={styles.userInfoCentered}>
           <Text style={styles.userName}>
-            {CURRENT_USER.name}
+            {currentUser?.name || 'User'}
           </Text>
           <Text style={styles.userRole}>
-            {selectedRole || CURRENT_USER.role}
+            {currentUser?.role || 'Verpleegster'}
           </Text>
         </View>
       )}
@@ -75,10 +79,10 @@ export function NavigationBar() {
         {Platform.OS === 'web' && (
           <View style={styles.userInfo}>
             <Text style={styles.userName}>
-              {CURRENT_USER.name}
+              {currentUser?.name || 'User'}
             </Text>
             <Text style={styles.userRole}>
-              {selectedRole || CURRENT_USER.role}
+              {currentUser?.role || 'Verpleegster'}
             </Text>
           </View>
         )}
@@ -100,7 +104,7 @@ export function NavigationBar() {
         </TouchableOpacity>
 
         {/* Logout icon */}
-        <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+        <TouchableOpacity onPress={handleLogoutClick} style={styles.iconButton}>
           <MaterialIcons
             name="exit-to-app"
             size={26}
@@ -114,6 +118,40 @@ export function NavigationBar() {
         visible={announcementsModalVisible}
         onClose={() => setAnnouncementsModalVisible(false)}
       />
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        visible={showLogoutConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={handleLogoutCancel}
+      >
+        <Pressable style={styles.modalOverlay} onPress={handleLogoutCancel}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <MaterialIcons name="logout" size={48} color={Colors.error} />
+              <Text style={styles.modalTitle}>Uitloggen</Text>
+            </View>
+            <Text style={styles.modalMessage}>
+              Weet je zeker dat je wilt uitloggen?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={handleLogoutCancel}
+              >
+                <Text style={styles.modalCancelText}>Annuleren</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleLogoutConfirm}
+              >
+                <Text style={styles.modalConfirmText}>Uitloggen</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -196,5 +234,73 @@ const styles = StyleSheet.create({
     lineHeight: LineHeight.tight,
     color: Colors.textPrimary,
     opacity: 0.6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing['2xl'],
+    width: '90%',
+    maxWidth: 400,
+    ...Platform.select({
+      web: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      default: {
+        elevation: 8,
+      },
+    }),
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.md,
+  },
+  modalMessage: {
+    fontSize: FontSize.lg,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing['2xl'],
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textSecondary,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textOnPrimary,
   },
 });
