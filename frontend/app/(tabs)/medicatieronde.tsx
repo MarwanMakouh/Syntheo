@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DagdeelDropdown } from '@/components/DagdeelDropdown';
 import { VerdiepingDropdown } from '@/components/VerdiepingDropdown';
 import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
+import { RoleGuard } from '@/components';
 import { fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
 import { saveMedicationRoundsBulk, fetchMedicationRounds } from '@/Services/medicationRoundsApi';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
@@ -430,43 +431,45 @@ export default function MedicatierondeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <DagdeelDropdown value={selectedDagdeel} onChange={handleDagdeelChange} />
-        <VerdiepingDropdown value={selectedVerdieping} onChange={handleVerdiepingChange} />
+    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <DagdeelDropdown value={selectedDagdeel} onChange={handleDagdeelChange} />
+          <VerdiepingDropdown value={selectedVerdieping} onChange={handleVerdiepingChange} />
+        </View>
+
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          {filteredResidents.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>
+                Geen bewoners met medicatie voor {selectedDagdeel.toLowerCase()}
+                {selectedVerdieping !== 'Alle verdiepingen' && ` op ${selectedVerdieping.toLowerCase()}`}
+              </Text>
+            </View>
+          ) : (
+            filteredResidents.map((resident: any) => (
+              <ResidentMedicationCard
+                key={resident.resident_id}
+                resident={resident}
+                status={getResidentStatus(resident.resident_id)}
+                isExpanded={residentStates[resident.resident_id]?.isExpanded || false}
+                checkedMedications={residentStates[resident.resident_id]?.checkedMedications || new Set()}
+                completedAt={residentStates[resident.resident_id]?.completedAt || null}
+                roundColor={getResidentRoundColor(resident.resident_id)}
+                medicationRounds={residentStates[resident.resident_id]?.medicationRounds || []}
+                onToggle={() => handleToggle(resident.resident_id)}
+                onSave={() => handleSave(resident.resident_id)}
+                onToggleMedication={(scheduleId) =>
+                  handleToggleMedication(resident.resident_id, scheduleId)
+                }
+              />
+            ))
+          )}
+        </ScrollView>
+
+        {renderUncheckedMedicationModal()}
       </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {filteredResidents.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
-              Geen bewoners met medicatie voor {selectedDagdeel.toLowerCase()}
-              {selectedVerdieping !== 'Alle verdiepingen' && ` op ${selectedVerdieping.toLowerCase()}`}
-            </Text>
-          </View>
-        ) : (
-          filteredResidents.map((resident: any) => (
-            <ResidentMedicationCard
-              key={resident.resident_id}
-              resident={resident}
-              status={getResidentStatus(resident.resident_id)}
-              isExpanded={residentStates[resident.resident_id]?.isExpanded || false}
-              checkedMedications={residentStates[resident.resident_id]?.checkedMedications || new Set()}
-              completedAt={residentStates[resident.resident_id]?.completedAt || null}
-              roundColor={getResidentRoundColor(resident.resident_id)}
-              medicationRounds={residentStates[resident.resident_id]?.medicationRounds || []}
-              onToggle={() => handleToggle(resident.resident_id)}
-              onSave={() => handleSave(resident.resident_id)}
-              onToggleMedication={(scheduleId) =>
-                handleToggleMedication(resident.resident_id, scheduleId)
-              }
-            />
-          ))
-        )}
-      </ScrollView>
-
-      {renderUncheckedMedicationModal()}
-    </View>
+    </RoleGuard>
   );
 }
 

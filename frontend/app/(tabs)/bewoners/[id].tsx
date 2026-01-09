@@ -20,6 +20,7 @@ import {
   MedicatieSchema,
   MedicatieHistoriek,
   DieetInformatie,
+  RoleGuard,
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
@@ -378,33 +379,35 @@ export default function BewonerInfoScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Bewoner Header */}
-        <BewonerDetailHeader
-          resident={resident}
-          roomNumber={roomData?.room_number || null}
-          floorNumber={roomData?.floor_id || null}
+    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+      <View style={styles.container}>
+        <ScrollView style={styles.scrollView}>
+          {/* Bewoner Header */}
+          <BewonerDetailHeader
+            resident={resident}
+            roomNumber={roomData?.room_number || null}
+            floorNumber={roomData?.floor_id || null}
+          />
+
+          {/* Tabs */}
+          <BewonerTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+
+          {/* Tab Content */}
+          {renderTabContent()}
+        </ScrollView>
+
+        {/* Nieuwe Melding Modal */}
+        <NieuweMeldingModal
+          visible={showNewNoteModal}
+          onClose={() => setShowNewNoteModal(false)}
+          onSave={handleSaveNote}
+          residentId={Number(id)}
         />
-
-        {/* Tabs */}
-        <BewonerTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-
-        {/* Tab Content */}
-        {renderTabContent()}
-      </ScrollView>
-
-      {/* Nieuwe Melding Modal */}
-      <NieuweMeldingModal
-        visible={showNewNoteModal}
-        onClose={() => setShowNewNoteModal(false)}
-        onSave={handleSaveNote}
-        residentId={Number(id)}
-      />
-    </View>
+      </View>
+    </RoleGuard>
   );
 }
 

@@ -4,7 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
 import { MeldingCard } from '@/components/MeldingCard';
 import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
-import { NieuweMeldingModal } from '@/components';
+import { NieuweMeldingModal, RoleGuard } from '@/components';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchResidents } from '@/Services/residentsApi';
@@ -229,61 +229,63 @@ export default function MeldingenScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header with Filter and New Button */}
-      <View style={styles.header}>
-        <MeldingenFilterDropdown onFilterChange={handleFilterChange} />
-        <TouchableOpacity style={styles.newButton} onPress={handleNewMelding}>
-          <MaterialIcons name="add" size={20} color="#FFFFFF" />
-          <Text style={styles.newButtonText}>Nieuwe Melding</Text>
-        </TouchableOpacity>
-      </View>
+    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+      <View style={styles.container}>
+        {/* Header with Filter and New Button */}
+        <View style={styles.header}>
+          <MeldingenFilterDropdown onFilterChange={handleFilterChange} />
+          <TouchableOpacity style={styles.newButton} onPress={handleNewMelding}>
+            <MaterialIcons name="add" size={20} color="#FFFFFF" />
+            <Text style={styles.newButtonText}>Nieuwe Melding</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Meldingen List */}
-      <ScrollView style={styles.meldingenList}>
-        {filteredNotes.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialIcons name="inbox" size={64} color={Colors.textSecondary} />
-            <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
-          </View>
-        ) : (
-          filteredNotes.map((note) => {
-            const resident = getResidentById(note.resident_id);
-            const status = getStatus(note);
+        {/* Meldingen List */}
+        <ScrollView style={styles.meldingenList}>
+          {filteredNotes.length === 0 ? (
+            <View style={styles.emptyState}>
+              <MaterialIcons name="inbox" size={64} color={Colors.textSecondary} />
+              <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
+            </View>
+          ) : (
+            filteredNotes.map((note) => {
+              const resident = getResidentById(note.resident_id);
+              const status = getStatus(note);
 
-            return (
-              <MeldingCard
-                key={note.note_id}
-                residentName={resident?.name || 'Onbekend'}
-                description={note.content}
-                timeAgo={getTimeAgo(note.created_at)}
-                urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
-                status={status}
-                onPress={() => handleOpenMelding(note)}
-              />
-            );
-          })
+              return (
+                <MeldingCard
+                  key={note.note_id}
+                  residentName={resident?.name || 'Onbekend'}
+                  description={note.content}
+                  timeAgo={getTimeAgo(note.created_at)}
+                  urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
+                  status={status}
+                  onPress={() => handleOpenMelding(note)}
+                />
+              );
+            })
+          )}
+        </ScrollView>
+
+        {/* Details Modal */}
+        {selectedMelding && (
+          <MeldingDetailsModal
+            visible={modalVisible}
+            onClose={handleCloseModal}
+            melding={selectedMelding}
+            onSave={handleSaveMelding}
+          />
         )}
-      </ScrollView>
 
-      {/* Details Modal */}
-      {selectedMelding && (
-        <MeldingDetailsModal
-          visible={modalVisible}
-          onClose={handleCloseModal}
-          melding={selectedMelding}
-          onSave={handleSaveMelding}
+        {/* Nieuwe Melding Modal */}
+        <NieuweMeldingModal
+          visible={showNewMeldingModal}
+          onClose={() => setShowNewMeldingModal(false)}
+          onSave={handleSaveNewMelding}
+          residents={residents}
         />
-      )}
-
-      {/* Nieuwe Melding Modal */}
-      <NieuweMeldingModal
-        visible={showNewMeldingModal}
-        onClose={() => setShowNewMeldingModal(false)}
-        onSave={handleSaveNewMelding}
-        residents={residents}
-      />
-    </View>
+      </View>
+    </RoleGuard>
   );
 }
 
