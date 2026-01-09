@@ -35,11 +35,19 @@ export default function DashboardAuditLogsScreen() {
     try {
       setLoading(true);
       setError(null);
-      const { items } = await fetchAuditLogs({ page: 1, per_page: 1000 });
+      console.log('Starting to load audit logs...');
+      const { items } = await fetchAuditLogs({ page: 1, per_page: 200 });
+      console.log('Loaded audit logs:', items.length);
       setAuditLogs(items);
-    } catch (err) {
-      setError('Fout bij het laden van audit logs');
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Onbekende fout';
+      setError(`Fout bij het laden van audit logs: ${errorMessage}`);
       console.error('Error loading audit logs:', err);
+      console.error('Error details:', {
+        message: err?.message,
+        stack: err?.stack,
+        response: err?.response
+      });
     } finally {
       setLoading(false);
     }
@@ -109,7 +117,6 @@ export default function DashboardAuditLogsScreen() {
               </>
             )}
           </View>
-<<<<<<< Updated upstream
 
           {/* Loading State */}
           {loading ? (
@@ -147,8 +154,6 @@ export default function DashboardAuditLogsScreen() {
               {/* No pagination controls */}
             </>
           )}
-=======
->>>>>>> Stashed changes
         </ScrollView>
       </AdminLayout>
     </RoleGuard>
