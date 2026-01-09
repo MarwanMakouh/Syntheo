@@ -22,6 +22,7 @@ import {
   MedicatieSchema,
   MedicatieHistoriek,
   DieetInformatie,
+  RoleGuard,
   type TabType,
 } from '@/components';
 import { formatDate } from '@/utils';
@@ -397,11 +398,15 @@ export default function BewonerInfoScreen() {
           floorNumber={roomData?.floor_id || null}
         />
 
-        {/* Tabs */}
-        <BewonerTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+          {/* Tabs */}
+          <BewonerTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+
+          {/* Tab Content */}
+          {renderTabContent()}
+        </ScrollView>
 
         {/* Tab Content */}
         {renderTabContent()}

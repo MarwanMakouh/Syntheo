@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout, ConfirmationModal, AssignResidentModal, RoomsFilters } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { RoomCard } from '@/components/admin/room-card';
 import { WarningBanner } from '@/components/admin/warning-banner';
 import { fetchRooms, linkResidentToRoom, unlinkResidentFromRoom } from '@/Services/roomsApi';
@@ -166,122 +167,124 @@ export default function DashboardKamersScreen() {
     : undefined;
 
   return (
-    <AdminLayout activeRoute="kamers">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.pageTitle}>Kamerbeheer</Text>
-            <Text style={styles.pageSubtitle}>
-              Beheer kamertoewijzingen van bewoners
-            </Text>
-          </View>
-
-          {/* Loading State */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Kamers laden...</Text>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="kamers">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.pageTitle}>Kamerbeheer</Text>
+              <Text style={styles.pageSubtitle}>
+                Beheer kamertoewijzingen van bewoners
+              </Text>
             </View>
-          ) : error ? (
-            /* Error State */
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              {/* Warning Banner */}
-              {residentsWithoutRooms.length > 0 && (
-                <WarningBanner
-                  message={`${residentsWithoutRooms.length} bewoner${
-                    residentsWithoutRooms.length > 1 ? 's' : ''
-                  } zonder kamertoewijzing`}
-                  badges={residentsWithoutRooms.map((r) => r.name)}
-                />
-              )}
 
-              {/* Filters */}
-              <RoomsFilters
-                floorFilter={floorFilter}
-                searchQuery={searchQuery}
-                onFloorFilterChange={setFloorFilter}
-                onSearchChange={setSearchQuery}
-              />
-
-              {/* Rooms Grid */}
-              {filteredRooms.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <MaterialIcons name="meeting-room" size={64} color={Colors.textSecondary} />
-                  <Text style={styles.emptyText}>Geen kamers gevonden</Text>
-                  <Text style={styles.emptySubtext}>
-                    Probeer je filters aan te passen of verwijder de zoekterm.
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.grid}>
-                  {filteredRooms.map((room) => {
-                  const isOccupied = room.resident_id !== null;
-                  const residentName = getResidentName(room.resident_id);
-                  const residentStatus = room.resident_id
-                    ? getResidentStatus(room.resident_id)
-                    : undefined;
-
-                  return (
-                    <View key={room.room_id} style={styles.cardWrapper}>
-                      <RoomCard
-                        roomNumber={room.room_number}
-                        isOccupied={isOccupied}
-                        residentName={residentName}
-                        residentStatus={residentStatus}
-                        onAssign={() => handleAssignResident(room.room_id)}
-                        onUnlink={() => handleUnlinkResident(room.room_id, residentName)}
-                      />
-                    </View>
-                  );
-                })}
+            {/* Loading State */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Kamers laden...</Text>
               </View>
-              )}
-            </>
-          )}
-        </View>
-      </ScrollView>
+            ) : error ? (
+              /* Error State */
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                  <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                {/* Warning Banner */}
+                {residentsWithoutRooms.length > 0 && (
+                  <WarningBanner
+                    message={`${residentsWithoutRooms.length} bewoner${
+                      residentsWithoutRooms.length > 1 ? 's' : ''
+                    } zonder kamertoewijzing`}
+                    badges={residentsWithoutRooms.map((r) => r.name)}
+                  />
+                )}
 
-      {/* Unlink Confirmation Modal */}
-      <ConfirmationModal
-        visible={showUnlinkModal}
-        onClose={() => {
-          setShowUnlinkModal(false);
-          setSelectedRoom(null);
-        }}
-        onConfirm={confirmUnlinkResident}
-        title="Bewoner Loskoppelen"
-        message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_number}? Deze actie kan later ongedaan worden gemaakt.`}
-        confirmText="Loskoppelen"
-        cancelText="Annuleren"
-        isLoading={isProcessing}
-        type="warning"
-      />
+                {/* Filters */}
+                <RoomsFilters
+                  floorFilter={floorFilter}
+                  searchQuery={searchQuery}
+                  onFloorFilterChange={setFloorFilter}
+                  onSearchChange={setSearchQuery}
+                />
 
-      {/* Assign Resident Modal */}
-      <AssignResidentModal
-        visible={showAssignModal}
-        onClose={() => {
-          setShowAssignModal(false);
-          setSelectedRoom(null);
-          setSelectedResidentId(null);
-        }}
-        onConfirm={confirmAssignResident}
-        roomNumber={selectedRoom?.room_number || ''}
-        availableResidents={residentsWithoutRooms}
-        selectedResidentId={selectedResidentId}
-        onSelectResident={handleSelectResident}
-        isLoading={isProcessing}
-      />
-    </AdminLayout>
+                {/* Rooms Grid */}
+                {filteredRooms.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <MaterialIcons name="meeting-room" size={64} color={Colors.textSecondary} />
+                    <Text style={styles.emptyText}>Geen kamers gevonden</Text>
+                    <Text style={styles.emptySubtext}>
+                      Probeer je filters aan te passen of verwijder de zoekterm.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.grid}>
+                    {filteredRooms.map((room) => {
+                    const isOccupied = room.resident_id !== null;
+                    const residentName = getResidentName(room.resident_id);
+                    const residentStatus = room.resident_id
+                      ? getResidentStatus(room.resident_id)
+                      : undefined;
+
+                    return (
+                      <View key={room.room_id} style={styles.cardWrapper}>
+                        <RoomCard
+                          roomNumber={room.room_number}
+                          isOccupied={isOccupied}
+                          residentName={residentName}
+                          residentStatus={residentStatus}
+                          onAssign={() => handleAssignResident(room.room_id)}
+                          onUnlink={() => handleUnlinkResident(room.room_id, residentName)}
+                        />
+                      </View>
+                    );
+                  })}
+                </View>
+                )}
+              </>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Unlink Confirmation Modal */}
+        <ConfirmationModal
+          visible={showUnlinkModal}
+          onClose={() => {
+            setShowUnlinkModal(false);
+            setSelectedRoom(null);
+          }}
+          onConfirm={confirmUnlinkResident}
+          title="Bewoner Loskoppelen"
+          message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_number}? Deze actie kan later ongedaan worden gemaakt.`}
+          confirmText="Loskoppelen"
+          cancelText="Annuleren"
+          isLoading={isProcessing}
+          type="warning"
+        />
+
+        {/* Assign Resident Modal */}
+        <AssignResidentModal
+          visible={showAssignModal}
+          onClose={() => {
+            setShowAssignModal(false);
+            setSelectedRoom(null);
+            setSelectedResidentId(null);
+          }}
+          onConfirm={confirmAssignResident}
+          roomNumber={selectedRoom?.room_number || ''}
+          availableResidents={residentsWithoutRooms}
+          selectedResidentId={selectedResidentId}
+          onSelectResident={handleSelectResident}
+          isLoading={isProcessing}
+        />
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 

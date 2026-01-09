@@ -1,6 +1,9 @@
 // Navigation
 export * from './navigation/navigation-bar';
 
+// Shared Components
+export * from './shared/base-sidebar-layout';
+
 // UI Components
 export * from './ui';
 
@@ -9,6 +12,9 @@ export * from './shared/base-sidebar-layout';
 export * from './staff';
 export * from './kitchen';
 export * from './admin';
+
+// Auth Components
+export * from './RoleGuard';
 
 // Announcement Components
 export * from './announcements';

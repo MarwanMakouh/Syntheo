@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout, ResidentFormModal, ConfirmationModal, ResidentDetailsModal } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { ResidentCard } from '@/components/admin/resident-card';
 import { ResidentsFilters } from '@/components/admin/residents-filters';
 import { fetchResidents, createResident, updateResident, deleteResident } from '@/Services/residentsApi';
@@ -202,121 +203,123 @@ export default function DashboardBewonersScreen() {
 
 
   return (
-    <AdminLayout activeRoute="bewoners">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.pageTitle}>Bewoners Beheren</Text>
-            <TouchableOpacity style={styles.newButton} onPress={handleNewResident}>
-              <MaterialIcons name="add" size={20} color={Colors.background} />
-              <Text style={styles.newButtonText}>Nieuwe Bewoner</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Loading State */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Bewoners laden...</Text>
-            </View>
-          ) : error ? (
-            /* Error State */
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadResidents}>
-                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="bewoners">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.pageTitle}>Bewoners Beheren</Text>
+              <TouchableOpacity style={styles.newButton} onPress={handleNewResident}>
+                <MaterialIcons name="add" size={20} color={Colors.background} />
+                <Text style={styles.newButtonText}>Nieuwe Bewoner</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <>
-              {/* Filters */}
-              <ResidentsFilters
-                roomFilter={roomFilter}
-                allergyFilter={allergyFilter}
-                sortOrder={sortOrder}
-                searchQuery={searchQuery}
-                onRoomFilterChange={setRoomFilter}
-                onAllergyFilterChange={setAllergyFilter}
-                onSortOrderChange={setSortOrder}
-                onSearchChange={setSearchQuery}
-              />
 
-              {/* Residents Grid */}
-              {filteredResidents.length === 0 ? (
-            <View style={styles.emptyState}>
-              <MaterialIcons name="person-off" size={64} color={Colors.textSecondary} />
-              <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
-              <Text style={styles.emptySubtext}>
-                Probeer je filters aan te passen of voeg een nieuwe bewoner toe.
-              </Text>
-            </View>
-              ) : (
-                <View style={styles.grid}>
-                  {filteredResidents.map((resident) => {
-                    const room = getRoomForResident(resident);
-                    return (
-                      <View key={resident.resident_id} style={styles.cardWrapper}>
-                        <ResidentCard
-                          resident={resident}
-                          roomNumber={room?.room_id.toString()}
-                          age={calculateAge(resident.date_of_birth)}
-                          hasAllergies={hasAllergies(resident)}
-                          onView={() => handleViewResident(resident)}
-                          onEdit={() => handleEditResident(resident)}
-                          onDelete={() => handleDeleteResident(resident)}
-                        />
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </>
-          )}
-        </View>
-      </ScrollView>
+            {/* Loading State */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Bewoners laden...</Text>
+              </View>
+            ) : error ? (
+              /* Error State */
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadResidents}>
+                  <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                {/* Filters */}
+                <ResidentsFilters
+                  roomFilter={roomFilter}
+                  allergyFilter={allergyFilter}
+                  sortOrder={sortOrder}
+                  searchQuery={searchQuery}
+                  onRoomFilterChange={setRoomFilter}
+                  onAllergyFilterChange={setAllergyFilter}
+                  onSortOrderChange={setSortOrder}
+                  onSearchChange={setSearchQuery}
+                />
 
-      {/* Resident Form Modal */}
-      <ResidentFormModal
-        visible={showResidentModal}
-        onClose={() => {
-          setShowResidentModal(false);
-          setEditingResident(null);
-        }}
-        onSubmit={handleSubmitResident}
-        isLoading={isCreating}
-        resident={editingResident || undefined}
-      />
+                {/* Residents Grid */}
+                {filteredResidents.length === 0 ? (
+              <View style={styles.emptyState}>
+                <MaterialIcons name="person-off" size={64} color={Colors.textSecondary} />
+                <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
+                <Text style={styles.emptySubtext}>
+                  Probeer je filters aan te passen of voeg een nieuwe bewoner toe.
+                </Text>
+              </View>
+                ) : (
+                  <View style={styles.grid}>
+                    {filteredResidents.map((resident) => {
+                      const room = getRoomForResident(resident);
+                      return (
+                        <View key={resident.resident_id} style={styles.cardWrapper}>
+                          <ResidentCard
+                            resident={resident}
+                            roomNumber={room?.room_id.toString()}
+                            age={calculateAge(resident.date_of_birth)}
+                            hasAllergies={hasAllergies(resident)}
+                            onView={() => handleViewResident(resident)}
+                            onEdit={() => handleEditResident(resident)}
+                            onDelete={() => handleDeleteResident(resident)}
+                          />
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </ScrollView>
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        visible={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setResidentToDelete(null);
-        }}
-        onConfirm={confirmDelete}
-        title="Bewoner Verwijderen"
-        message={`Weet je zeker dat je ${residentToDelete?.name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
-        confirmText="Verwijderen"
-        cancelText="Annuleren"
-        isLoading={isDeleting}
-        type="danger"
-      />
+        {/* Resident Form Modal */}
+        <ResidentFormModal
+          visible={showResidentModal}
+          onClose={() => {
+            setShowResidentModal(false);
+            setEditingResident(null);
+          }}
+          onSubmit={handleSubmitResident}
+          isLoading={isCreating}
+          resident={editingResident || undefined}
+        />
 
-      {/* Resident Details Modal */}
-      <ResidentDetailsModal
-        visible={showDetailsModal}
-        onClose={() => {
-          setShowDetailsModal(false);
-          setViewingResident(null);
-        }}
-        resident={viewingResident}
-        roomNumber={viewingResident ? getRoomForResident(viewingResident)?.room_id.toString() : undefined}
-        age={viewingResident ? calculateAge(viewingResident.date_of_birth) : undefined}
-      />
-    </AdminLayout>
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          visible={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setResidentToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          title="Bewoner Verwijderen"
+          message={`Weet je zeker dat je ${residentToDelete?.name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+          confirmText="Verwijderen"
+          cancelText="Annuleren"
+          isLoading={isDeleting}
+          type="danger"
+        />
+
+        {/* Resident Details Modal */}
+        <ResidentDetailsModal
+          visible={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setViewingResident(null);
+          }}
+          resident={viewingResident}
+          roomNumber={viewingResident ? getRoomForResident(viewingResident)?.room_id.toString() : undefined}
+          age={viewingResident ? calculateAge(viewingResident.date_of_birth) : undefined}
+        />
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 

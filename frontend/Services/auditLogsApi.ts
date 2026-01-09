@@ -10,8 +10,9 @@ const mapBackendToFrontend = (item: any): AuditLog => {
   const timestamp = item.created_at ?? item.timestamp ?? '';
   const user_name = item.user?.name ?? item.user_name ?? (item.user_id ? `#${item.user_id}` : 'Systeem');
 
-  // entity_type: try human-friendly name
-  let entity_type = item.auditable_type ?? item.entity_type ?? '';
+  // entity_type: prefer the human-friendly display name from backend
+  let entity_type = item.entity_type ?? item.auditable_type ?? '';
+  // If it's still a fully qualified class name, extract the basename
   if (entity_type && entity_type.includes('\\')) {
     entity_type = entity_type.split('\\').pop() ?? entity_type;
   }

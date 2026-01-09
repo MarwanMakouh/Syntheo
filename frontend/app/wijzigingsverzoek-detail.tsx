@@ -12,7 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, FontSize, FontWeight } from '@/constants';
-import { NavigationBar } from '@/components';
+import { NavigationBar, RoleGuard } from '@/components';
 import { formatDate } from '@/utils/date';
 import { fetchChangeRequests, approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -217,15 +217,16 @@ export default function WijzigingsverzoekDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <NavigationBar />
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.header}>
+    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+      <SafeAreaView style={styles.safeArea}>
+        <NavigationBar />
+        <View style={styles.container}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header */}
+            <View style={styles.header}>
             <View style={styles.headerTop}>
               <Text style={styles.pageTitle}>Wijzigingsverzoek</Text>
               <View
@@ -363,9 +364,10 @@ export default function WijzigingsverzoekDetailScreen() {
               </TouchableOpacity>
             </View>
           )}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    </RoleGuard>
   );
 }
 

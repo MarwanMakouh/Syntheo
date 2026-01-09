@@ -105,107 +105,109 @@ export default function DashboardAnnouncementsScreen() {
   }, [announcements, searchQuery, sort, users]);
 
   return (
-    <AdminLayout activeRoute="announcements">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.titleContainer}>
-              <MaterialIcons name="campaign" size={32} color={Colors.primary} />
-              <Text style={styles.pageTitle}>Aankondigingen</Text>
-            </View>
-            <Text style={styles.breadcrumb}>Home / Aankondigingen</Text>
-          </View>
-
-          <View style={styles.toolbar}>
-            <View style={styles.searchBox}>
-              <MaterialIcons name="search" size={18} color={Colors.textSecondary} />
-              <TextInput
-                placeholder="Zoek titel, tekst of auteur"
-                placeholderTextColor={Colors.textSecondary}
-                style={styles.searchInput}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-            <View style={styles.toolbarRight}>
-              <View style={styles.segmented}> 
-                <TouchableOpacity
-                  style={[styles.segmentButton, sort === 'newest' ? styles.segmentButtonActive : null]}
-                  onPress={() => setSort('newest')}
-                  accessibilityLabel="Sorteer op nieuwste"
-                >
-                  <MaterialIcons name="arrow-upward" size={16} color={sort === 'newest' ? Colors.background : Colors.textSecondary} />
-                  <Text style={[styles.segmentText, sort === 'newest' ? styles.segmentTextActive : null]}>Nieuwst</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.segmentButton, sort === 'oldest' ? styles.segmentButtonActive : null]}
-                  onPress={() => setSort('oldest')}
-                  accessibilityLabel="Sorteer op oudste"
-                >
-                  <MaterialIcons name="arrow-downward" size={16} color={sort === 'oldest' ? Colors.background : Colors.textSecondary} />
-                  <Text style={[styles.segmentText, sort === 'oldest' ? styles.segmentTextActive : null]}>Oudst</Text>
-                </TouchableOpacity>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="announcements">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <View style={styles.titleContainer}>
+                <MaterialIcons name="campaign" size={32} color={Colors.primary} />
+                <Text style={styles.pageTitle}>Aankondigingen</Text>
               </View>
+              <Text style={styles.breadcrumb}>Home / Aankondigingen</Text>
+            </View>
 
-              <TouchableOpacity style={styles.newButton} onPress={() => setModalVisible(true)}>
-                <MaterialIcons name="add" size={20} color={Colors.background} />
-                <Text style={styles.newButtonText}>Nieuwe</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Aankondigingen laden...</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <View style={styles.statsContainer}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statLabel}>Totaal</Text>
-                  <Text style={styles.statValue}>{stats.total}</Text>
-                </View>
+            <View style={styles.toolbar}>
+              <View style={styles.searchBox}>
+                <MaterialIcons name="search" size={18} color={Colors.textSecondary} />
+                <TextInput
+                  placeholder="Zoek titel, tekst of auteur"
+                  placeholderTextColor={Colors.textSecondary}
+                  style={styles.searchInput}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
               </View>
+              <View style={styles.toolbarRight}>
+                <View style={styles.segmented}>
+                  <TouchableOpacity
+                    style={[styles.segmentButton, sort === 'newest' ? styles.segmentButtonActive : null]}
+                    onPress={() => setSort('newest')}
+                    accessibilityLabel="Sorteer op nieuwste"
+                  >
+                    <MaterialIcons name="arrow-upward" size={16} color={sort === 'newest' ? Colors.background : Colors.textSecondary} />
+                    <Text style={[styles.segmentText, sort === 'newest' ? styles.segmentTextActive : null]}>Nieuwst</Text>
+                  </TouchableOpacity>
 
-              {filtered.length === 0 ? (
-                <View style={styles.emptyStateEnhanced}>
-                  <MaterialIcons name="campaign" size={96} color={Colors.textSecondary} />
-                  <Text style={styles.emptyTitle}>Er zijn nog geen aankondigingen</Text>
-                  <Text style={styles.emptyText}>Maak een nieuwe aankondiging om iedereen te informeren.</Text>
-                  <TouchableOpacity style={styles.newButtonLarge} onPress={() => setModalVisible(true)}>
-                    <MaterialIcons name="add" size={20} color={Colors.background} />
-                    <Text style={styles.newButtonText}>Nieuwe aankondiging</Text>
+                  <TouchableOpacity
+                    style={[styles.segmentButton, sort === 'oldest' ? styles.segmentButtonActive : null]}
+                    onPress={() => setSort('oldest')}
+                    accessibilityLabel="Sorteer op oudste"
+                  >
+                    <MaterialIcons name="arrow-downward" size={16} color={sort === 'oldest' ? Colors.background : Colors.textSecondary} />
+                    <Text style={[styles.segmentText, sort === 'oldest' ? styles.segmentTextActive : null]}>Oudst</Text>
                   </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={styles.list}>
-                  {filtered.map(a => (
-                    <AnnouncementCard key={a.announcement_id} announcement={a} authorName={getAuthorName(a.author_id)} />
-                  ))}
-                </View>
-              )}
-            </>
-          )}
-        </View>
-      </ScrollView>
 
-      <AnnouncementCreateModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSend={handleCreate}
-        isLoading={isCreating}
-      />
-    </AdminLayout>
+                <TouchableOpacity style={styles.newButton} onPress={() => setModalVisible(true)}>
+                  <MaterialIcons name="add" size={20} color={Colors.background} />
+                  <Text style={styles.newButtonText}>Nieuwe</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Aankondigingen laden...</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                  <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={styles.statsContainer}>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statLabel}>Totaal</Text>
+                    <Text style={styles.statValue}>{stats.total}</Text>
+                  </View>
+                </View>
+
+                {filtered.length === 0 ? (
+                  <View style={styles.emptyStateEnhanced}>
+                    <MaterialIcons name="campaign" size={96} color={Colors.textSecondary} />
+                    <Text style={styles.emptyTitle}>Er zijn nog geen aankondigingen</Text>
+                    <Text style={styles.emptyText}>Maak een nieuwe aankondiging om iedereen te informeren.</Text>
+                    <TouchableOpacity style={styles.newButtonLarge} onPress={() => setModalVisible(true)}>
+                      <MaterialIcons name="add" size={20} color={Colors.background} />
+                      <Text style={styles.newButtonText}>Nieuwe aankondiging</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.list}>
+                    {filtered.map(a => (
+                      <AnnouncementCard key={a.announcement_id} announcement={a} authorName={getAuthorName(a.author_id)} />
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </ScrollView>
+
+        <AnnouncementCreateModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSend={handleCreate}
+          isLoading={isCreating}
+        />
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 
