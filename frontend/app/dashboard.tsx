@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
-import { NavigationBar } from '@/components';
+import { NavigationBar, RoleGuard } from '@/components';
 import { AnnouncementCreatePopup } from '@/components/announcement-create-popup';
 import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
 import { formatDate } from '@/utils/date';
@@ -346,14 +346,15 @@ export default function DashboardScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <NavigationBar />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <Text style={styles.pageTitle}>Overzicht</Text>
+    <RoleGuard allowedRoles={['Hoofdverpleegster']}>
+      <View style={styles.container}>
+        <NavigationBar />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <Text style={styles.pageTitle}>Overzicht</Text>
         {/* Status Cards */}
         <View style={styles.statusCardsContainer}>
           {dynamicStatusCards.map((card) => (
@@ -459,7 +460,8 @@ export default function DashboardScreen() {
         roomNumber={selectedResident ? rooms.find((r) => r.resident_id === selectedResident.resident_id)?.room_number : undefined}
         urgentNotes={selectedResident ? notes.filter((n) => n.resident_id === selectedResident.resident_id && n.urgency === 'Hoog' && !n.is_resolved) : []}
       />
-    </View>
+      </View>
+    </RoleGuard>
   );
 }
 

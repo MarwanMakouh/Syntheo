@@ -13,6 +13,7 @@ import {
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { AdminLayout } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { StatsCard } from '@/components/admin/stats-card';
 import { fetchResidents } from '@/Services/residentsApi';
 import { fetchUsers } from '@/Services';
@@ -120,146 +121,148 @@ export default function DashboardWijzigingsverzoekenScreen() {
   };
 
   return (
-    <AdminLayout activeRoute="wijzigingsverzoeken">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.titleContainer}>
-              <MaterialIcons name="edit" size={32} color={Colors.primary} />
-              <Text style={styles.pageTitle}>Wijzigingsverzoeken</Text>
-            </View>
-            <Text style={styles.breadcrumb}>Home / Wijzigingsverzoeken</Text>
-          </View>
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Wijzigingsverzoeken laden...</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : (
-            <>
-              <View style={styles.filterSection}>
-                <View style={styles.searchContainer}>
-                  <MaterialIcons name="search" size={24} color={Colors.textSecondary} />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Zoeken op naam of verzoek #..."
-                    placeholderTextColor={Colors.textSecondary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery ? (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <MaterialIcons name="close" size={24} color={Colors.textSecondary} />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-
-                <View style={styles.statusFilters}>
-                  <TouchableOpacity
-                    style={[styles.statusButton, selectedStatus === 'all' && styles.statusButtonActive]}
-                    onPress={() => setSelectedStatus('all')}
-                  >
-                    <Text style={[styles.statusButtonText, selectedStatus === 'all' && styles.statusButtonTextActive]}>
-                      Alles ({stats.total})
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.statusButton, selectedStatus === 'pending' && styles.statusButtonActive]}
-                    onPress={() => setSelectedStatus('pending')}
-                  >
-                    <Text style={[styles.statusButtonText, selectedStatus === 'pending' && styles.statusButtonTextActive]}>
-                      In afwachting ({stats.pending})
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.statusButton, selectedStatus === 'approved' && styles.statusButtonActive]}
-                    onPress={() => setSelectedStatus('approved')}
-                  >
-                    <Text style={[styles.statusButtonText, selectedStatus === 'approved' && styles.statusButtonTextActive]}>
-                      Goedgekeurd ({stats.approved})
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.statusButton, selectedStatus === 'rejected' && styles.statusButtonActive]}
-                    onPress={() => setSelectedStatus('rejected')}
-                  >
-                    <Text style={[styles.statusButtonText, selectedStatus === 'rejected' && styles.statusButtonTextActive]}>
-                      Afgewezen ({stats.rejected})
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="wijzigingsverzoeken">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <View style={styles.titleContainer}>
+                <MaterialIcons name="edit" size={32} color={Colors.primary} />
+                <Text style={styles.pageTitle}>Wijzigingsverzoeken</Text>
               </View>
+              <Text style={styles.breadcrumb}>Home / Wijzigingsverzoeken</Text>
+            </View>
 
-              <View style={styles.list}>
-                {filteredRequests.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <MaterialIcons name="edit-off" size={64} color={Colors.textSecondary} />
-                    <Text style={styles.emptyText}>
-                      {searchQuery || selectedStatus !== 'all' ? 'Geen overeenkomstige verzoeken gevonden' : 'Geen wijzigingsverzoeken gevonden'}
-                    </Text>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Wijzigingsverzoeken laden...</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.filterSection}>
+                  <View style={styles.searchContainer}>
+                    <MaterialIcons name="search" size={24} color={Colors.textSecondary} />
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="Zoeken op naam of verzoek #..."
+                      placeholderTextColor={Colors.textSecondary}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                    />
+                    {searchQuery ? (
+                      <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <MaterialIcons name="close" size={24} color={Colors.textSecondary} />
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
-                ) : (
-                  filteredRequests.map((r) => (
-                    <View key={r.request_id} style={styles.requestCard}>
-                      <View style={styles.requestHeader}>
-                        <Text style={styles.requestTitle}>Verzoek #{r.request_id} — {getResidentName(r.resident_id)}</Text>
-                        <View style={styles.requestMetaRow}>
-                          <Text style={[
-                            r.urgency && r.urgency.toString().toLowerCase().includes('hoog') ? styles.urgencyHighText : r.urgency && (r.urgency.toString().toLowerCase().includes('matig') || r.urgency.toString().toLowerCase().includes('medium')) ? styles.urgencyMediumText : styles.urgencyLowText,
-                            { fontSize: FontSize.sm, fontWeight: FontWeight.semibold }
-                          ]}>
-                            {r.urgency === 'high' ? 'Hoog' : r.urgency === 'medium' ? 'Matig' : r.urgency === 'low' ? 'Laag' : r.urgency}
-                          </Text>
-                          <Text style={styles.requestMetaSeparator}>•</Text>
-                          <View style={[
-                            styles.statusBadge,
-                            r.status === 'approved' ? styles.statusApproved : r.status === 'rejected' ? styles.statusRejected : styles.statusPending,
-                          ]}>
-                            <Text style={styles.statusBadgeText}>
-                              {r.status === 'approved' ? 'Goedgekeurd' : r.status === 'rejected' ? 'Afgewezen' : 'In afwachting'}
+
+                  <View style={styles.statusFilters}>
+                    <TouchableOpacity
+                      style={[styles.statusButton, selectedStatus === 'all' && styles.statusButtonActive]}
+                      onPress={() => setSelectedStatus('all')}
+                    >
+                      <Text style={[styles.statusButtonText, selectedStatus === 'all' && styles.statusButtonTextActive]}>
+                        Alles ({stats.total})
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.statusButton, selectedStatus === 'pending' && styles.statusButtonActive]}
+                      onPress={() => setSelectedStatus('pending')}
+                    >
+                      <Text style={[styles.statusButtonText, selectedStatus === 'pending' && styles.statusButtonTextActive]}>
+                        In afwachting ({stats.pending})
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.statusButton, selectedStatus === 'approved' && styles.statusButtonActive]}
+                      onPress={() => setSelectedStatus('approved')}
+                    >
+                      <Text style={[styles.statusButtonText, selectedStatus === 'approved' && styles.statusButtonTextActive]}>
+                        Goedgekeurd ({stats.approved})
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.statusButton, selectedStatus === 'rejected' && styles.statusButtonActive]}
+                      onPress={() => setSelectedStatus('rejected')}
+                    >
+                      <Text style={[styles.statusButtonText, selectedStatus === 'rejected' && styles.statusButtonTextActive]}>
+                        Afgewezen ({stats.rejected})
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.list}>
+                  {filteredRequests.length === 0 ? (
+                    <View style={styles.emptyState}>
+                      <MaterialIcons name="edit-off" size={64} color={Colors.textSecondary} />
+                      <Text style={styles.emptyText}>
+                        {searchQuery || selectedStatus !== 'all' ? 'Geen overeenkomstige verzoeken gevonden' : 'Geen wijzigingsverzoeken gevonden'}
+                      </Text>
+                    </View>
+                  ) : (
+                    filteredRequests.map((r) => (
+                      <View key={r.request_id} style={styles.requestCard}>
+                        <View style={styles.requestHeader}>
+                          <Text style={styles.requestTitle}>Verzoek #{r.request_id} — {getResidentName(r.resident_id)}</Text>
+                          <View style={styles.requestMetaRow}>
+                            <Text style={[
+                              r.urgency && r.urgency.toString().toLowerCase().includes('hoog') ? styles.urgencyHighText : r.urgency && (r.urgency.toString().toLowerCase().includes('matig') || r.urgency.toString().toLowerCase().includes('medium')) ? styles.urgencyMediumText : styles.urgencyLowText,
+                              { fontSize: FontSize.sm, fontWeight: FontWeight.semibold }
+                            ]}>
+                              {r.urgency === 'high' ? 'Hoog' : r.urgency === 'medium' ? 'Matig' : r.urgency === 'low' ? 'Laag' : r.urgency}
                             </Text>
+                            <Text style={styles.requestMetaSeparator}>•</Text>
+                            <View style={[
+                              styles.statusBadge,
+                              r.status === 'approved' ? styles.statusApproved : r.status === 'rejected' ? styles.statusRejected : styles.statusPending,
+                            ]}>
+                              <Text style={styles.statusBadgeText}>
+                                {r.status === 'approved' ? 'Goedgekeurd' : r.status === 'rejected' ? 'Afgewezen' : 'In afwachting'}
+                              </Text>
+                            </View>
                           </View>
                         </View>
+                        <View style={styles.requestBody}>
+                          {r.changeFields?.map((f) => (
+                            <View key={f.field_id} style={styles.fieldRow}>
+                              <Text style={styles.fieldName}>{f.field_name}</Text>
+                              <Text style={styles.fieldOld}>Oud: {f.old ?? '—'}</Text>
+                              <Text style={styles.fieldNew}>Nieuw: {f.new}</Text>
+                            </View>
+                          ))}
+                        </View>
+                        <View style={styles.requestActions}>
+                          <TouchableOpacity style={styles.viewButton} onPress={() => handleView(r.request_id)}>
+                            <Text style={styles.viewButtonText}>Bekijk</Text>
+                          </TouchableOpacity>
+                          {r.status === 'pending' && (
+                            <>
+                              <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(r.request_id)}>
+                                <Text style={styles.approveButtonText}>Goedkeuren</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(r.request_id)}>
+                                <Text style={styles.rejectButtonText}>Afwijzen</Text>
+                              </TouchableOpacity>
+                            </>
+                          )}
+                        </View>
                       </View>
-                      <View style={styles.requestBody}>
-                        {r.changeFields?.map((f) => (
-                          <View key={f.field_id} style={styles.fieldRow}>
-                            <Text style={styles.fieldName}>{f.field_name}</Text>
-                            <Text style={styles.fieldOld}>Oud: {f.old ?? '—'}</Text>
-                            <Text style={styles.fieldNew}>Nieuw: {f.new}</Text>
-                          </View>
-                        ))}
-                      </View>
-                      <View style={styles.requestActions}>
-                        <TouchableOpacity style={styles.viewButton} onPress={() => handleView(r.request_id)}>
-                          <Text style={styles.viewButtonText}>Bekijk</Text>
-                        </TouchableOpacity>
-                        {r.status === 'pending' && (
-                          <>
-                            <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(r.request_id)}>
-                              <Text style={styles.approveButtonText}>Goedkeuren</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(r.request_id)}>
-                              <Text style={styles.rejectButtonText}>Afwijzen</Text>
-                            </TouchableOpacity>
-                          </>
-                        )}
-                      </View>
-                    </View>
-                  ))
-                )}
-              </View>
-            </>
-          )}
-        </View>
-      </ScrollView>
-    </AdminLayout>
+                    ))
+                  )}
+                </View>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 

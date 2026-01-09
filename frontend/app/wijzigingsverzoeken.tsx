@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
-import { NavigationBar } from '@/components';
+import { NavigationBar, RoleGuard } from '@/components';
 import { ChangeRequestPopup } from '@/components/change-request-popup';
 import { formatDate } from '@/utils/date';
 import { fetchChangeRequests, approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
@@ -190,17 +190,18 @@ export default function WijzigingsverzookenScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <NavigationBar />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <Text style={styles.pageTitle}>Wijzigingsverzoeken</Text>
+    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+      <View style={styles.container}>
+        <NavigationBar />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <Text style={styles.pageTitle}>Wijzigingsverzoeken</Text>
 
-          {/* Requests List */}
-          {sortedRequests.map((request) => {
+            {/* Requests List */}
+            {sortedRequests.map((request) => {
             const mapUrgency = (u: string) => mapUrgencyFromBackend(u || '');
             const mapStatus = (s: string) => {
               switch (s) {
@@ -354,7 +355,8 @@ export default function WijzigingsverzookenScreen() {
         isApproving={isApproving}
         isRejecting={isRejecting}
       />
-    </View>
+      </View>
+    </RoleGuard>
   );
 }
 

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { NavigationBar } from '@/components';
+import { NavigationBar, RoleGuard } from '@/components';
 import { ConfirmationModal, AssignResidentModal, RoomsFilters } from '@/components/admin';
 import { RoomCard } from '@/components/admin/room-card';
 import { WarningBanner } from '@/components/admin/warning-banner';
@@ -168,9 +168,10 @@ export default function KamerBeheerScreen() {
     : undefined;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <NavigationBar />
-      <ScrollView style={styles.container}>
+    <RoleGuard allowedRoles={['Hoofdverpleegster']}>
+      <SafeAreaView style={styles.safeArea}>
+        <NavigationBar />
+        <ScrollView style={styles.container}>
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
@@ -284,7 +285,8 @@ export default function KamerBeheerScreen() {
         onSelectResident={handleSelectResident}
         isLoading={isProcessing}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </RoleGuard>
   );
 }
 

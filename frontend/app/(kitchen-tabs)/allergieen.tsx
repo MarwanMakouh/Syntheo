@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SearchBar } from '@/components';
+import { SearchBar, RoleGuard } from '@/components';
 import { fetchKitchenAllergyOverview } from '@/Services/allergiesApi';
 import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
 
@@ -278,126 +278,128 @@ export default function AllergieenOverzichtScreen() {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Warning Banner */}
-      <View style={styles.warningBanner}>
-        <MaterialIcons name="warning" size={20} color="#DC2626" />
-        <Text style={styles.warningText}>
-          LET OP: Levengevaarlijk! Deze lijst bevat alle bewoners met allergieën. Controleer ALTIJD voordat u een hierold of serveerd.
-        </Text>
-      </View>
-
-      {/* Search Bar */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Zoek Bewoner"
-        style={styles.searchContainer}
-      />
-
-      {/* Filters Container */}
-      <View style={styles.filtersRow}>
-        {Platform.OS === 'ios' ? (
-          <TouchableOpacity
-            style={styles.filterContainer}
-            onPress={handleFloorPress}
-          >
-            <MaterialIcons name="filter-list" size={16} color="#666" />
-            <Text style={styles.filterLabel}>Verdieping:</Text>
-            <Text style={styles.filterValue}>{getFloorLabel()}</Text>
-            <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.filterContainer}>
-            <MaterialIcons name="filter-list" size={16} color="#666" />
-            <Text style={styles.filterLabel}>Verdieping:</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectedFloor}
-                onValueChange={(value) => setSelectedFloor(Number(value))}
-                style={styles.picker}
-              >
-                {FLOOR_OPTIONS.map((option) => (
-                  <Picker.Item
-                    key={option.value}
-                    label={option.label}
-                    value={option.value}
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-        )}
-
-        {Platform.OS === 'ios' ? (
-          <TouchableOpacity
-            style={styles.filterContainer}
-            onPress={handleAllergyPress}
-          >
-            <MaterialIcons name="filter-list" size={16} color="#666" />
-            <Text style={styles.filterLabel}>Allergie:</Text>
-            <Text style={styles.filterValue}>{getAllergyLabel()}</Text>
-            <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.filterContainer}>
-            <MaterialIcons name="filter-list" size={16} color="#666" />
-            <Text style={styles.filterLabel}>Allergie:</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectedAllergy}
-                onValueChange={(value) => setSelectedAllergy(value)}
-                style={styles.picker}
-              >
-                {ALLERGY_OPTIONS.map((option) => (
-                  <Picker.Item
-                    key={option.value}
-                    label={option.label}
-                    value={option.value}
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Title */}
-      <View style={styles.titleSection}>
-        <Text style={styles.title}>Volledige Allergieën Lijst</Text>
-        {Platform.OS !== 'web' && (
-          <Text style={styles.subtitle}>
-            {residents.length} bewoner{residents.length !== 1 ? 's' : ''} gevonden
+    <RoleGuard allowedRoles={['Keukenpersoneel']}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        {/* Warning Banner */}
+        <View style={styles.warningBanner}>
+          <MaterialIcons name="warning" size={20} color="#DC2626" />
+          <Text style={styles.warningText}>
+            LET OP: Levengevaarlijk! Deze lijst bevat alle bewoners met allergieën. Controleer ALTIJD voordat u een hierold of serveerd.
           </Text>
-        )}
-      </View>
-
-      {/* Conditional Layout: Mobile Cards or Desktop Table */}
-      {Platform.OS === 'web' ? (
-        <View style={styles.webTableWrapper}>
-          {renderTableLayout()}
         </View>
-      ) : (
-        <FlatList
-          data={residents}
-          renderItem={renderMobileCard}
-          keyExtractor={(item) => item.resident_id.toString()}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <MaterialIcons
-                name="person-off"
-                size={64}
-                color={Colors.iconMuted}
-              />
-              <Text style={styles.emptyText}>
-                {loading ? 'Bewoners laden...' : 'Geen bewoners gevonden'}
-              </Text>
-            </View>
-          }
+
+        {/* Search Bar */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Zoek Bewoner"
+          style={styles.searchContainer}
         />
-      )}
-    </ScrollView>
+
+        {/* Filters Container */}
+        <View style={styles.filtersRow}>
+          {Platform.OS === 'ios' ? (
+            <TouchableOpacity
+              style={styles.filterContainer}
+              onPress={handleFloorPress}
+            >
+              <MaterialIcons name="filter-list" size={16} color="#666" />
+              <Text style={styles.filterLabel}>Verdieping:</Text>
+              <Text style={styles.filterValue}>{getFloorLabel()}</Text>
+              <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.filterContainer}>
+              <MaterialIcons name="filter-list" size={16} color="#666" />
+              <Text style={styles.filterLabel}>Verdieping:</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={selectedFloor}
+                  onValueChange={(value) => setSelectedFloor(Number(value))}
+                  style={styles.picker}
+                >
+                  {FLOOR_OPTIONS.map((option) => (
+                    <Picker.Item
+                      key={option.value}
+                      label={option.label}
+                      value={option.value}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          )}
+
+          {Platform.OS === 'ios' ? (
+            <TouchableOpacity
+              style={styles.filterContainer}
+              onPress={handleAllergyPress}
+            >
+              <MaterialIcons name="filter-list" size={16} color="#666" />
+              <Text style={styles.filterLabel}>Allergie:</Text>
+              <Text style={styles.filterValue}>{getAllergyLabel()}</Text>
+              <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.filterContainer}>
+              <MaterialIcons name="filter-list" size={16} color="#666" />
+              <Text style={styles.filterLabel}>Allergie:</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={selectedAllergy}
+                  onValueChange={(value) => setSelectedAllergy(value)}
+                  style={styles.picker}
+                >
+                  {ALLERGY_OPTIONS.map((option) => (
+                    <Picker.Item
+                      key={option.value}
+                      label={option.label}
+                      value={option.value}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Title */}
+        <View style={styles.titleSection}>
+          <Text style={styles.title}>Volledige Allergieën Lijst</Text>
+          {Platform.OS !== 'web' && (
+            <Text style={styles.subtitle}>
+              {residents.length} bewoner{residents.length !== 1 ? 's' : ''} gevonden
+            </Text>
+          )}
+        </View>
+
+        {/* Conditional Layout: Mobile Cards or Desktop Table */}
+        {Platform.OS === 'web' ? (
+          <View style={styles.webTableWrapper}>
+            {renderTableLayout()}
+          </View>
+        ) : (
+          <FlatList
+            data={residents}
+            renderItem={renderMobileCard}
+            keyExtractor={(item) => item.resident_id.toString()}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialIcons
+                  name="person-off"
+                  size={64}
+                  color={Colors.iconMuted}
+                />
+                <Text style={styles.emptyText}>
+                  {loading ? 'Bewoners laden...' : 'Geen bewoners gevonden'}
+                </Text>
+              </View>
+            }
+          />
+        )}
+      </ScrollView>
+    </RoleGuard>
   );
 }
 

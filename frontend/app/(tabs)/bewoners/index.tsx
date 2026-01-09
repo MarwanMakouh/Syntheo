@@ -11,7 +11,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SearchBar, BewonerCard } from '@/components';
+import { SearchBar, BewonerCard, RoleGuard } from '@/components';
 import { fetchResidents } from '@/Services/residentsApi';
 import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
 
@@ -92,82 +92,84 @@ export default function BewonersScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Search Bar */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Zoek bewoner op naam..."
-        style={styles.searchContainer}
-      />
+    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+      <View style={styles.container}>
+        {/* Search Bar */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Zoek bewoner op naam..."
+          style={styles.searchContainer}
+        />
 
-      {/* Floor Filter */}
-      {Platform.OS === 'ios' ? (
-        <TouchableOpacity
-          style={styles.filterContainer}
-          onPress={handleFloorPress}
-        >
-          <MaterialIcons name="filter-list" size={20} color="#666" />
-          <Text style={styles.filterLabel}>Verdieping:</Text>
-          <Text style={styles.filterValue}>{getFloorLabel()}</Text>
-          <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.filterContainer}>
-          <MaterialIcons name="filter-list" size={20} color="#666" />
-          <Text style={styles.filterLabel}>Verdieping:</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedFloor}
-              onValueChange={(value) =>
-                setSelectedFloor(Number(value))
-              }
-              style={styles.picker}
-            >
-              <Picker.Item label="Verdieping 1" value={1} />
-              <Picker.Item label="Verdieping 2" value={2} />
-              <Picker.Item label="Verdieping 3" value={3} />
-            </Picker>
+        {/* Floor Filter */}
+        {Platform.OS === 'ios' ? (
+          <TouchableOpacity
+            style={styles.filterContainer}
+            onPress={handleFloorPress}
+          >
+            <MaterialIcons name="filter-list" size={20} color="#666" />
+            <Text style={styles.filterLabel}>Verdieping:</Text>
+            <Text style={styles.filterValue}>{getFloorLabel()}</Text>
+            <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.filterContainer}>
+            <MaterialIcons name="filter-list" size={20} color="#666" />
+            <Text style={styles.filterLabel}>Verdieping:</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedFloor}
+                onValueChange={(value) =>
+                  setSelectedFloor(Number(value))
+                }
+                style={styles.picker}
+              >
+                <Picker.Item label="Verdieping 1" value={1} />
+                <Picker.Item label="Verdieping 2" value={2} />
+                <Picker.Item label="Verdieping 3" value={3} />
+              </Picker>
+            </View>
           </View>
-        </View>
-      )}
-
-      {/* Results count */}
-      <Text style={styles.resultCount}>
-        {filteredResidents.length} bewoner
-        {filteredResidents.length !== 1 ? 's' : ''} gevonden
-      </Text>
-
-      {/* Residents List */}
-      <FlatList
-        data={filteredResidents}
-        renderItem={({ item }) => (
-          <BewonerCard
-            resident={item}
-            roomNumber={item.room?.room_number ?? null}
-            onPress={() =>
-              router.push(`/(tabs)/bewoners/${item.resident_id}` as any)
-            }
-          />
         )}
-        keyExtractor={(item) => item.resident_id.toString()}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialIcons
-              name="person-off"
-              size={64}
-              color={Colors.iconMuted}
+
+        {/* Results count */}
+        <Text style={styles.resultCount}>
+          {filteredResidents.length} bewoner
+          {filteredResidents.length !== 1 ? 's' : ''} gevonden
+        </Text>
+
+        {/* Residents List */}
+        <FlatList
+          data={filteredResidents}
+          renderItem={({ item }) => (
+            <BewonerCard
+              resident={item}
+              roomNumber={item.room?.room_number ?? null}
+              onPress={() =>
+                router.push(`/(tabs)/bewoners/${item.resident_id}` as any)
+              }
             />
-            <Text style={styles.emptyText}>
-              {loading
-                ? 'Bewoners laden...'
-                : 'Geen bewoners gevonden'}
-            </Text>
-          </View>
-        }
-      />
-    </View>
+          )}
+          keyExtractor={(item) => item.resident_id.toString()}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialIcons
+                name="person-off"
+                size={64}
+                color={Colors.iconMuted}
+              />
+              <Text style={styles.emptyText}>
+                {loading
+                  ? 'Bewoners laden...'
+                  : 'Geen bewoners gevonden'}
+              </Text>
+            </View>
+          }
+        />
+      </View>
+    </RoleGuard>
   );
 }
 
