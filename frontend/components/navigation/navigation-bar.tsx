@@ -34,7 +34,7 @@ export function NavigationBar() {
   const handleLogoutConfirm = () => {
     setShowLogoutConfirm(false);
     setCurrentUser(null);
-    router.replace('/login');
+    router.replace('/role-selection');
   };
 
   const handleLogoutCancel = () => {

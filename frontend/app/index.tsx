@@ -9,9 +9,10 @@ export default function Index() {
     return null;
   }
 
-  // If not logged in, redirect to login
+  // If not logged in, redirect to role selection for easier testing
+  // (change to /login for production)
   if (!currentUser) {
-    return <Redirect href="/login" />;
+    return <Redirect href="/role-selection" />;
   }
 
   // Redirect based on user role

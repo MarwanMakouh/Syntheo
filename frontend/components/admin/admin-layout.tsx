@@ -83,7 +83,7 @@ export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayout
   const handleLogoutConfirm = () => {
     setShowLogoutConfirm(false);
     setCurrentUser(null);
-    router.replace('/login');
+    router.replace('/role-selection');
   };
 
   const handleLogoutCancel = () => {
