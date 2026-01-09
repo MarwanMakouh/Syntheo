@@ -1,6 +1,9 @@
 // Navigation
 export * from './navigation/navigation-bar';
 
+// Shared Components
+export * from './shared/base-sidebar-layout';
+
 // UI Components
 export * from './ui/search-bar';
 
