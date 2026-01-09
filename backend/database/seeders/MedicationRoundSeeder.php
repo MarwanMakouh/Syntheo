@@ -9,57 +9,49 @@ class MedicationRoundSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('medication_rounds')->insert([
-            [
-                'round_id' => 1,
-                'schedule_id' => 1,
-                'res_medication_id' => 1,
-                'resident_id' => 1,
-                'status' => 'Toegediend',
-                'notes' => 'Zonder problemen ingenomen',
-                'given_by' => 2,
-                'given_at' => now()->setTime(8, 5),
-            ],
-            [
-                'round_id' => 2,
-                'schedule_id' => 3,
-                'res_medication_id' => 2,
-                'resident_id' => 1,
-                'status' => 'Toegediend',
-                'notes' => null,
-                'given_by' => 2,
-                'given_at' => now()->setTime(7, 10),
-            ],
-            [
-                'round_id' => 3,
-                'schedule_id' => 4,
-                'res_medication_id' => 3,
-                'resident_id' => 2,
-                'status' => 'Gemist',
-                'notes' => 'Bewoner sliep al',
-                'given_by' => 3,
-                'given_at' => null,
-            ],
-            [
-                'round_id' => 4,
-                'schedule_id' => 5,
-                'res_medication_id' => 4,
-                'resident_id' => 3,
-                'status' => 'Geweigerd',
-                'notes' => 'Bewoner voelde zich goed, wilde geen pijnstiller',
-                'given_by' => 2,
-                'given_at' => null,
-            ],
-            [
-                'round_id' => 5,
-                'schedule_id' => 7,
-                'res_medication_id' => 6,
-                'resident_id' => 4,
-                'status' => 'Toegediend',
-                'notes' => 'Met het avondeten toegediend',
-                'given_by' => 3,
-                'given_at' => now()->setTime(18, 15),
-            ],
-        ]);
+        $rounds = [];
+        $id = 1;
+        $nurses = [3, 4, 5, 6, 7]; // Nurse IDs
+        $statuses = ['Toegediend', 'Toegediend', 'Toegediend', 'Toegediend', 'Toegediend', 'Geweigerd', 'Gemist'];
+        $notes = [
+            'Zonder problemen ingenomen',
+            'Met water ingenomen',
+            'Met maaltijd toegediend',
+            null,
+            'Bewoner nam medicatie zelfstandig in',
+        ];
+
+        // Generate medication rounds for the last 3 days for a selection of schedules
+        // We'll create rounds for first 30 schedules (covering multiple residents)
+        for ($day = 0; $day < 3; $day++) {
+            for ($schedId = 1; $schedId <= 30; $schedId++) {
+                $status = $statuses[array_rand($statuses)];
+                $nurse = $nurses[array_rand($nurses)];
+                $note = $notes[array_rand($notes)];
+
+                // Determine time based on schedule pattern
+                $hour = 8; // Default morning
+                if ($schedId % 4 == 0) $hour = 21; // Night
+                elseif ($schedId % 4 == 1) $hour = 12; // Noon
+                elseif ($schedId % 4 == 2) $hour = 18; // Evening
+
+                $timestamp = ($status === 'Toegediend')
+                    ? now()->subDays($day)->setTime($hour, rand(0, 30))
+                    : null;
+
+                $rounds[] = [
+                    'round_id' => $id++,
+                    'schedule_id' => $schedId,
+                    'res_medication_id' => $schedId, // Simplified mapping
+                    'resident_id' => ceil($schedId / 3), // Distribute across residents
+                    'status' => $status,
+                    'notes' => ($status !== 'Toegediend') ? ($status === 'Geweigerd' ? 'Bewoner weigerde medicatie' : 'Bewoner sliep') : $note,
+                    'given_by' => $nurse,
+                    'given_at' => $timestamp,
+                ];
+            }
+        }
+
+        DB::table('medication_rounds')->insert($rounds);
     }
 }
