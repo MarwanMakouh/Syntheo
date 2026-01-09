@@ -10,18 +10,20 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
+        headerShown: Platform.OS !== 'web',
         header: () => <NavigationBar />,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopWidth: 1,
-          borderTopColor: Colors.border,
-          height: Platform.OS === 'ios' ? 88 : Platform.OS === 'android' ? 65 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 28 : Platform.OS === 'android' ? 10 : 10,
-          paddingTop: 8,
-        },
+        tabBarStyle: Platform.OS === 'web' 
+          ? { display: 'none' } 
+          : {
+              backgroundColor: Colors.background,
+              borderTopWidth: 1,
+              borderTopColor: Colors.border,
+              height: Platform.OS === 'ios' ? 88 : 65,
+              paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+              paddingTop: 8,
+            },
         tabBarLabelStyle: {
           fontSize: FontSize.xs,
           fontWeight: FontWeight.medium,

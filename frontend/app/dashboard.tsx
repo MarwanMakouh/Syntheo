@@ -10,8 +10,8 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
-import { NavigationBar } from '@/components';
-import { AnnouncementCreatePopup } from '@/components/announcement-create-popup';
+import { StaffLayout } from '@/components';
+import { AnnouncementCreatePopup } from '@/components/announcements/announcement-create-popup';
 import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
 import { formatDate } from '@/utils/date';
 import { fetchResidents } from '@/Services/residentsApi';
@@ -346,8 +346,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <NavigationBar />
+    <StaffLayout activeRoute="dashboard">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -459,15 +458,11 @@ export default function DashboardScreen() {
         roomNumber={selectedResident ? rooms.find((r) => r.resident_id === selectedResident.resident_id)?.room_number : undefined}
         urgentNotes={selectedResident ? notes.filter((n) => n.resident_id === selectedResident.resident_id && n.urgency === 'Hoog' && !n.is_resolved) : []}
       />
-    </View>
+    </StaffLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
-  },
   scrollContent: {
     padding: Layout.screenPaddingLarge,
     paddingBottom: Spacing['3xl'],

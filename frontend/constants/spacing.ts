@@ -44,6 +44,10 @@ export const Layout = {
   // Web max width
   webMaxWidth: 600,
   webMaxWidthLarge: 800,
+  webContentMaxWidth: 1200,
+
+  // Web navigation
+  webNavHeight: 64,
 } as const;
 
 export type SpacingKey = keyof typeof Spacing;

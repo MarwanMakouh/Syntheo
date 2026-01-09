@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { StaffLayout } from '@/components/staff';
+import { LoadingState, ErrorState } from '@/components/ui';
 import {
   ContactCard,
   BewonerDetailHeader,
@@ -218,11 +220,19 @@ export default function BewonerInfoScreen() {
 
   const medicatieHistoriek = generateHistoriek();
 
+  if (loadingResident) {
+    return (
+      <StaffLayout showBackButton pageTitle="Bewoner Details">
+        <LoadingState message="Bewoner laden..." />
+      </StaffLayout>
+    );
+  }
+
   if (!resident) {
     return (
-      <View style={styles.container}>
-        <Text>Bewoner niet gevonden</Text>
-      </View>
+      <StaffLayout showBackButton pageTitle="Bewoner Details">
+        <ErrorState message="Bewoner niet gevonden" onRetry={loadResidentData} />
+      </StaffLayout>
     );
   }
 
@@ -378,8 +388,8 @@ export default function BewonerInfoScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+    <StaffLayout showBackButton pageTitle="Bewoner Details">
+      <ScrollView style={styles.container}>
         {/* Bewoner Header */}
         <BewonerDetailHeader
           resident={resident}
@@ -395,16 +405,16 @@ export default function BewonerInfoScreen() {
 
         {/* Tab Content */}
         {renderTabContent()}
-      </ScrollView>
 
-      {/* Nieuwe Melding Modal */}
-      <NieuweMeldingModal
-        visible={showNewNoteModal}
-        onClose={() => setShowNewNoteModal(false)}
-        onSave={handleSaveNote}
-        residentId={Number(id)}
-      />
-    </View>
+        {/* Nieuwe Melding Modal */}
+        <NieuweMeldingModal
+          visible={showNewNoteModal}
+          onClose={() => setShowNewNoteModal(false)}
+          onSave={handleSaveNote}
+          residentId={Number(id)}
+        />
+      </ScrollView>
+    </StaffLayout>
   );
 }
 

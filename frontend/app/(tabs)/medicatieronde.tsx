@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Modal, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { DagdeelDropdown } from '@/components/DagdeelDropdown';
-import { VerdiepingDropdown } from '@/components/VerdiepingDropdown';
-import { ResidentMedicationCard } from '@/components/ResidentMedicationCard';
+import { StaffLayout } from '@/components/staff';
+import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
+import { DagdeelDropdown } from '@/components/medication/dagdeel-dropdown';
+import { VerdiepingDropdown } from '@/components/medication/verdieping-dropdown';
+import { ResidentMedicationCard } from '@/components/medication/ResidentMedicationCard';
 import { fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
 import { saveMedicationRoundsBulk, fetchMedicationRounds } from '@/Services/medicationRoundsApi';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
@@ -430,71 +432,75 @@ export default function MedicatierondeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <DagdeelDropdown value={selectedDagdeel} onChange={handleDagdeelChange} />
-        <VerdiepingDropdown value={selectedVerdieping} onChange={handleVerdiepingChange} />
-      </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {filteredResidents.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
-              Geen bewoners met medicatie voor {selectedDagdeel.toLowerCase()}
-              {selectedVerdieping !== 'Alle verdiepingen' && ` op ${selectedVerdieping.toLowerCase()}`}
-            </Text>
+    <StaffLayout activeRoute="medicatie">
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          <PageHeader title="Medicatieronde" />
+          
+          <View style={styles.header}>
+            <DagdeelDropdown value={selectedDagdeel} onChange={handleDagdeelChange} />
+            <VerdiepingDropdown value={selectedVerdieping} onChange={handleVerdiepingChange} />
           </View>
-        ) : (
-          filteredResidents.map((resident: any) => (
-            <ResidentMedicationCard
-              key={resident.resident_id}
-              resident={resident}
-              status={getResidentStatus(resident.resident_id)}
-              isExpanded={residentStates[resident.resident_id]?.isExpanded || false}
-              checkedMedications={residentStates[resident.resident_id]?.checkedMedications || new Set()}
-              completedAt={residentStates[resident.resident_id]?.completedAt || null}
-              roundColor={getResidentRoundColor(resident.resident_id)}
-              medicationRounds={residentStates[resident.resident_id]?.medicationRounds || []}
-              onToggle={() => handleToggle(resident.resident_id)}
-              onSave={() => handleSave(resident.resident_id)}
-              onToggleMedication={(scheduleId) =>
-                handleToggleMedication(resident.resident_id, scheduleId)
-              }
-            />
-          ))
-        )}
-      </ScrollView>
 
-      {renderUncheckedMedicationModal()}
-    </View>
+          <View style={styles.scrollContent}>
+            {filteredResidents.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>
+                  Geen bewoners met medicatie voor {selectedDagdeel.toLowerCase()}
+                  {selectedVerdieping !== 'Alle verdiepingen' && ` op ${selectedVerdieping.toLowerCase()}`}
+                </Text>
+              </View>
+            ) : (
+              filteredResidents.map((resident: any) => (
+                <ResidentMedicationCard
+                  key={resident.resident_id}
+                  resident={resident}
+                  status={getResidentStatus(resident.resident_id)}
+                  isExpanded={residentStates[resident.resident_id]?.isExpanded || false}
+                  checkedMedications={residentStates[resident.resident_id]?.checkedMedications || new Set()}
+                  completedAt={residentStates[resident.resident_id]?.completedAt || null}
+                  roundColor={getResidentRoundColor(resident.resident_id)}
+                  medicationRounds={residentStates[resident.resident_id]?.medicationRounds || []}
+                  onToggle={() => handleToggle(resident.resident_id)}
+                  onSave={() => handleSave(resident.resident_id)}
+                  onToggleMedication={(scheduleId) =>
+                    handleToggleMedication(resident.resident_id, scheduleId)
+                  }
+                />
+              ))
+            )}
+          </View>
+
+          {renderUncheckedMedicationModal()}
+        </View>
+      </ScrollView>
+    </StaffLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  content: {
+    padding: Spacing['2xl'],
+    maxWidth: Layout.webContentMaxWidth,
+    width: '100%',
+    alignSelf: 'center',
+    ...Platform.select({
+      web: {
+        paddingTop: Spacing['3xl'],
+      },
+    }),
   },
   header: {
-    padding: Layout.screenPaddingLarge,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    marginTop: Spacing.xl,
     ...(Platform.OS === 'web' && { overflow: 'visible', zIndex: 900}),
-    backgroundColor: Colors.background,
     gap: Spacing.xl,
   },
-  title: {
-    fontSize: FontSize['3xl'],
-    fontWeight: FontWeight.bold,
-    color: Colors.textPrimary,
-    marginBottom: Layout.screenPadding,
-  },
-  scrollView: {
-    flex: 1,
-    ...(Platform.OS === 'web' && { zIndex: 1 }),
-  },
   scrollContent: {
-    padding: Layout.screenPaddingLarge,
+    marginTop: Spacing.xl,
   },
   emptyState: {
     alignItems: 'center',
