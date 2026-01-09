@@ -406,19 +406,15 @@ export default function BewonerInfoScreen() {
 
           {/* Tab Content */}
           {renderTabContent()}
-        </ScrollView>
-
-        {/* Tab Content */}
-        {renderTabContent()}
-
-        {/* Nieuwe Melding Modal */}
-        <NieuweMeldingModal
-          visible={showNewNoteModal}
-          onClose={() => setShowNewNoteModal(false)}
-          onSave={handleSaveNote}
-          residentId={Number(id)}
-        />
       </ScrollView>
+
+      {/* Nieuwe Melding Modal */}
+      <NieuweMeldingModal
+        visible={showNewNoteModal}
+        onClose={() => setShowNewNoteModal(false)}
+        onSave={handleSaveNote}
+        residentId={Number(id)}
+      />
     </StaffLayout>
   );
 }

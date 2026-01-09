@@ -162,7 +162,8 @@ export default function DietenScreen() {
                   size={24}
                   color={Colors.textSecondary}
                 />
-              </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
 
               {/* Expanded Content */}
               {expandedSections.has(group.diet_type) && (
@@ -294,7 +295,6 @@ export default function DietenScreen() {
                             </View>
                           )}
                         </View>
-                      </View>
                     ))}
                   </View>
                 ) : (
