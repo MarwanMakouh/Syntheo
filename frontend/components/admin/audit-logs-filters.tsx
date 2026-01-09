@@ -1,63 +1,70 @@
 import { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, Text, ScrollView, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, FontSize, Spacing, BorderRadius, FontWeight, Shadows } from '@/constants';
 
 interface AuditLogsFiltersProps {
   actionFilter: string;
-  userFilter: string;
+  typeFilter: string;
   dateFilter: string;
   onActionFilterChange: (value: string) => void;
-  onUserFilterChange: (value: string) => void;
+  onTypeFilterChange: (value: string) => void;
   onDateFilterChange: (value: string) => void;
 }
 
 const ACTION_OPTIONS = [
   { label: 'Alle acties', value: 'all' },
-  { label: 'Toegevoegd', value: 'created' },
-  { label: 'Bewerkt', value: 'updated' },
-  { label: 'Verwijderd', value: 'deleted' },
-  { label: 'Goedgekeurd', value: 'approved' },
-  { label: 'Afgekeurd', value: 'rejected' },
+  { label: 'Toegevoegd', value: 'toegevoegd' },
+  { label: 'Bewerkt', value: 'bewerkt' },
+  { label: 'Verwijderd', value: 'verwijderd' },
+  { label: 'Goedgekeurd', value: 'goedgekeurd' },
+  { label: 'Afgekeurd', value: 'afgekeurd' },
 ];
 
-const USER_OPTIONS = [
-  { label: 'Alle gebruikers', value: 'all' },
+const TYPE_OPTIONS = [
+  { label: 'Alle types', value: 'all' },
+  { label: 'Bewoner', value: 'Bewoner' },
+  { label: 'Wijzigingsverzoek', value: 'Wijzigingsverzoek' },
+  { label: 'Notitie', value: 'Notitie' },
+  { label: 'Medicatie', value: 'Medicatie' },
+  { label: 'Melding', value: 'Melding' },
+  { label: 'Gebruiker', value: 'Gebruiker' },
+  { label: 'Medicatie Ronde', value: 'Medicatie Ronde' },
 ];
 
 export function AuditLogsFilters({
   actionFilter,
-  userFilter,
+  typeFilter,
   dateFilter,
   onActionFilterChange,
-  onUserFilterChange,
+  onTypeFilterChange,
   onDateFilterChange,
 }: AuditLogsFiltersProps) {
   const [isActionOpen, setIsActionOpen] = useState(false);
-  const [isUserOpen, setIsUserOpen] = useState(false);
+  const [isTypeOpen, setIsTypeOpen] = useState(false);
 
   const selectedActionLabel = ACTION_OPTIONS.find(opt => opt.value === actionFilter)?.label || 'Alle acties';
-  const selectedUserLabel = USER_OPTIONS.find(opt => opt.value === userFilter)?.label || 'Alle gebruikers';
+  const selectedTypeLabel = TYPE_OPTIONS.find(opt => opt.value === typeFilter)?.label || 'Alle types';
 
   const handleActionSelect = (value: string) => {
     onActionFilterChange(value);
     setIsActionOpen(false);
   };
 
-  const handleUserSelect = (value: string) => {
-    onUserFilterChange(value);
-    setIsUserOpen(false);
+  const handleTypeSelect = (value: string) => {
+    onTypeFilterChange(value);
+    setIsTypeOpen(false);
   };
 
   return (
-    <View style={[styles.container, (isActionOpen || isUserOpen) && styles.containerOpen]}>
+    <View style={[styles.container, (isActionOpen || isTypeOpen) && styles.containerOpen]}>
       {/* Action Filter Dropdown */}
       <View style={[styles.dropdownWrapper, isActionOpen && styles.dropdownWrapperOpen]}>
         <TouchableOpacity
           style={styles.dropdownButton}
           onPress={() => {
             setIsActionOpen(!isActionOpen);
-            setIsUserOpen(false);
+            setIsTypeOpen(false);
           }}
         >
           <Text style={styles.dropdownButtonText}>{selectedActionLabel}</Text>
@@ -98,44 +105,44 @@ export function AuditLogsFilters({
         )}
       </View>
 
-      {/* User Filter Dropdown */}
-      <View style={[styles.dropdownWrapper, isUserOpen && styles.dropdownWrapperOpen]}>
+      {/* Type Filter Dropdown */}
+      <View style={[styles.dropdownWrapper, isTypeOpen && styles.dropdownWrapperOpen]}>
         <TouchableOpacity
           style={styles.dropdownButton}
           onPress={() => {
-            setIsUserOpen(!isUserOpen);
+            setIsTypeOpen(!isTypeOpen);
             setIsActionOpen(false);
           }}
         >
-          <Text style={styles.dropdownButtonText}>{selectedUserLabel}</Text>
+          <Text style={styles.dropdownButtonText}>{selectedTypeLabel}</Text>
           <MaterialIcons
-            name={isUserOpen ? "arrow-drop-up" : "arrow-drop-down"}
+            name={isTypeOpen ? "arrow-drop-up" : "arrow-drop-down"}
             size={24}
             color={Colors.iconDefault}
           />
         </TouchableOpacity>
 
-        {isUserOpen && (
+        {isTypeOpen && (
           <View style={styles.dropdownList}>
             <ScrollView style={styles.scrollView}>
-              {USER_OPTIONS.map((option) => (
+              {TYPE_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option.value}
                   style={[
                     styles.dropdownItem,
-                    userFilter === option.value && styles.dropdownItemSelected,
+                    typeFilter === option.value && styles.dropdownItemSelected,
                   ]}
-                  onPress={() => handleUserSelect(option.value)}
+                  onPress={() => handleTypeSelect(option.value)}
                 >
                   <Text
                     style={[
                       styles.dropdownItemText,
-                      userFilter === option.value && styles.dropdownItemTextSelected,
+                      typeFilter === option.value && styles.dropdownItemTextSelected,
                     ]}
                   >
                     {option.label}
                   </Text>
-                  {userFilter === option.value && (
+                  {typeFilter === option.value && (
                     <MaterialIcons name="check" size={20} color={Colors.primary} />
                   )}
                 </TouchableOpacity>
@@ -147,13 +154,43 @@ export function AuditLogsFilters({
 
       {/* Date Filter */}
       <View style={styles.dateContainer}>
-        <TextInput
-          style={styles.dateInput}
-          placeholder="dd-mm-jjjj"
-          placeholderTextColor={Colors.textSecondary}
-          value={dateFilter}
-          onChangeText={onDateFilterChange}
+        <MaterialIcons
+          name="calendar-today"
+          size={20}
+          color={Colors.textSecondary}
+          style={styles.dateIcon}
         />
+        {Platform.OS === 'web' ? (
+          <input
+            type="date"
+            style={{
+              flex: 1,
+              height: '100%',
+              fontSize: FontSize.md,
+              color: Colors.textPrimary,
+              border: 'none',
+              outline: 'none',
+              backgroundColor: 'transparent',
+              fontFamily: 'inherit',
+            }}
+            value={dateFilter}
+            onChange={(e: any) => onDateFilterChange(e.target.value)}
+            placeholder="Selecteer datum"
+          />
+        ) : (
+          <TextInput
+            style={styles.dateInput}
+            placeholder="YYYY-MM-DD"
+            placeholderTextColor={Colors.textSecondary}
+            value={dateFilter}
+            onChangeText={onDateFilterChange}
+          />
+        )}
+        {dateFilter && (
+          <TouchableOpacity onPress={() => onDateFilterChange('')} style={styles.clearButton}>
+            <MaterialIcons name="close" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -236,14 +273,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     height: 50,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    minWidth: 180,
+    minWidth: 220,
+  },
+  dateIcon: {
+    marginRight: Spacing.sm,
   },
   dateInput: {
+    flex: 1,
     height: '100%',
     fontSize: FontSize.md,
     color: Colors.textPrimary,
     outlineStyle: 'none',
+  },
+  clearButton: {
+    padding: Spacing.xs,
+    marginLeft: Spacing.xs,
   },
 });

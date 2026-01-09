@@ -11,6 +11,7 @@ import {
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout } from '@/components/admin';
 import { AuditLogsTable, type AuditLog } from '@/components/admin/audit-logs-table';
+import { AuditLogsFilters } from '@/components/admin/audit-logs-filters';
 import { fetchAuditLogs } from '@/Services/auditLogsApi';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
@@ -19,7 +20,12 @@ export default function DashboardAuditLogsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load data from API
+  // Filter states
+  const [actionFilter, setActionFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
+
+  // Load data from API once on mount
   useEffect(() => {
     loadData();
   }, []);
@@ -28,9 +34,7 @@ export default function DashboardAuditLogsScreen() {
     try {
       setLoading(true);
       setError(null);
-
-
-      const { items } = await fetchAuditLogs({ page: 1, per_page: 100 });
+      const { items } = await fetchAuditLogs({ page: 1, per_page: 1000 });
       setAuditLogs(items);
     } catch (err) {
       setError('Fout bij het laden van audit logs');
@@ -40,8 +44,27 @@ export default function DashboardAuditLogsScreen() {
     }
   };
 
-  // Filter audit logs
-  const filteredLogs = auditLogs; // no filtering applied
+  // Filter audit logs client-side
+  const filteredLogs = useMemo(() => {
+    return auditLogs.filter((log) => {
+      // Action filter
+      const matchesAction = actionFilter === 'all' || log.action.toLowerCase() === actionFilter.toLowerCase();
+
+      // Type filter
+      const matchesType = typeFilter === 'all' || log.entity_type === typeFilter;
+
+      // Date filter (YYYY-MM-DD format from date picker)
+      let matchesDate = true;
+      if (dateFilter) {
+        // log.timestamp is in format 'YYYY-MM-DD HH:MM'
+        const logDate = log.timestamp.split(' ')[0]; // Get just the date part
+        matchesDate = logDate === dateFilter;
+      }
+
+      return matchesAction && matchesType && matchesDate;
+    });
+  }, [auditLogs, actionFilter, typeFilter, dateFilter]);
+
 
   return (
     <AdminLayout activeRoute="audit-logs">
@@ -73,6 +96,15 @@ export default function DashboardAuditLogsScreen() {
             </View>
           ) : (
             <>
+              {/* Filters */}
+              <AuditLogsFilters
+                actionFilter={actionFilter}
+                typeFilter={typeFilter}
+                dateFilter={dateFilter}
+                onActionFilterChange={setActionFilter}
+                onTypeFilterChange={setTypeFilter}
+                onDateFilterChange={setDateFilter}
+              />
 
               {/* Audit Logs Table */}
               <AuditLogsTable logs={filteredLogs} />
