@@ -10,13 +10,12 @@ import {
   ActionSheetIOS,
   Alert,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SearchBar } from '@/components';
 import { KitchenLayout } from '@/components/kitchen';
 import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
 import { fetchKitchenAllergyOverview } from '@/Services/allergiesApi';
-import { Colors, FontSize, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
+import { Colors, FontSize, Spacing, BorderRadius, Layout, Shadows, FontWeight } from '@/constants';
 
 const FLOOR_OPTIONS = [
   { label: 'Alle Verdiepingen', value: 0 },
@@ -56,6 +55,8 @@ export default function AllergieenOverzichtScreen() {
   const [residents, setResidents] = useState<ResidentWithAllergies[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [floorDropdownOpen, setFloorDropdownOpen] = useState(false);
+  const [allergyDropdownOpen, setAllergyDropdownOpen] = useState(false);
 
   useEffect(() => {
     loadResidents();
@@ -81,31 +82,51 @@ export default function AllergieenOverzichtScreen() {
   };
 
   const handleFloorPress = () => {
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: ['Annuleren', ...FLOOR_OPTIONS.map((f) => f.label)],
-        cancelButtonIndex: 0,
-      },
-      (buttonIndex) => {
-        if (buttonIndex > 0) {
-          setSelectedFloor(FLOOR_OPTIONS[buttonIndex - 1].value);
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Annuleren', ...FLOOR_OPTIONS.map((f) => f.label)],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex > 0) {
+            setSelectedFloor(FLOOR_OPTIONS[buttonIndex - 1].value);
+          }
         }
-      }
-    );
+      );
+    } else {
+      setFloorDropdownOpen(!floorDropdownOpen);
+      setAllergyDropdownOpen(false);
+    }
   };
 
   const handleAllergyPress = () => {
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: ['Annuleren', ...ALLERGY_OPTIONS.map((a) => a.label)],
-        cancelButtonIndex: 0,
-      },
-      (buttonIndex) => {
-        if (buttonIndex > 0) {
-          setSelectedAllergy(ALLERGY_OPTIONS[buttonIndex - 1].value);
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Annuleren', ...ALLERGY_OPTIONS.map((a) => a.label)],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex > 0) {
+            setSelectedAllergy(ALLERGY_OPTIONS[buttonIndex - 1].value);
+          }
         }
-      }
-    );
+      );
+    } else {
+      setAllergyDropdownOpen(!allergyDropdownOpen);
+      setFloorDropdownOpen(false);
+    }
+  };
+
+  const handleFloorSelect = (value: number) => {
+    setSelectedFloor(value);
+    setFloorDropdownOpen(false);
+  };
+
+  const handleAllergySelect = (value: string) => {
+    setSelectedAllergy(value);
+    setAllergyDropdownOpen(false);
   };
 
   const getFloorLabel = () => {
@@ -327,69 +348,101 @@ export default function AllergieenOverzichtScreen() {
 
         {/* Filters Container */}
         <View style={styles.filtersRow}>
-          {Platform.OS === 'ios' ? (
-            <TouchableOpacity
-              style={styles.filterContainer}
-              onPress={handleFloorPress}
-            >
-              <MaterialIcons name="filter-list" size={16} color="#666" />
-              <Text style={styles.filterLabel}>Verdieping:</Text>
-              <Text style={styles.filterValue}>{getFloorLabel()}</Text>
-              <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.filterContainer}>
-              <MaterialIcons name="filter-list" size={16} color="#666" />
-              <Text style={styles.filterLabel}>Verdieping:</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={selectedFloor}
-                  onValueChange={(value) => setSelectedFloor(Number(value))}
-                  style={styles.picker}
-                >
-                  {FLOOR_OPTIONS.map((option) => (
-                    <Picker.Item
-                      key={option.value}
-                      label={option.label}
-                      value={option.value}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            </View>
-          )}
+          <View style={[styles.dropdownContainer, floorDropdownOpen && styles.dropdownContainerOpen]}>
+            <Text style={styles.label}>Verdieping:</Text>
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={handleFloorPress}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.dropdownButtonText}>{getFloorLabel()}</Text>
+                <MaterialIcons
+                  name={floorDropdownOpen ? "arrow-drop-up" : "arrow-drop-down"}
+                  size={24}
+                  color={Colors.iconDefault}
+                />
+              </TouchableOpacity>
 
-          {Platform.OS === 'ios' ? (
-            <TouchableOpacity
-              style={styles.filterContainer}
-              onPress={handleAllergyPress}
-            >
-              <MaterialIcons name="filter-list" size={16} color="#666" />
-              <Text style={styles.filterLabel}>Allergie:</Text>
-              <Text style={styles.filterValue}>{getAllergyLabel()}</Text>
-              <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.filterContainer}>
-              <MaterialIcons name="filter-list" size={16} color="#666" />
-              <Text style={styles.filterLabel}>Allergie:</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={selectedAllergy}
-                  onValueChange={(value) => setSelectedAllergy(value)}
-                  style={styles.picker}
-                >
-                  {ALLERGY_OPTIONS.map((option) => (
-                    <Picker.Item
-                      key={option.value}
-                      label={option.label}
-                      value={option.value}
-                    />
-                  ))}
-                </Picker>
-              </View>
+              {floorDropdownOpen && Platform.OS !== 'ios' && (
+                <View style={[styles.dropdownList, Platform.OS === 'web' && styles.dropdownListWeb]}>
+                  <ScrollView style={styles.scrollView} nestedScrollEnabled>
+                    {FLOOR_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.dropdownItem,
+                          selectedFloor === option.value && styles.dropdownItemSelected,
+                        ]}
+                        onPress={() => handleFloorSelect(option.value)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            selectedFloor === option.value && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                        {selectedFloor === option.value && (
+                          <MaterialIcons name="check" size={20} color={Colors.primary} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
             </View>
-          )}
+          </View>
+
+          <View style={[styles.dropdownContainer, allergyDropdownOpen && styles.dropdownContainerOpen]}>
+            <Text style={styles.label}>Allergie:</Text>
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={handleAllergyPress}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.dropdownButtonText}>{getAllergyLabel()}</Text>
+                <MaterialIcons
+                  name={allergyDropdownOpen ? "arrow-drop-up" : "arrow-drop-down"}
+                  size={24}
+                  color={Colors.iconDefault}
+                />
+              </TouchableOpacity>
+
+              {allergyDropdownOpen && Platform.OS !== 'ios' && (
+                <View style={[styles.dropdownList, Platform.OS === 'web' && styles.dropdownListWeb]}>
+                  <ScrollView style={styles.scrollView} nestedScrollEnabled>
+                    {ALLERGY_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.dropdownItem,
+                          selectedAllergy === option.value && styles.dropdownItemSelected,
+                        ]}
+                        onPress={() => handleAllergySelect(option.value)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            selectedAllergy === option.value && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                        {selectedAllergy === option.value && (
+                          <MaterialIcons name="check" size={20} color={Colors.primary} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
 
         {/* Title */}
@@ -468,7 +521,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
     fontSize: FontSize.sm,
     color: '#DC2626',
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     ...Platform.select({
       default: {
         flex: 1,
@@ -489,96 +542,91 @@ const styles = StyleSheet.create({
   },
   filtersRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginHorizontal: Layout.screenPadding,
+    gap: Spacing.lg,
     marginBottom: Spacing.md,
-    ...Platform.select({
-      web: {
-        alignSelf: 'center',
-      },
-    }),
+    zIndex: 100,
   },
-  filterContainer: {
+  dropdownContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  dropdownContainerOpen: {
+    ...(Platform.OS === 'web' ? { zIndex: 10000 } : { zIndex: 2000 }),
+  },
+  label: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  dropdownWrapper: {
+    position: 'relative',
+  },
+  dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    paddingLeft: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        flex: 1,
-        paddingRight: Spacing.md,
-        paddingVertical: Spacing.md,
-      },
-      android: {
-        flex: 1,
-        paddingRight: 0,
-        paddingVertical: 0,
-      },
-      web: {
-        minWidth: 250,
-        paddingRight: Spacing.md,
-        paddingVertical: Spacing.sm,
-      },
-    }),
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
   },
-  filterLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginLeft: Spacing.xs,
-    fontWeight: '500',
-  },
-  filterValue: {
-    fontSize: FontSize.sm,
+  dropdownButtonText: {
+    fontSize: FontSize.lg,
     color: Colors.textPrimary,
-    marginLeft: Spacing.xs,
-    fontWeight: '600',
-    ...Platform.select({
-      default: {
-        flex: 1,
-      },
-      web: {
-        minWidth: 150,
-      },
-    }),
   },
-  pickerContainer: {
-    ...Platform.select({
-      default: {
-        flex: 1,
-      },
-      web: {
-        minWidth: 150,
-        overflow: 'hidden',
-        borderRadius: BorderRadius.lg,
-      },
-    }),
+  dropdownList: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    ...Shadows.dropdown,
+    maxHeight: 200,
+    ...(Platform.OS === 'web' ? { zIndex: 10001 } : { zIndex: 2001 }),
   },
-  picker: {
-    height: 40,
-    ...Platform.select({
-      web: {
-        backgroundColor: 'transparent',
-        border: 'none',
-      },
-    }),
+  dropdownListWeb: {
+    position: 'absolute' as any,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+  },
+  scrollView: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.selectedBackground,
+  },
+  dropdownItemText: {
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+  },
+  dropdownItemTextSelected: {
+    fontWeight: FontWeight.semibold,
+    color: Colors.primary,
   },
   titleSection: {
     marginHorizontal: Layout.screenPadding,
     marginBottom: Spacing.md,
-    ...Platform.select({
-      web: {
-        alignSelf: 'center',
-      },
-    }),
+    alignItems: 'center',
   },
   title: {
     fontSize: FontSize.xl,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: FontSize.sm,
@@ -607,14 +655,14 @@ const styles = StyleSheet.create({
   },
   residentName: {
     fontSize: FontSize.lg,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     flex: 1,
   },
   roomNumber: {
     fontSize: FontSize.md,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
   },
   allergiesContainer: {
     gap: Spacing.sm,
@@ -633,7 +681,7 @@ const styles = StyleSheet.create({
   allergyTextMobile: {
     color: '#FFFFFF',
     fontSize: FontSize.md,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
   },
   severityBadgeMobile: {
     paddingHorizontal: Spacing.md,
@@ -642,7 +690,7 @@ const styles = StyleSheet.create({
   },
   severityTextMobile: {
     fontSize: FontSize.sm,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
   },
   noAllergyBadge: {
     backgroundColor: '#D1FAE5',
@@ -654,7 +702,7 @@ const styles = StyleSheet.create({
   noAllergyText: {
     color: '#065F46',
     fontSize: FontSize.md,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
   },
   notesSection: {
     marginTop: Spacing.sm,
@@ -664,7 +712,7 @@ const styles = StyleSheet.create({
   },
   notesLabel: {
     fontSize: FontSize.sm,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -685,14 +733,14 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#334155',
+    backgroundColor: '#047857',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
   },
   tableHeaderText: {
     color: '#FFFFFF',
     fontSize: FontSize.sm,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
   },
   tableRow: {
     flexDirection: 'row',
@@ -701,6 +749,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
     minHeight: 60,
+    backgroundColor: Colors.background,
+    ':hover': {
+      backgroundColor: Colors.backgroundSecondary,
+    },
   },
   tableCell: {
     justifyContent: 'center',
@@ -726,7 +778,7 @@ const styles = StyleSheet.create({
     flex: 2.5,
   },
   boldText: {
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
   },
   allergyBadge: {
     paddingHorizontal: Spacing.sm,
@@ -738,7 +790,7 @@ const styles = StyleSheet.create({
   allergyText: {
     color: '#FFFFFF',
     fontSize: FontSize.sm,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
   },
   severityBadge: {
     paddingHorizontal: Spacing.sm,
@@ -749,7 +801,7 @@ const styles = StyleSheet.create({
   },
   severityText: {
     fontSize: FontSize.xs,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
   },
   extraInfoText: {
     fontSize: FontSize.sm,

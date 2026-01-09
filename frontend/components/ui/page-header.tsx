@@ -13,8 +13,8 @@ interface PageHeaderProps {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, actionButton }) => {
   return (
-    <View style={styles.header}>
-      <Text style={styles.pageTitle}>{title}</Text>
+    <View style={[styles.header, !actionButton && styles.headerCentered]}>
+      <Text style={[styles.pageTitle, !actionButton && styles.pageTitleCentered]}>{title}</Text>
       {actionButton && (
         <TouchableOpacity style={styles.actionButton} onPress={actionButton.onPress}>
           {actionButton.icon}
@@ -37,10 +37,16 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  headerCentered: {
+    justifyContent: 'center',
+  },
   pageTitle: {
     fontSize: FontSize['3xl'], // 28px
     fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
+  },
+  pageTitleCentered: {
+    textAlign: 'center',
   },
   actionButton: {
     flexDirection: 'row',

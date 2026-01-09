@@ -13,7 +13,7 @@ import { SearchBar } from '@/components';
 import { KitchenLayout } from '@/components/kitchen';
 import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
 import { fetchKitchenDietOverview } from '@/Services/dietsApi';
-import { Colors, FontSize, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
+import { Colors, FontSize, Spacing, BorderRadius, Layout, Shadows, FontWeight } from '@/constants';
 
 interface DietGroup {
   diet_type: string;
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   searchLabel: {
-    fontSize: FontSize.md,
-    fontWeight: '600',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   dietTitle: {
     fontSize: FontSize.lg,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
     flex: 1,
   },
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   countBadge: {
     fontSize: FontSize.md,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     color: Colors.textSecondary,
     backgroundColor: Colors.backgroundSecondary,
     paddingHorizontal: Spacing.md,
@@ -395,14 +395,14 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#334155',
+    backgroundColor: '#047857',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
   },
   tableHeaderText: {
     color: '#FFFFFF',
     fontSize: FontSize.sm,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
   },
   tableRow: {
     flexDirection: 'row',
@@ -411,6 +411,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
     minHeight: 60,
+    backgroundColor: Colors.background,
+    ':hover': {
+      backgroundColor: Colors.backgroundSecondary,
+    },
   },
   tableCell: {
     justifyContent: 'center',
@@ -428,7 +432,7 @@ const styles = StyleSheet.create({
     flex: 4,
   },
   boldText: {
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
   },
   descriptionText: {
     fontSize: FontSize.sm,
@@ -450,7 +454,7 @@ const styles = StyleSheet.create({
   },
   preferenceLabel: {
     fontSize: FontSize.xs,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
   },
   preferenceItems: {
@@ -470,7 +474,7 @@ const styles = StyleSheet.create({
   preferenceChipText: {
     fontSize: FontSize.xs,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -508,7 +512,7 @@ const styles = StyleSheet.create({
   },
   residentCardName: {
     fontSize: FontSize.lg,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     flex: 1,
   },
@@ -524,7 +528,7 @@ const styles = StyleSheet.create({
   residentCardRoomText: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
   },
   residentCardSection: {
     gap: Spacing.xs,
@@ -537,7 +541,7 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     fontSize: FontSize.sm,
-    fontWeight: '700',
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
   },
   residentCardDescription: {
@@ -556,7 +560,7 @@ const styles = StyleSheet.create({
   },
   preferenceLabelMobile: {
     fontSize: FontSize.sm,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
   },
   preferenceItemsMobile: {
@@ -576,6 +580,6 @@ const styles = StyleSheet.create({
   preferenceChipTextMobile: {
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
   },
 });
