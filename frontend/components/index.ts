@@ -4,6 +4,9 @@ export * from './navigation/navigation-bar';
 // UI Components
 export * from './ui/search-bar';
 
+// Auth Components
+export * from './RoleGuard';
+
 // Announcement Components
 export * from './announcement-create-modal';
 export * from './announcements-modal';
