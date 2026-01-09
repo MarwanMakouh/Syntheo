@@ -312,6 +312,7 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     marginBottom: Spacing.xl,
+    zIndex: 100,
   },
   emptyState: {
     flex: 1,

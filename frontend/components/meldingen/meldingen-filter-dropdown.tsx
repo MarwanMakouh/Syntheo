@@ -165,6 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.xl,
     alignItems: 'center',
+    zIndex: 100,
   },
   dropdownContainer: {
     flexDirection: 'row',
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     ...Shadows.dropdown,
     maxHeight: 200,
-    zIndex: 1,
+    ...(Platform.OS === 'web' ? { zIndex: 10001 } : { zIndex: 2001 }),
   },
   dropdownListWeb: {
     position: 'absolute' as any,
