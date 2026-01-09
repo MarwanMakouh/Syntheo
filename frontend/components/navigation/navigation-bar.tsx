@@ -21,7 +21,8 @@ export function NavigationBar() {
     (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
     (segments as string[]).includes('wijzigingsverzoeken') ||
     (segments as string[]).includes('wijzigingsverzoek-detail') ||
-    (segments as string[]).includes('kamerbeheer');
+    (segments as string[]).includes('kamerbeheer') ||
+    (segments as string[]).includes('meldingen');
 
   const handleNotifications = () => {
     setAnnouncementsModalVisible(true);
@@ -42,7 +43,22 @@ export function NavigationBar() {
   };
 
   const handleBack = () => {
-    router.back();
+    // Check if we're on specific pages that need custom back navigation
+    const currentSegments = segments as string[];
+
+    if (currentSegments.includes('meldingen')) {
+      // From meldingen, go back to hoofdverpleger dashboard
+      router.push('/dashboard');
+    } else if (currentSegments.includes('wijzigingsverzoeken') || currentSegments.includes('kamerbeheer')) {
+      // From wijzigingsverzoeken or kamerbeheer, go back to hoofdverpleger dashboard
+      router.push('/dashboard');
+    } else if (currentSegments.includes('wijzigingsverzoek-detail')) {
+      // From detail page, go back to wijzigingsverzoeken
+      router.push('/wijzigingsverzoeken');
+    } else {
+      // Default back behavior
+      router.back();
+    }
   };
 
   return (

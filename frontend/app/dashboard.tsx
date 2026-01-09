@@ -13,9 +13,10 @@ import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/c
 import { StaffLayout } from '@/components';
 import { AnnouncementCreatePopup } from '@/components/announcements/announcement-create-popup';
 import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
+import { MeldingDetailsPopup } from '@/components/melding-details-popup';
 import { formatDate } from '@/utils/date';
 import { fetchResidents } from '@/Services/residentsApi';
-import { fetchNotes } from '@/Services/notesApi';
+import { fetchNotes, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { fetchRooms } from '@/Services/roomsApi';
 import { fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { fetchMedicationRounds } from '@/Services/medicationRoundsApi';
@@ -35,6 +36,9 @@ export default function DashboardScreen() {
   const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
   const [residentModalVisible, setResidentModalVisible] = useState(false);
   const [selectedResident, setSelectedResident] = useState<any>(null);
+  const [meldingModalVisible, setMeldingModalVisible] = useState(false);
+  const [selectedMelding, setSelectedMelding] = useState<any>(null);
+  const [isResolving, setIsResolving] = useState(false);
 
   const [residents, setResidents] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
@@ -102,20 +106,27 @@ export default function DashboardScreen() {
       },
       {
         id: 2,
+        title: 'Meldingen',
+        subtitle: `${stats.urgent + stats.attention} open meldingen`,
+        icon: 'notifications-active',
+        color: Colors.primary,
+      },
+      {
+        id: 3,
         title: 'Aankondiging Maken',
         subtitle: 'Bericht sturen naar personeel',
         icon: 'campaign',
         color: Colors.primary,
       },
       {
-        id: 3,
+        id: 4,
         title: 'Kamerbeheer',
         subtitle: 'Bewoners toewijzen',
         icon: 'meeting-room',
         color: Colors.primary,
       },
     ],
-    [stats.pendingChanges]
+    [stats.pendingChanges, stats.urgent, stats.attention]
   );
 
   // Get urgent residents from data (one entry per resident, latest urgent note)
@@ -203,10 +214,64 @@ export default function DashboardScreen() {
     console.log(`Action pressed: ${actionTitle}`);
     if (actionTitle === 'Wijzigingsverzoeken') {
       router.push('/wijzigingsverzoeken');
+    } else if (actionTitle === 'Meldingen') {
+      router.push('/meldingen');
     } else if (actionTitle === 'Aankondiging Maken') {
       setAnnouncementModalVisible(true);
     } else if (actionTitle === 'Kamerbeheer') {
       router.push('/kamerbeheer');
+    }
+  };
+
+  const handleNotePress = (note: any) => {
+    const resident = residents.find((r) => r.resident_id === note.resident_id);
+    const author = users.find((u) => u.user_id === note.author_id);
+
+    setSelectedMelding({
+      noteId: note.note_id,
+      residentName: resident?.name || 'Onbekend',
+      category: note.category,
+      urgency: note.urgency,
+      reportedBy: author?.name || 'Onbekend',
+      timestamp: formatDate(note.created_at, 'dd-MM-yyyy, HH:mm'),
+      description: note.content,
+      status: note.is_resolved ? 'Afgehandeld' : 'Open',
+      isResolved: note.is_resolved,
+    });
+    setMeldingModalVisible(true);
+  };
+
+  const handleResolve = async () => {
+    if (!selectedMelding || !currentUser) return;
+
+    try {
+      setIsResolving(true);
+      await resolveNote(selectedMelding.noteId, currentUser.user_id);
+      setMeldingModalVisible(false);
+      setSelectedMelding(null);
+      await loadDashboardData();
+    } catch (err) {
+      console.error('Failed to resolve note:', err);
+      alert('Kon melding niet afhandelen');
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const handleUnresolve = async () => {
+    if (!selectedMelding) return;
+
+    try {
+      setIsResolving(true);
+      await unresolveNote(selectedMelding.noteId);
+      setMeldingModalVisible(false);
+      setSelectedMelding(null);
+      await loadDashboardData();
+    } catch (err) {
+      console.error('Failed to unresolve note:', err);
+      alert('Kon melding niet heropenen');
+    } finally {
+      setIsResolving(false);
     }
   };
 
@@ -457,6 +522,20 @@ export default function DashboardScreen() {
         resident={selectedResident}
         roomNumber={selectedResident ? rooms.find((r) => r.resident_id === selectedResident.resident_id)?.room_number : undefined}
         urgentNotes={selectedResident ? notes.filter((n) => n.resident_id === selectedResident.resident_id && n.urgency === 'Hoog' && !n.is_resolved) : []}
+        onNotePress={handleNotePress}
+      />
+
+      {/* Melding Details Popup */}
+      <MeldingDetailsPopup
+        visible={meldingModalVisible}
+        onClose={() => {
+          setMeldingModalVisible(false);
+          setSelectedMelding(null);
+        }}
+        melding={selectedMelding}
+        onResolve={handleResolve}
+        onUnresolve={handleUnresolve}
+        isResolving={isResolving}
       />
     </StaffLayout>
   );
