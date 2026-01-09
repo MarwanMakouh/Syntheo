@@ -157,6 +157,10 @@ export default function DietenScreen() {
                     color={getDietIconColor(group.diet_type)}
                   />
                 </View>
+                <Text style={styles.dietTitle}>{group.diet_type}</Text>
+              </View>
+              <View style={styles.dietHeaderRight}>
+                <Text style={styles.countBadge}>{group.count}</Text>
                 <MaterialIcons
                   name={expandedSections.has(group.diet_type) ? 'expand-less' : 'expand-more'}
                   size={24}
@@ -370,6 +374,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     flex: 1,
+  },
+  dietHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  countBadge: {
+    fontSize: FontSize.md,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
   },
   tableContainer: {
     borderTopWidth: 1,

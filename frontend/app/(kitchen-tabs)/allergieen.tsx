@@ -401,24 +401,28 @@ export default function AllergieenOverzichtScreen() {
             </Text>
           )}
         </View>
-      ) : (
-        <FlatList
-          data={residents}
-          renderItem={renderMobileCard}
-          keyExtractor={(item) => item.resident_id.toString()}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <MaterialIcons
-                name="person-off"
-                size={64}
-                color={Colors.iconMuted}
-              />
-              <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
-            </View>
-          }
-        />
-      )}
+
+        {/* Content - Web Table or Mobile List */}
+        {Platform.OS === 'web' ? (
+          renderTableLayout()
+        ) : (
+          <FlatList
+            data={residents}
+            renderItem={renderMobileCard}
+            keyExtractor={(item) => item.resident_id.toString()}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialIcons
+                  name="person-off"
+                  size={64}
+                  color={Colors.iconMuted}
+                />
+                <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
+              </View>
+            }
+          />
+        )}
         </ScrollView>
       </View>
     </KitchenLayout>
