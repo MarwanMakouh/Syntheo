@@ -109,6 +109,7 @@ export default function DashboardAuditLogsScreen() {
               </>
             )}
           </View>
+<<<<<<< Updated upstream
 
           {/* Loading State */}
           {loading ? (
@@ -146,6 +147,8 @@ export default function DashboardAuditLogsScreen() {
               {/* No pagination controls */}
             </>
           )}
+=======
+>>>>>>> Stashed changes
         </ScrollView>
       </AdminLayout>
     </RoleGuard>
