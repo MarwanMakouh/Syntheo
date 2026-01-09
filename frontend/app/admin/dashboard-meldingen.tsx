@@ -12,6 +12,7 @@ import {
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { AdminLayout, ConfirmationModal } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { StatsCard } from '@/components/admin/stats-card';
 import { NoteCard } from '@/components/admin/note-card';
 import { NotesFilters } from '@/components/admin/notes-filters';
@@ -172,103 +173,105 @@ export default function DashboardMeldingenScreen() {
   };
 
   return (
-    <AdminLayout activeRoute="meldingen">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.titleContainer}>
-              <MaterialIcons name="info" size={32} color={Colors.primary} />
-              <Text style={styles.pageTitle}>Meldingen</Text>
-            </View>
-            <Text style={styles.breadcrumb}>Home / Meldingen</Text>
-          </View>
-
-          {/* Loading State */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Meldingen laden...</Text>
-            </View>
-          ) : error ? (
-            /* Error State */
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              {/* Stats Cards */}
-              <View style={styles.statsContainer}>
-                <StatsCard label="Totaal" value={stats.total} color="#34C759" />
-                <StatsCard label="Open" value={stats.open} color="#E74C3C" />
-                <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
-                <StatsCard label="Urgent" value={stats.urgent} color="#E74C3C" />
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="meldingen">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.titleContainer}>
+                <MaterialIcons name="info" size={32} color={Colors.primary} />
+                <Text style={styles.pageTitle}>Meldingen</Text>
               </View>
+              <Text style={styles.breadcrumb}>Home / Meldingen</Text>
+            </View>
 
-              {/* Filters */}
-              <NotesFilters
-                urgencyFilter={urgencyFilter}
-                categoryFilter={categoryFilter}
-                statusFilter={statusFilter}
-                dateFilter={dateFilter}
-                searchQuery={searchQuery}
-                onUrgencyFilterChange={setUrgencyFilter}
-                onCategoryFilterChange={setCategoryFilter}
-                onStatusFilterChange={setStatusFilter}
-                onDateFilterChange={setDateFilter}
-                onSearchChange={setSearchQuery}
-              />
-
-              {/* Notes List */}
-              {filteredNotes.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <MaterialIcons name="speaker-notes-off" size={64} color={Colors.textSecondary} />
-                  <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
-                  <Text style={styles.emptySubtext}>
-                    Probeer je filters aan te passen of verwijder de zoekterm.
-                  </Text>
+            {/* Loading State */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Meldingen laden...</Text>
+              </View>
+            ) : error ? (
+              /* Error State */
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                  <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                {/* Stats Cards */}
+                <View style={styles.statsContainer}>
+                  <StatsCard label="Totaal" value={stats.total} color="#34C759" />
+                  <StatsCard label="Open" value={stats.open} color="#E74C3C" />
+                  <StatsCard label="Afgehandeld" value={stats.resolved} color="#27AE60" />
+                  <StatsCard label="Urgent" value={stats.urgent} color="#E74C3C" />
                 </View>
-              ) : (
-                <View style={styles.notesList}>
-                  {filteredNotes.map((note) => (
-                    <NoteCard
-                      key={note.note_id}
-                      note={note}
-                      residentName={getResidentName(note.resident_id)}
-                      authorName={getAuthorName(note.author_id)}
-                      onView={() => handleViewNote(note.note_id)}
-                      onResolve={note.is_resolved ? undefined : () => handleResolveNote(note.note_id)}
-                      onUnresolve={note.is_resolved ? () => handleUnresolveNote(note.note_id) : undefined}
-                      onDelete={() => handleDeleteNote(note)}
-                    />
-                  ))}
-                </View>
-              )}
-            </>
-          )}
-        </View>
-      </ScrollView>
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        visible={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setNoteToDelete(null);
-        }}
-        onConfirm={confirmDeleteNote}
-        title="Melding Verwijderen"
-        message={`Weet je zeker dat je deze melding wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
-        confirmText="Verwijderen"
-        cancelText="Annuleren"
-        isLoading={isDeleting}
-        type="danger"
-      />
-    </AdminLayout>
+                {/* Filters */}
+                <NotesFilters
+                  urgencyFilter={urgencyFilter}
+                  categoryFilter={categoryFilter}
+                  statusFilter={statusFilter}
+                  dateFilter={dateFilter}
+                  searchQuery={searchQuery}
+                  onUrgencyFilterChange={setUrgencyFilter}
+                  onCategoryFilterChange={setCategoryFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  onDateFilterChange={setDateFilter}
+                  onSearchChange={setSearchQuery}
+                />
+
+                {/* Notes List */}
+                {filteredNotes.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <MaterialIcons name="speaker-notes-off" size={64} color={Colors.textSecondary} />
+                    <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
+                    <Text style={styles.emptySubtext}>
+                      Probeer je filters aan te passen of verwijder de zoekterm.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.notesList}>
+                    {filteredNotes.map((note) => (
+                      <NoteCard
+                        key={note.note_id}
+                        note={note}
+                        residentName={getResidentName(note.resident_id)}
+                        authorName={getAuthorName(note.author_id)}
+                        onView={() => handleViewNote(note.note_id)}
+                        onResolve={note.is_resolved ? undefined : () => handleResolveNote(note.note_id)}
+                        onUnresolve={note.is_resolved ? () => handleUnresolveNote(note.note_id) : undefined}
+                        onDelete={() => handleDeleteNote(note)}
+                      />
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          visible={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setNoteToDelete(null);
+          }}
+          onConfirm={confirmDeleteNote}
+          title="Melding Verwijderen"
+          message={`Weet je zeker dat je deze melding wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+          confirmText="Verwijderen"
+          cancelText="Annuleren"
+          isLoading={isDeleting}
+          type="danger"
+        />
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 

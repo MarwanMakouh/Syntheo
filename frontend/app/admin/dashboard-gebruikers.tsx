@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout, UserFormModal, ConfirmationModal } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { UsersTable } from '@/components/admin/users-table';
 import { UsersFilters } from '@/components/admin/users-filters';
 import { fetchUsers, deleteUser, createUser, updateUser } from '@/Services';
@@ -137,84 +138,86 @@ export default function DashboardGebruikersScreen() {
   };
 
   return (
-    <AdminLayout activeRoute="gebruikers">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.pageTitle}>Personeelsbeheer</Text>
-            <TouchableOpacity style={styles.newButton} onPress={handleNewUser}>
-              <MaterialIcons name="person-add" size={20} color={Colors.background} />
-              <Text style={styles.newButtonText}>Nieuw Personeelslid</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Loading State */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Gebruikers laden...</Text>
-            </View>
-          ) : error ? (
-            /* Error State */
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
-                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="gebruikers">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.pageTitle}>Personeelsbeheer</Text>
+              <TouchableOpacity style={styles.newButton} onPress={handleNewUser}>
+                <MaterialIcons name="person-add" size={20} color={Colors.background} />
+                <Text style={styles.newButtonText}>Nieuw Personeelslid</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <>
-              {/* Filters */}
-              <UsersFilters
-                roleFilter={roleFilter}
-                statusFilter={statusFilter}
-                searchQuery={searchQuery}
-                onRoleFilterChange={setRoleFilter}
-                onStatusFilterChange={setStatusFilter}
-                onSearchChange={setSearchQuery}
-              />
 
-              {/* Users Table */}
-              <UsersTable
-                users={filteredUsers}
-                onEdit={handleEditUser}
-                onDelete={handleDeleteUser}
-              />
-            </>
-          )}
-        </View>
-      </ScrollView>
+            {/* Loading State */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Gebruikers laden...</Text>
+              </View>
+            ) : error ? (
+              /* Error State */
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
+                  <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                {/* Filters */}
+                <UsersFilters
+                  roleFilter={roleFilter}
+                  statusFilter={statusFilter}
+                  searchQuery={searchQuery}
+                  onRoleFilterChange={setRoleFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  onSearchChange={setSearchQuery}
+                />
 
-      {/* User Form Modal */}
-      <UserFormModal
-        visible={showUserModal}
-        onClose={() => {
-          setShowUserModal(false);
-          setEditingUser(null);
-        }}
-        onSubmit={handleSubmitUser}
-        isLoading={isCreating}
-        user={editingUser || undefined}
-      />
+                {/* Users Table */}
+                <UsersTable
+                  users={filteredUsers}
+                  onEdit={handleEditUser}
+                  onDelete={handleDeleteUser}
+                />
+              </>
+            )}
+          </View>
+        </ScrollView>
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        visible={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setUserToDelete(null);
-        }}
-        onConfirm={confirmDelete}
-        title="Personeelslid Verwijderen"
-        message={`Weet je zeker dat je ${userToDelete?.name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
-        confirmText="Verwijderen"
-        cancelText="Annuleren"
-        isLoading={isDeleting}
-        type="danger"
-      />
-    </AdminLayout>
+        {/* User Form Modal */}
+        <UserFormModal
+          visible={showUserModal}
+          onClose={() => {
+            setShowUserModal(false);
+            setEditingUser(null);
+          }}
+          onSubmit={handleSubmitUser}
+          isLoading={isCreating}
+          user={editingUser || undefined}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          visible={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setUserToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          title="Personeelslid Verwijderen"
+          message={`Weet je zeker dat je ${userToDelete?.name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+          confirmText="Verwijderen"
+          cancelText="Annuleren"
+          isLoading={isDeleting}
+          type="danger"
+        />
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 

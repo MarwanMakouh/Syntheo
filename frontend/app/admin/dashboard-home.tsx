@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AdminLayout, ActionCard, ActivityTimeline, type ActivityItem } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Layout } from '@/constants';
 
 export default function DashboardHomeScreen() {
@@ -41,11 +42,12 @@ export default function DashboardHomeScreen() {
   };
 
   return (
-    <AdminLayout activeRoute="dashboard">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          {/* Page Title */}
-          <Text style={styles.pageTitle}>Beheerder Dashboard</Text>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="dashboard">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            {/* Page Title */}
+            <Text style={styles.pageTitle}>Beheerder Dashboard</Text>
 
           {/* Action Cards */}
           <View style={styles.cardsContainer}>
@@ -88,6 +90,7 @@ export default function DashboardHomeScreen() {
         </View>
       </ScrollView>
     </AdminLayout>
+    </RoleGuard>
   );
 }
 

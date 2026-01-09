@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AdminLayout } from '@/components/admin';
+import { RoleGuard } from '@/components';
 import { AuditLogsTable, type AuditLog } from '@/components/admin/audit-logs-table';
 import { AuditLogsFilters } from '@/components/admin/audit-logs-filters';
 import { fetchAuditLogs } from '@/Services/auditLogsApi';
@@ -67,16 +68,46 @@ export default function DashboardAuditLogsScreen() {
 
 
   return (
-    <AdminLayout activeRoute="audit-logs">
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.titleContainer}>
-              <MaterialIcons name="history" size={32} color={Colors.primary} />
-              <Text style={styles.pageTitle}>Audit Trail</Text>
+    <RoleGuard allowedRoles={['Beheerder']}>
+      <AdminLayout activeRoute="audit-logs">
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.titleContainer}>
+                <MaterialIcons name="history" size={32} color={Colors.primary} />
+                <Text style={styles.pageTitle}>Audit Trail</Text>
+              </View>
+              <Text style={styles.breadcrumb}>Home / Audit Trail</Text>
             </View>
-            <Text style={styles.breadcrumb}>Home / Audit Trail</Text>
+
+            {/* Loading State */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Audit logs laden...</Text>
+              </View>
+            ) : error ? (
+              /* Error State */
+              <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                  <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+
+                {/* Audit Logs Table */}
+                <AuditLogsTable logs={filteredLogs} />
+
+                {/* Pagination controls */}
+
+
+                {/* No pagination controls */}
+              </>
+            )}
           </View>
 
           {/* Loading State */}
@@ -115,9 +146,9 @@ export default function DashboardAuditLogsScreen() {
               {/* No pagination controls */}
             </>
           )}
-        </View>
-      </ScrollView>
-    </AdminLayout>
+        </ScrollView>
+      </AdminLayout>
+    </RoleGuard>
   );
 }
 
