@@ -17,6 +17,7 @@ interface ResidentQuickViewPopupProps {
   resident: any;
   roomNumber?: string;
   urgentNotes?: any[];
+  onNotePress?: (note: any) => void;
 }
 
 export function ResidentQuickViewPopup({
@@ -25,6 +26,7 @@ export function ResidentQuickViewPopup({
   resident,
   roomNumber,
   urgentNotes = [],
+  onNotePress,
 }: ResidentQuickViewPopupProps) {
   if (!resident) return null;
 
@@ -82,17 +84,30 @@ export function ResidentQuickViewPopup({
                   <Text style={styles.sectionTitle}>Urgente Notities ({urgentNotes.length})</Text>
                 </View>
                 {urgentNotes.slice(0, 3).map((note, index) => (
-                  <View key={note.note_id || index} style={styles.noteCard}>
+                  <TouchableOpacity
+                    key={note.note_id || index}
+                    style={styles.noteCard}
+                    onPress={() => onNotePress && onNotePress(note)}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.noteHeader}>
                       <Text style={styles.noteCategory}>{note.category}</Text>
                       <Text style={styles.noteDate}>
                         {formatDate(note.created_at, 'dd-MM HH:mm')}
                       </Text>
                     </View>
-                    <Text style={styles.noteDescription} numberOfLines={2}>
-                      {note.description}
+                    <Text style={styles.noteDescription}>
+                      {note.content}
                     </Text>
-                  </View>
+                    {onNotePress && (
+                      <MaterialIcons
+                        name="chevron-right"
+                        size={20}
+                        color={Colors.textSecondary}
+                        style={styles.noteChevron}
+                      />
+                    )}
+                  </TouchableOpacity>
                 ))}
                 {urgentNotes.length > 3 && (
                   <Text style={styles.moreText}>+ {urgentNotes.length - 3} meer</Text>
@@ -276,6 +291,13 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     lineHeight: 18,
+    flex: 1,
+  },
+  noteChevron: {
+    position: 'absolute',
+    right: Spacing.md,
+    top: '50%',
+    marginTop: -10,
   },
   moreText: {
     fontSize: FontSize.sm,

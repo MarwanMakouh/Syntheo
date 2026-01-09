@@ -26,3 +26,6 @@ export * from './bewoners/medicatie-schema';
 export * from './bewoners/medicatie-historiek';
 export * from './bewoners/dieet-informatie';
 export * from './bewoners/dieet-bewerken-modal';
+
+// Melding Components
+export * from './melding-details-popup';
