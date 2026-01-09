@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { MeldingenFilterDropdown } from '@/components/MeldingenFilterDropdown';
-import { MeldingCard } from '@/components/MeldingCard';
-import { MeldingDetailsModal } from '@/components/MeldingDetailsModal';
-import { NieuweMeldingModal, RoleGuard } from '@/components';
+import { MeldingenFilterDropdown } from '@/components/meldingen/meldingen-filter-dropdown';
+import { MeldingCard } from '@/components/meldingen/melding-card';
+import { MeldingDetailsModal } from '@/components/meldingen/melding-details-modal';
+import { NieuweMeldingModal } from '@/components';
+import { StaffLayout } from '@/components/staff';
+import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchResidents } from '@/Services/residentsApi';
@@ -208,84 +210,87 @@ export default function MeldingenScreen() {
   // Show loading state
   if (loading) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Meldingen laden...</Text>
-      </View>
+      <StaffLayout activeRoute="meldingen">
+        <LoadingState message="Meldingen laden..." />
+      </StaffLayout>
     );
   }
 
   // Show error state
   if (error) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <MaterialIcons name="error-outline" size={48} color={Colors.error} />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-          <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
-        </TouchableOpacity>
-      </View>
+      <StaffLayout activeRoute="meldingen">
+        <ErrorState message={error} onRetry={loadData} />
+      </StaffLayout>
     );
   }
 
   return (
-    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
-      <View style={styles.container}>
-        {/* Header with Filter and New Button */}
-        <View style={styles.header}>
-          <MeldingenFilterDropdown onFilterChange={handleFilterChange} />
-          <TouchableOpacity style={styles.newButton} onPress={handleNewMelding}>
-            <MaterialIcons name="add" size={20} color="#FFFFFF" />
-            <Text style={styles.newButtonText}>Nieuwe Melding</Text>
-          </TouchableOpacity>
-        </View>
+    <StaffLayout activeRoute="meldingen">
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          {/* Page Header */}
+          <PageHeader
+            title="Meldingen"
+            actionButton={{
+              label: 'Nieuwe Melding',
+              onPress: handleNewMelding,
+              icon: <MaterialIcons name="add" size={20} color={Colors.textOnPrimary} />,
+            }}
+          />
 
-        {/* Meldingen List */}
-        <ScrollView style={styles.meldingenList}>
+          {/* Filter */}
+          <View style={styles.filterContainer}>
+            <MeldingenFilterDropdown onFilterChange={handleFilterChange} />
+          </View>
+
+          {/* Meldingen List */}
           {filteredNotes.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialIcons name="inbox" size={64} color={Colors.textSecondary} />
               <Text style={styles.emptyText}>Geen meldingen gevonden</Text>
             </View>
           ) : (
-            filteredNotes.map((note) => {
-              const resident = getResidentById(note.resident_id);
-              const status = getStatus(note);
+            <View style={styles.meldingenList}>
+              {filteredNotes.map((note) => {
+                const resident = getResidentById(note.resident_id);
+                const status = getStatus(note);
 
-              return (
-                <MeldingCard
-                  key={note.note_id}
-                  residentName={resident?.name || 'Onbekend'}
-                  description={note.content}
-                  timeAgo={getTimeAgo(note.created_at)}
-                  urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
-                  status={status}
-                  onPress={() => handleOpenMelding(note)}
-                />
-              );
-            })
+                return (
+                  <MeldingCard
+                    key={note.note_id}
+                    residentName={resident?.name || 'Onbekend'}
+                    description={note.content}
+                    timeAgo={getTimeAgo(note.created_at)}
+                    urgency={note.urgency as 'Hoog' | 'Matig' | 'Laag'}
+                    status={status}
+                    onPress={() => handleOpenMelding(note)}
+                  />
+                );
+              })}
+            </View>
           )}
-        </ScrollView>
+        </View>
+      </ScrollView>
 
-        {/* Details Modal */}
-        {selectedMelding && (
-          <MeldingDetailsModal
-            visible={modalVisible}
-            onClose={handleCloseModal}
-            melding={selectedMelding}
-            onSave={handleSaveMelding}
-          />
-        )}
-
-        {/* Nieuwe Melding Modal */}
-        <NieuweMeldingModal
-          visible={showNewMeldingModal}
-          onClose={() => setShowNewMeldingModal(false)}
-          onSave={handleSaveNewMelding}
-          residents={residents}
+      {/* Details Modal */}
+      {selectedMelding && (
+        <MeldingDetailsModal
+          visible={modalVisible}
+          onClose={handleCloseModal}
+          melding={selectedMelding}
+          onSave={handleSaveMelding}
         />
-      </View>
-    </RoleGuard>
+      )}
+
+      {/* Nieuwe Melding Modal */}
+      <NieuweMeldingModal
+        visible={showNewMeldingModal}
+        onClose={() => setShowNewMeldingModal(false)}
+        onSave={handleSaveNewMelding}
+        residents={residents}
+      />
+    </StaffLayout>
   );
 }
 
@@ -294,33 +299,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Layout.screenPaddingLarge,
+  content: {
+    padding: Spacing['2xl'],
+    maxWidth: Layout.webContentMaxWidth,
+    width: '100%',
+    alignSelf: 'center',
+    ...Platform.select({
+      web: {
+        paddingTop: Spacing['3xl'],
+      },
+    }),
   },
-  loadingText: {
-    marginTop: Spacing.lg,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-  },
-  errorText: {
-    marginTop: Spacing.lg,
-    fontSize: FontSize.md,
-    color: Colors.error,
-    textAlign: 'center',
+  filterContainer: {
     marginBottom: Spacing.xl,
-  },
-  retryButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Layout.screenPaddingLarge,
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-  },
-  retryButtonText: {
-    color: Colors.textOnPrimary,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
   },
   emptyState: {
     flex: 1,
@@ -333,36 +324,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Layout.screenPaddingLarge,
-    paddingTop: Layout.screenPadding,
-    paddingBottom: Layout.screenPadding,
-    backgroundColor: Colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    gap: Layout.screenPadding,
-    zIndex: 1000,
-  },
-  newButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.success,
-    paddingHorizontal: Layout.screenPadding,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-  },
-  newButtonText: {
-    color: Colors.textOnPrimary,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-  },
   meldingenList: {
-    flex: 1,
-    paddingHorizontal: Layout.screenPaddingLarge,
-    paddingTop: Layout.screenPadding,
+    gap: Spacing.md,
   },
 });

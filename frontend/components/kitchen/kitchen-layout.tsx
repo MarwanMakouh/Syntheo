@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { BaseSidebarLayout } from '@/components';
+import { BaseSidebarLayout } from '@/components/shared/base-sidebar-layout';
 
 interface KitchenLayoutProps {
   children: React.ReactNode;

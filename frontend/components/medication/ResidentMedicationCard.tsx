@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { StatusIndicator } from './StatusIndicator';
-import { MedicationCheckbox } from './MedicationCheckbox';
-import { MedicationRoundNotesModal } from './MedicationRoundNotesModal';
+import { StatusIndicator } from './status-indicator';
+import { MedicationCheckbox } from './medication-checkbox';
+import { MedicationRoundNotesModal } from './medication-round-notes-modal';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
 import type { MedicationRound } from '@/types/medication';
 

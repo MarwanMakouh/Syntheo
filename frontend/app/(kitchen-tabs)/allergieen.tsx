@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SearchBar, RoleGuard } from '@/components';
+import { SearchBar } from '@/components';
+import { KitchenLayout } from '@/components/kitchen';
+import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
 import { fetchKitchenAllergyOverview } from '@/Services/allergiesApi';
-import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
+import { Colors, FontSize, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
 
 const FLOOR_OPTIONS = [
   { label: 'Alle Verdiepingen', value: 0 },
@@ -53,6 +55,7 @@ export default function AllergieenOverzichtScreen() {
   const [selectedAllergy, setSelectedAllergy] = useState<string>('');
   const [residents, setResidents] = useState<ResidentWithAllergies[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadResidents();
@@ -61,6 +64,7 @@ export default function AllergieenOverzichtScreen() {
   const loadResidents = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params: any = {};
       if (selectedFloor > 0) params.floor = selectedFloor;
       if (selectedAllergy) params.allergyType = selectedAllergy;
@@ -68,9 +72,9 @@ export default function AllergieenOverzichtScreen() {
 
       const data = await fetchKitchenAllergyOverview(params);
       setResidents(data);
-    } catch (error) {
-      console.error('Failed to load residents:', error);
-      Alert.alert('Fout', 'Kon bewoners niet laden');
+    } catch (err) {
+      console.error('Failed to load residents:', err);
+      setError('Kon bewoners niet laden. Probeer het opnieuw.');
     } finally {
       setLoading(false);
     }
@@ -117,11 +121,22 @@ export default function AllergieenOverzichtScreen() {
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
       case 'ernst':
-        return '#EF4444';
+        return Colors.error;
       case 'matig':
-        return '#F97316';
+        return Colors.warning;
       default:
-        return '#10B981';
+        return Colors.success;
+    }
+  };
+
+  const getSeverityBackgroundColor = (severity: string) => {
+    switch (severity.toLowerCase()) {
+      case 'ernst':
+        return Colors.dangerLight;
+      case 'matig':
+        return Colors.warningLight;
+      default:
+        return Colors.successLight;
     }
   };
 
@@ -154,7 +169,7 @@ export default function AllergieenOverzichtScreen() {
               <View
                 style={[
                   styles.severityBadgeMobile,
-                  { backgroundColor: getSeverityColor(allergy.severity) + '20' },
+                  { backgroundColor: getSeverityBackgroundColor(allergy.severity) },
                 ]}
               >
                 <Text
@@ -198,11 +213,7 @@ export default function AllergieenOverzichtScreen() {
       </View>
 
       {/* Table Rows */}
-      {loading ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Bewoners laden...</Text>
-        </View>
-      ) : residents.length === 0 ? (
+      {residents.length === 0 ? (
         <View style={styles.emptyContainer}>
           <MaterialIcons name="person-off" size={48} color={Colors.iconMuted} />
           <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
@@ -240,7 +251,7 @@ export default function AllergieenOverzichtScreen() {
                     key={allergy.allergy_id}
                     style={[
                       styles.severityBadge,
-                      { backgroundColor: getSeverityColor(allergy.severity) + '20' },
+                      { backgroundColor: getSeverityBackgroundColor(allergy.severity) },
                     ]}
                   >
                     <Text
@@ -277,16 +288,34 @@ export default function AllergieenOverzichtScreen() {
     </View>
   );
 
+  if (loading) {
+    return (
+      <KitchenLayout activeRoute="allergieen">
+        <LoadingState message="Allergieën laden..." />
+      </KitchenLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <KitchenLayout activeRoute="allergieen">
+        <ErrorState message={error} onRetry={loadResidents} />
+      </KitchenLayout>
+    );
+  }
+
   return (
-    <RoleGuard allowedRoles={['Keukenpersoneel']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        {/* Warning Banner */}
-        <View style={styles.warningBanner}>
-          <MaterialIcons name="warning" size={20} color="#DC2626" />
-          <Text style={styles.warningText}>
-            LET OP: Levengevaarlijk! Deze lijst bevat alle bewoners met allergieën. Controleer ALTIJD voordat u een hierold of serveerd.
-          </Text>
-        </View>
+    <KitchenLayout activeRoute="allergieen">
+      <View style={styles.container}>
+        <PageHeader title="Allergieën Overzicht" />
+        <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+      {/* Warning Banner */}
+      <View style={styles.warningBanner}>
+        <MaterialIcons name="warning" size={20} color="#DC2626" />
+        <Text style={styles.warningText}>
+          LET OP: Levengevaarlijk! Deze lijst bevat alle bewoners met allergieën. Controleer ALTIJD voordat u een hierold of serveerd.
+        </Text>
+      </View>
 
         {/* Search Bar */}
         <SearchBar
@@ -372,34 +401,27 @@ export default function AllergieenOverzichtScreen() {
             </Text>
           )}
         </View>
-
-        {/* Conditional Layout: Mobile Cards or Desktop Table */}
-        {Platform.OS === 'web' ? (
-          <View style={styles.webTableWrapper}>
-            {renderTableLayout()}
-          </View>
-        ) : (
-          <FlatList
-            data={residents}
-            renderItem={renderMobileCard}
-            keyExtractor={(item) => item.resident_id.toString()}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <MaterialIcons
-                  name="person-off"
-                  size={64}
-                  color={Colors.iconMuted}
-                />
-                <Text style={styles.emptyText}>
-                  {loading ? 'Bewoners laden...' : 'Geen bewoners gevonden'}
-                </Text>
-              </View>
-            }
-          />
-        )}
-      </ScrollView>
-    </RoleGuard>
+      ) : (
+        <FlatList
+          data={residents}
+          renderItem={renderMobileCard}
+          keyExtractor={(item) => item.resident_id.toString()}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialIcons
+                name="person-off"
+                size={64}
+                color={Colors.iconMuted}
+              />
+              <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
+            </View>
+          }
+        />
+      )}
+        </ScrollView>
+      </View>
+    </KitchenLayout>
   );
 }
 
@@ -408,10 +430,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
+  content: {
+    flex: 1,
+  },
   scrollContent: {
+    padding: Spacing['2xl'],
+    maxWidth: Layout.webContentMaxWidth,
+    width: '100%',
+    alignSelf: 'center',
     ...Platform.select({
       web: {
-        flexGrow: 1,
+        paddingTop: Spacing['3xl'],
       },
     }),
   },
@@ -564,6 +593,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...Shadows.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -647,6 +677,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     overflow: 'hidden',
     minWidth: 1000,
+    ...Shadows.card,
   },
   tableHeader: {
     flexDirection: 'row',

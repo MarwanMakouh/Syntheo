@@ -7,13 +7,15 @@ import {
   TouchableOpacity,
   Platform,
   ActionSheetIOS,
+  ScrollView,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SearchBar, BewonerCard, RoleGuard } from '@/components';
+import { useRouter } from 'expo-router';
+import { StaffLayout } from '@/components/staff';
+import { PageHeader, LoadingState, ErrorState, SearchBar } from '@/components/ui';
+import { BewonerCard } from '@/components';
 import { fetchResidents } from '@/Services/residentsApi';
-import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
+import { Colors, FontSize, Spacing, BorderRadius, Layout, FontWeight, Shadows } from '@/constants';
 
 // backend callen
 const DEFAULT_FLOOR_ID = 1;
@@ -31,6 +33,7 @@ export default function BewonersScreen() {
   const [selectedFloor, setSelectedFloor] = useState<number>(
     DEFAULT_FLOOR_ID
   );
+  const [floorDropdownOpen, setFloorDropdownOpen] = useState(false);
   const [allResidents, setAllResidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,21 +72,30 @@ export default function BewonersScreen() {
     return filtered;
   }, [allResidents, selectedFloor, searchQuery]);
 
+  const handleFloorSelect = (floorValue: number) => {
+    setSelectedFloor(floorValue);
+    setFloorDropdownOpen(false);
+  };
+
   // Handle floor selection for iOS
   const handleFloorPress = () => {
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: ['Annuleren', ...FLOOR_OPTIONS.map(f => f.label)],
-        cancelButtonIndex: 0,
-      },
-      (buttonIndex) => {
-        if (buttonIndex > 0) {
-          setSelectedFloor(
-            Number(FLOOR_OPTIONS[buttonIndex - 1].value)
-          );
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Annuleren', ...FLOOR_OPTIONS.map(f => f.label)],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex > 0) {
+            setSelectedFloor(
+              Number(FLOOR_OPTIONS[buttonIndex - 1].value)
+            );
+          }
         }
-      }
-    );
+      );
+    } else {
+      setFloorDropdownOpen(!floorDropdownOpen);
+    }
   };
 
   const getFloorLabel = () => {
@@ -91,85 +103,101 @@ export default function BewonersScreen() {
     return floor ? floor.label : 'Verdieping 1';
   };
 
-  return (
-    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
-      <View style={styles.container}>
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Zoek bewoner op naam..."
-          style={styles.searchContainer}
-        />
+  if (loading) {
+    return (
+      <StaffLayout activeRoute="bewoners">
+        <LoadingState message="Bewoners laden..." />
+      </StaffLayout>
+    );
+  }
 
-        {/* Floor Filter */}
-        {Platform.OS === 'ios' ? (
-          <TouchableOpacity
-            style={styles.filterContainer}
-            onPress={handleFloorPress}
-          >
-            <MaterialIcons name="filter-list" size={20} color="#666" />
-            <Text style={styles.filterLabel}>Verdieping:</Text>
-            <Text style={styles.filterValue}>{getFloorLabel()}</Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.filterContainer}>
-            <MaterialIcons name="filter-list" size={20} color="#666" />
-            <Text style={styles.filterLabel}>Verdieping:</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectedFloor}
-                onValueChange={(value) =>
-                  setSelectedFloor(Number(value))
-                }
-                style={styles.picker}
+  return (
+    <StaffLayout activeRoute="bewoners">
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          <PageHeader title="Bewoners" />
+          
+          <View style={[styles.dropdownContainer, floorDropdownOpen && styles.dropdownContainerOpen]}>
+            <Text style={styles.label}>Verdieping:</Text>
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={handleFloorPress}
+                activeOpacity={0.7}
               >
-                <Picker.Item label="Verdieping 1" value={1} />
-                <Picker.Item label="Verdieping 2" value={2} />
-                <Picker.Item label="Verdieping 3" value={3} />
-              </Picker>
+                <Text style={styles.dropdownButtonText}>{getFloorLabel()}</Text>
+                <MaterialIcons
+                  name={floorDropdownOpen ? "arrow-drop-up" : "arrow-drop-down"}
+                  size={24}
+                  color={Colors.iconDefault}
+                />
+              </TouchableOpacity>
+
+              {floorDropdownOpen && Platform.OS !== 'ios' && (
+                <View style={[styles.dropdownList, Platform.OS === 'web' && styles.dropdownListWeb]}>
+                  <ScrollView style={styles.scrollView} nestedScrollEnabled>
+                    {FLOOR_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.dropdownItem,
+                          selectedFloor === option.value && styles.dropdownItemSelected,
+                        ]}
+                        onPress={() => handleFloorSelect(option.value)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            selectedFloor === option.value && styles.dropdownItemTextSelected,
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                        {selectedFloor === option.value && (
+                          <MaterialIcons name="check" size={20} color={Colors.primary} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
             </View>
           </View>
-        )}
 
-        {/* Results count */}
-        <Text style={styles.resultCount}>
-          {filteredResidents.length} bewoner
-          {filteredResidents.length !== 1 ? 's' : ''} gevonden
-        </Text>
+          {/* Results count */}
+          <Text style={styles.resultCount}>
+            {filteredResidents.length} bewoner
+            {filteredResidents.length !== 1 ? 's' : ''} gevonden
+          </Text>
 
-        {/* Residents List */}
-        <FlatList
-          data={filteredResidents}
-          renderItem={({ item }) => (
-            <BewonerCard
-              resident={item}
-              roomNumber={item.room?.room_number ?? null}
-              onPress={() =>
-                router.push(`/(tabs)/bewoners/${item.resident_id}` as any)
-              }
-            />
-          )}
-          keyExtractor={(item) => item.resident_id.toString()}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
+          {/* Residents List */}
+          {filteredResidents.length === 0 ? (
             <View style={styles.emptyContainer}>
               <MaterialIcons
                 name="person-off"
                 size={64}
                 color={Colors.iconMuted}
               />
-              <Text style={styles.emptyText}>
-                {loading
-                  ? 'Bewoners laden...'
-                  : 'Geen bewoners gevonden'}
-              </Text>
+              <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
             </View>
-          }
-        />
-      </View>
-    </RoleGuard>
+          ) : (
+            <View style={styles.listContent}>
+              {filteredResidents.map((item) => (
+                <BewonerCard
+                  key={item.resident_id}
+                  resident={item}
+                  roomNumber={item.room?.room_number ?? null}
+                  onPress={() =>
+                    router.push(`/(tabs)/bewoners/${item.resident_id}` as any)
+                  }
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </StaffLayout>
   );
 }
 
@@ -178,64 +206,99 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
-  searchContainer: {
-    margin: Layout.screenPadding,
+  content: {
+    padding: Spacing['2xl'],
+    maxWidth: Layout.webContentMaxWidth,
+    width: '100%',
+    alignSelf: 'center',
     ...Platform.select({
       web: {
-        maxWidth: 600,
-        alignSelf: 'center',
-        width: '100%',
+        paddingTop: Spacing['3xl'],
       },
     }),
   },
-  filterContainer: {
+  dropdownContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    marginHorizontal: Layout.screenPadding,
+    gap: Spacing.lg,
+    position: 'relative',
+    marginTop: Spacing.md,
     marginBottom: Spacing.md,
-    paddingLeft: Spacing.lg,
-    paddingRight: Platform.OS === 'ios' ? Spacing.lg : 0,
-    paddingVertical: Platform.OS === 'ios' ? Spacing.lg : 0,
-    borderRadius: BorderRadius.lg,
+  },
+  dropdownContainerOpen: {
+    ...(Platform.OS === 'web' ? { zIndex: 10000 } : { zIndex: 2000 }),
+  },
+  label: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  dropdownWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
-    ...Platform.select({
-      web: {
-        maxWidth: 600,
-        alignSelf: 'center',
-        width: '100%',
-      },
-    }),
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
   },
-  filterLabel: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    marginLeft: Spacing.md,
-    fontWeight: '500',
-  },
-  filterValue: {
-    flex: 1,
-    fontSize: FontSize.md,
+  dropdownButtonText: {
+    fontSize: FontSize.lg,
     color: Colors.textPrimary,
-    marginLeft: Spacing.md,
-    fontWeight: '600',
   },
-  pickerContainer: {
-    flex: 1,
+  dropdownList: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    ...Shadows.dropdown,
+    maxHeight: 200,
+    zIndex: 1,
   },
-  picker: {
-    height: 50,
+  dropdownListWeb: {
+    position: 'absolute' as any,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+  },
+  scrollView: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.selectedBackground,
+  },
+  dropdownItemText: {
+    fontSize: FontSize.lg,
+    color: Colors.textPrimary,
+  },
+  dropdownItemTextSelected: {
+    fontWeight: FontWeight.semibold,
+    color: Colors.primary,
   },
   resultCount: {
     fontSize: FontSize.md,
     color: Colors.textSecondary,
-    marginHorizontal: Layout.screenPadding,
     marginBottom: Spacing.md,
   },
   listContent: {
-    paddingHorizontal: Layout.screenPadding,
-    paddingBottom: Layout.screenPadding,
+    gap: Spacing.md,
   },
   emptyContainer: {
     alignItems: 'center',

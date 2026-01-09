@@ -5,7 +5,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { Colors, Spacing, FontSize, FontWeight, LineHeight, BorderRadius } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/contexts/AnnouncementsContext';
-import { AnnouncementsDropdown } from '@/components/announcements-dropdown';
+import { AnnouncementsDropdown } from '@/components/announcements/announcements-dropdown';
 import { useState } from 'react';
 
 export function NavigationBar() {

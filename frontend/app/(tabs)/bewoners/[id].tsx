@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { StaffLayout } from '@/components/staff';
+import { LoadingState, ErrorState } from '@/components/ui';
 import {
   ContactCard,
   BewonerDetailHeader,
@@ -219,11 +221,19 @@ export default function BewonerInfoScreen() {
 
   const medicatieHistoriek = generateHistoriek();
 
+  if (loadingResident) {
+    return (
+      <StaffLayout showBackButton pageTitle="Bewoner Details">
+        <LoadingState message="Bewoner laden..." />
+      </StaffLayout>
+    );
+  }
+
   if (!resident) {
     return (
-      <View style={styles.container}>
-        <Text>Bewoner niet gevonden</Text>
-      </View>
+      <StaffLayout showBackButton pageTitle="Bewoner Details">
+        <ErrorState message="Bewoner niet gevonden" onRetry={loadResidentData} />
+      </StaffLayout>
     );
   }
 
@@ -379,15 +389,14 @@ export default function BewonerInfoScreen() {
   };
 
   return (
-    <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
-      <View style={styles.container}>
-        <ScrollView style={styles.scrollView}>
-          {/* Bewoner Header */}
-          <BewonerDetailHeader
-            resident={resident}
-            roomNumber={roomData?.room_number || null}
-            floorNumber={roomData?.floor_id || null}
-          />
+    <StaffLayout showBackButton pageTitle="Bewoner Details">
+      <ScrollView style={styles.container}>
+        {/* Bewoner Header */}
+        <BewonerDetailHeader
+          resident={resident}
+          roomNumber={roomData?.room_number || null}
+          floorNumber={roomData?.floor_id || null}
+        />
 
           {/* Tabs */}
           <BewonerTabs
@@ -399,6 +408,9 @@ export default function BewonerInfoScreen() {
           {renderTabContent()}
         </ScrollView>
 
+        {/* Tab Content */}
+        {renderTabContent()}
+
         {/* Nieuwe Melding Modal */}
         <NieuweMeldingModal
           visible={showNewNoteModal}
@@ -406,8 +418,8 @@ export default function BewonerInfoScreen() {
           onSave={handleSaveNote}
           residentId={Number(id)}
         />
-      </View>
-    </RoleGuard>
+      </ScrollView>
+    </StaffLayout>
   );
 }
 

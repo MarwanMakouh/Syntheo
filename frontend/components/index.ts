@@ -5,21 +5,31 @@ export * from './navigation/navigation-bar';
 export * from './shared/base-sidebar-layout';
 
 // UI Components
-export * from './ui/search-bar';
+export * from './ui';
+
+// Layout Components
+export * from './shared/base-sidebar-layout';
+export * from './staff';
+export * from './kitchen';
+export * from './admin';
 
 // Auth Components
 export * from './RoleGuard';
 
 // Announcement Components
-export * from './announcement-create-modal';
-export * from './announcements-modal';
-export * from './announcement-list-item';
-export * from './announcements-dropdown';
-export * from './announcement-detail-overlay';
+export * from './announcements';
+
+// Meldingen Components
+export * from './meldingen';
+
+// Medication Components
+export * from './medication';
 
 // Kamerbeheer Components
 export * from './disconnect-confirmation-modal';
 export * from './assign-resident-modal';
+export * from './change-request-popup';
+export * from './resident-quick-view-popup';
 
 // Bewoners Components
 export * from './bewoners/bewoner-card';

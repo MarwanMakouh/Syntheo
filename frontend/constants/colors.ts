@@ -84,9 +84,9 @@ export const Colors = {
 
   // Backgrounds (use white app-wide instead of gray variants)
   background: palette.white,
-  backgroundSecondary: palette.white,
-  backgroundTertiary: palette.white,
-  backgroundMuted: palette.white,
+  backgroundSecondary: palette.gray50,
+  backgroundTertiary: palette.gray25,
+  backgroundMuted: palette.gray75,
 
   // Borders
   border: palette.gray100,
@@ -146,6 +146,15 @@ export const Colors = {
   // Tab bar
   tabActive: palette.green600,
   tabInactive: palette.gray500,
+
+  // Admin-specific
+  adminSidebar: '#1E4D2B',
+  grayMedium: '#95A5A6',
+
+  // Additional status light variants
+  successLight: '#D5F5E3',
+  dangerLight: '#FADBD8',
+  warningLight: '#FEF5E7',
 } as const;
 
 export type ColorKey = keyof typeof Colors;

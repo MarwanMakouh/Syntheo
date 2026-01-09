@@ -9,13 +9,23 @@ import {
   Image,
   Modal,
   Pressable,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
-import { AnnouncementsDropdown } from '@/components/announcements-dropdown';
+import { useRouter, usePathname } from 'expo-router';
+import { AnnouncementsDropdown } from '@/components/announcements/announcements-dropdown';
 import { useAnnouncements } from '@/contexts/AnnouncementsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '@/constants';
+
+interface BaseSidebarLayoutProps {
+  children: React.ReactNode;
+  navSections: NavSection[];
+  activeRoute?: string;
+  profileRole: string;
+}
 
 interface NavItem {
   id: string;
@@ -29,24 +39,35 @@ interface NavSection {
   items: NavItem[];
 }
 
-interface BaseSidebarLayoutProps {
-  children: React.ReactNode;
-  activeRoute?: string;
-  navSections: NavSection[];
-  profileRole: string;
-}
-
 export function BaseSidebarLayout({ 
   children, 
-  activeRoute = 'dashboard', 
   navSections,
-  profileRole 
+  activeRoute,
+  profileRole,
 }: BaseSidebarLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { unreadCount } = useAnnouncements();
-  const { setCurrentUser, currentUser } = useAuth();
+  const { currentUser, setCurrentUser } = useAuth();
+
+  // Auto-detect active route if not provided
+  const getActiveRoute = () => {
+    if (activeRoute) return activeRoute;
+    
+    // Try to match pathname against all routes
+    for (const section of navSections) {
+      for (const item of section.items) {
+        if (pathname.includes(item.id)) {
+          return item.id;
+        }
+      }
+    }
+    return '';
+  };
+
+  const currentActiveRoute = getActiveRoute();
 
   const handleNavigation = (route: string) => {
     router.push(route as any);
@@ -66,8 +87,9 @@ export function BaseSidebarLayout({
     setShowLogoutConfirm(false);
   };
 
+  // Mobile: just render children (let existing tab layout handle navigation)
   if (Platform.OS !== 'web') {
-    return <View style={styles.container}>{children}</View>;
+    return <>{children}</>;
   }
 
   return (
@@ -94,7 +116,7 @@ export function BaseSidebarLayout({
                 <Text style={styles.navSectionTitle}>{section.title}</Text>
               )}
               {section.items.map((item) => {
-                const isActive = activeRoute === item.id;
+                const isActive = currentActiveRoute === item.id;
                 return (
                   <TouchableOpacity
                     key={item.id}
@@ -149,7 +171,7 @@ export function BaseSidebarLayout({
             {/* Profile */}
             <View style={styles.profileContainer}>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{currentUser?.name || 'User'}</Text>
+                <Text style={styles.profileName}>{currentUser?.username || currentUser?.name || 'Gebruiker'}</Text>
                 <Text style={styles.profileRole}>{profileRole}</Text>
               </View>
               <View style={styles.profileAvatar}>
@@ -211,7 +233,46 @@ export function BaseSidebarLayout({
   );
 }
 
-const styles = StyleSheet.create({
+interface Styles {
+  container: ViewStyle;
+  sidebar: ViewStyle;
+  logoContainer: ViewStyle;
+  logoCircle: ViewStyle;
+  logo: ImageStyle;
+  logoText: TextStyle;
+  nav: ViewStyle;
+  navSection: ViewStyle;
+  navSectionTitle: TextStyle;
+  navItem: ViewStyle;
+  navItemActive: ViewStyle;
+  navItemText: TextStyle;
+  navItemTextActive: TextStyle;
+  main: ViewStyle;
+  topBar: ViewStyle;
+  topBarLeft: ViewStyle;
+  topBarRight: ViewStyle;
+  topBarIcon: ViewStyle;
+  notificationBadge: ViewStyle;
+  notificationBadgeText: TextStyle;
+  profileContainer: ViewStyle;
+  profileInfo: ViewStyle;
+  profileName: TextStyle;
+  profileRole: TextStyle;
+  profileAvatar: ViewStyle;
+  content: ViewStyle;
+  modalOverlay: ViewStyle;
+  modalContent: ViewStyle;
+  modalHeader: ViewStyle;
+  modalTitle: TextStyle;
+  modalMessage: TextStyle;
+  modalButtons: ViewStyle;
+  modalCancelButton: ViewStyle;
+  modalCancelText: TextStyle;
+  modalConfirmButton: ViewStyle;
+  modalConfirmText: TextStyle;
+}
+
+const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
     flexDirection: 'row',

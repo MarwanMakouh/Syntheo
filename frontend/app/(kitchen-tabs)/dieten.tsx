@@ -9,9 +9,11 @@ import {
   Platform,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SearchBar, RoleGuard } from '@/components';
+import { SearchBar } from '@/components';
+import { KitchenLayout } from '@/components/kitchen';
+import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
 import { fetchKitchenDietOverview } from '@/Services/dietsApi';
-import { Colors, FontSize, Spacing, BorderRadius, Layout } from '@/constants';
+import { Colors, FontSize, Spacing, BorderRadius, Layout, Shadows } from '@/constants';
 
 interface DietGroup {
   diet_type: string;
@@ -33,6 +35,7 @@ export default function DietenScreen() {
   const [dietGroups, setDietGroups] = useState<DietGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDiets();
@@ -41,14 +44,15 @@ export default function DietenScreen() {
   const loadDiets = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params: any = {};
       if (searchQuery) params.search = searchQuery;
 
       const data = await fetchKitchenDietOverview(params);
       setDietGroups(data);
-    } catch (error) {
-      console.error('Failed to load diets:', error);
-      Alert.alert('Fout', 'Kon diëten niet laden');
+    } catch (err) {
+      console.error('Failed to load diets:', err);
+      setError('Kon diëten niet laden. Probeer het opnieuw.');
     } finally {
       setLoading(false);
     }
@@ -82,75 +86,76 @@ export default function DietenScreen() {
   const getDietIconColor = (dietType: string): string => {
     switch (dietType) {
       case 'Diabetisch Dieet':
-        return '#EC4899';
+        return Colors.error;
       case 'Zoutarm Dieet':
-        return '#60A5FA';
+        return Colors.primary;
       case 'Vegetarisch':
-        return '#34D399';
+        return Colors.success;
       case 'Zachte Voeding':
-        return '#A78BFA';
+        return Colors.secondary;
       default:
         return Colors.primary;
     }
   };
 
+  if (loading) {
+    return (
+      <KitchenLayout activeRoute="dieten">
+        <LoadingState message="Diëten laden..." />
+      </KitchenLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <KitchenLayout activeRoute="dieten">
+        <ErrorState message={error} onRetry={loadDiets} />
+      </KitchenLayout>
+    );
+  }
+
   return (
-    <RoleGuard allowedRoles={['Keukenpersoneel']}>
-      <ScrollView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <MaterialIcons name="restaurant-menu" size={32} color={Colors.primary} />
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Diëten & Voorkeuren</Text>
-            <Text style={styles.subtitle}>Overzicht van alle speciale diëten en voorkeuren</Text>
-          </View>
-        </View>
+    <KitchenLayout activeRoute="dieten">
+      <View style={styles.container}>
+        <PageHeader title="Diëten & Voorkeuren" />
+        <ScrollView style={styles.content}>
+      {/* Search Bar */}
+      <View style={styles.searchSection}>
+        <Text style={styles.searchLabel}>Zoek Bewoner</Text>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Zoek op naam..."
+          style={styles.searchBar}
+        />
+      </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchSection}>
-          <Text style={styles.searchLabel}>Zoek Bewoner</Text>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Zoek op naam..."
-            style={styles.searchBar}
-          />
+      {/* Diet Groups */}
+      {dietGroups.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <MaterialIcons name="restaurant-menu" size={64} color={Colors.iconMuted} />
+          <Text style={styles.emptyText}>Geen diëten gevonden</Text>
         </View>
-
-        {/* Diet Groups */}
-        {loading ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Diëten laden...</Text>
-          </View>
-        ) : dietGroups.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialIcons name="restaurant-menu" size={64} color={Colors.iconMuted} />
-            <Text style={styles.emptyText}>Geen diëten gevonden</Text>
-          </View>
-        ) : (
-          dietGroups.map((group) => (
-            <View key={group.diet_type} style={styles.dietCard}>
-              <TouchableOpacity
-                style={styles.dietHeader}
-                onPress={() => toggleSection(group.diet_type)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.dietHeaderLeft}>
-                  <View
-                    style={[
-                      styles.dietIconContainer,
-                      { backgroundColor: getDietIconColor(group.diet_type) + '20' },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name={getDietIcon(group.diet_type)}
-                      size={24}
-                      color={getDietIconColor(group.diet_type)}
-                    />
-                  </View>
-                  <Text style={styles.dietTitle}>
-                    {group.diet_type} ({group.count} bewoner{group.count !== 1 ? 's' : ''})
-                  </Text>
+      ) : (
+        dietGroups.map((group) => (
+          <View key={group.diet_type} style={styles.dietCard}>
+            <TouchableOpacity
+              style={styles.dietHeader}
+              onPress={() => toggleSection(group.diet_type)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.dietHeaderLeft}>
+                <View
+                  style={[
+                    styles.dietIconContainer,
+                    { backgroundColor: getDietIconColor(group.diet_type) + '20' },
+                  ]}
+                >
+                  <MaterialIcons
+                    name={getDietIcon(group.diet_type)}
+                    size={24}
+                    color={getDietIconColor(group.diet_type)}
+                  />
                 </View>
                 <MaterialIcons
                   name={expandedSections.has(group.diet_type) ? 'expand-less' : 'expand-more'}
@@ -289,16 +294,85 @@ export default function DietenScreen() {
                             </View>
                           )}
                         </View>
-                      ))}
-                    </View>
-                  )}
-                </>
-              )}
-            </View>
-          ))
-        )}
-      </ScrollView>
-    </RoleGuard>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.mobileCardsContainer}>
+                    {group.residents.map((resident) => (
+                      <View key={resident.resident_id} style={styles.residentCard}>
+                        <View style={styles.residentCardHeader}>
+                          <Text style={styles.residentCardName}>{resident.name}</Text>
+                          <View style={styles.residentCardRoom}>
+                            <MaterialIcons name="room" size={14} color={Colors.textSecondary} />
+                            <Text style={styles.residentCardRoomText}>
+                              {resident.room_number || 'Geen kamer'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {resident.description && (
+                          <View style={styles.residentCardSection}>
+                            <View style={styles.sectionHeader}>
+                              <MaterialIcons name="info-outline" size={16} color={Colors.primary} />
+                              <Text style={styles.sectionHeaderText}>Beschrijving</Text>
+                            </View>
+                            <Text style={styles.residentCardDescription}>{resident.description}</Text>
+                          </View>
+                        )}
+
+                        {resident.preferences && (
+                          <View style={styles.residentCardSection}>
+                            <View style={styles.sectionHeader}>
+                              <MaterialIcons name="restaurant" size={16} color={Colors.primary} />
+                              <Text style={styles.sectionHeaderText}>Voorkeuren</Text>
+                            </View>
+
+                            {resident.preferences.likes && resident.preferences.likes.length > 0 && (
+                              <View style={styles.preferenceGroupMobile}>
+                                <View style={styles.preferenceHeaderMobile}>
+                                  <MaterialIcons name="thumb-up" size={14} color="#10B981" />
+                                  <Text style={styles.preferenceLabelMobile}>Houdt van</Text>
+                                </View>
+                                <View style={styles.preferenceItemsMobile}>
+                                  {resident.preferences.likes.map((item, index) => (
+                                    <View key={index} style={styles.preferenceChipMobile}>
+                                      <Text style={styles.preferenceChipTextMobile}>{item}</Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+
+                            {resident.preferences.dislikes && resident.preferences.dislikes.length > 0 && (
+                              <View style={styles.preferenceGroupMobile}>
+                                <View style={styles.preferenceHeaderMobile}>
+                                  <MaterialIcons name="thumb-down" size={14} color="#EF4444" />
+                                  <Text style={styles.preferenceLabelMobile}>Houdt niet van</Text>
+                                </View>
+                                <View style={styles.preferenceItemsMobile}>
+                                  {resident.preferences.dislikes.map((item, index) => (
+                                    <View key={index} style={[styles.preferenceChipMobile, styles.dislikeChipMobile]}>
+                                      <Text style={styles.preferenceChipTextMobile}>{item}</Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        ))
+      )}
+        </ScrollView>
+      </View>
+    </KitchenLayout>
   );
 }
 
@@ -307,28 +381,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Layout.screenPadding,
-    gap: Spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    fontSize: FontSize['2xl'],
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+  content: {
+    padding: Spacing['2xl'],
+    maxWidth: Layout.webContentMaxWidth,
+    width: '100%',
+    alignSelf: 'center',
+    ...Platform.select({
+      web: {
+        paddingTop: Spacing['3xl'],
+      },
+    }),
   },
   searchSection: {
-    padding: Layout.screenPadding,
-    paddingTop: 0,
+    marginBottom: Spacing.lg,
   },
   searchLabel: {
     fontSize: FontSize.md,
@@ -341,12 +406,12 @@ const styles = StyleSheet.create({
   },
   dietCard: {
     backgroundColor: Colors.background,
-    marginHorizontal: Layout.screenPadding,
     marginBottom: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
+    ...Shadows.card,
   },
   dietHeader: {
     flexDirection: 'row',
@@ -480,6 +545,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...Shadows.card,
   },
   residentCardHeader: {
     flexDirection: 'row',
