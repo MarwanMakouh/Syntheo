@@ -71,9 +71,22 @@ export const fetchAuditLogs = async (opts: FetchAuditLogsOptions = {}): Promise<
     if (opts.date_to) params.append('date_to', String(opts.date_to));
 
     const url = `${API_BASE_URL}${API_ENDPOINTS.auditLogs}${params.toString() ? `?${params.toString()}` : ''}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`API error ${res.status}`);
+    console.log('Fetching audit logs from:', url);
+
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('API error response:', errorText);
+      throw new Error(`API error ${res.status}: ${errorText}`);
+    }
     const json = await res.json();
+    console.log('Received audit logs response:', { itemCount: Array.isArray(json) ? json.length : json.data?.length });
 
     // Detect paginated response
     const rawItems = Array.isArray(json) ? json : json.data ?? json.data?.data ?? json.data ?? [];
@@ -89,8 +102,14 @@ export const fetchAuditLogs = async (opts: FetchAuditLogsOptions = {}): Promise<
     };
 
     return { items, meta };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching audit logs:', error);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - controleer je internetverbinding');
+    }
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Netwerkfout - kan server niet bereiken');
+    }
     throw error;
   }
 };
