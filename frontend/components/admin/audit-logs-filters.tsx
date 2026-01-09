@@ -166,12 +166,14 @@ export function AuditLogsFilters({
             style={{
               flex: 1,
               height: '100%',
-              fontSize: FontSize.md,
+              fontSize: `${FontSize.lg}px`,
               color: Colors.textPrimary,
               border: 'none',
               outline: 'none',
               backgroundColor: 'transparent',
-              fontFamily: 'inherit',
+              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontWeight: '400',
+              cursor: 'pointer',
             }}
             value={dateFilter}
             onChange={(e: any) => onDateFilterChange(e.target.value)}
