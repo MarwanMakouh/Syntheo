@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Modal, TouchableOpacity, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Modal, TouchableOpacity, ScrollView, Pressable, Platform } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, LineHeight } from '@/constants';
+import { Background } from '@react-navigation/elements';
 
 interface MeldingDetailsModalProps {
   visible: boolean;
@@ -141,16 +142,37 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
+    ...Platform.select({
+      default: {
+        justifyContent: 'flex-end',
+        alignItems: 'stretch',
+        padding: 0,
+      },
+      web: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Spacing.xl,
+      },
+    }),
   },
   popup: {
     backgroundColor: Colors.background,
-    borderRadius: BorderRadius.xl,
     width: '100%',
-    maxWidth: 600,
-    maxHeight: '85%',
+    ...Platform.select({
+      default: {
+        borderTopLeftRadius: BorderRadius.xl,
+        borderTopRightRadius: BorderRadius.xl,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        maxHeight: '90%',
+        minHeight: '70%',
+      },
+      web: {
+        borderRadius: BorderRadius.xl,
+        maxWidth: 600,
+        maxHeight: '85%',
+      },
+    }),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -162,24 +184,54 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing['2xl'],
-    paddingTop: Spacing.xl,
+    ...Platform.select({
+      default: {
+        paddingHorizontal: Spacing.lg,
+        paddingTop: Spacing.md,
+      },
+      web: {
+        paddingHorizontal: Spacing['2xl'],
+        paddingTop: Spacing.xl,
+      },
+    }),
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: Spacing['3xl'],
+    ...Platform.select({
+      default: {
+        marginBottom: Spacing.lg,
+      },
+      web: {
+        marginBottom: Spacing['3xl'],
+      },
+    }),
   },
   closeButton: {
     padding: Spacing.xs,
   },
   grid: {
-    gap: Spacing['3xl'],
-    marginBottom: Spacing['5xl'],
+    ...Platform.select({
+      default: {
+        gap: Spacing.lg,
+        marginBottom: Spacing['2xl'],
+      },
+      web: {
+        gap: Spacing['3xl'],
+        marginBottom: Spacing['5xl'],
+      },
+    }),
   },
   field: {
-    width: '48%',
+    ...Platform.select({
+      default: {
+        width: '100%',
+      },
+      web: {
+        width: '48%',
+      },
+    }),
   },
   fieldFullWidth: {
     width: '100%',
@@ -242,7 +294,15 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: Spacing.lg,
-    marginBottom: Spacing['5xl'],
+    ...Platform.select({
+      default: {
+        marginBottom: Spacing.xl,
+        paddingHorizontal: Spacing.lg,
+      },
+      web: {
+        marginBottom: Spacing['5xl'],
+      },
+    }),
   },
   cancelButton: {
     flex: 1,
@@ -259,7 +319,7 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     paddingVertical: 14,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.success,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
