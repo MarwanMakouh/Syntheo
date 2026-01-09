@@ -162,16 +162,33 @@ export function MeldingenFilterDropdown({ onFilterChange }: MeldingenFilterDropd
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    gap: Spacing.xl,
-    alignItems: 'center',
+    ...Platform.select({
+      default: {
+        flexDirection: 'column',
+        gap: Spacing.lg,
+      },
+      web: {
+        flexDirection: 'row',
+        gap: Spacing.xl,
+        alignItems: 'center',
+      },
+    }),
     zIndex: 100,
   },
   dropdownContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.lg,
+    ...Platform.select({
+      default: {
+        flexDirection: 'column',
+        gap: Spacing.sm,
+      },
+      web: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.lg,
+      },
+    }),
     position: 'relative',
+    flex: 1,
   },
   dropdownContainerOpen: {
     ...(Platform.OS === 'web' ? { zIndex: 10000 } : { zIndex: 2000 }),
@@ -182,7 +199,14 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   dropdownWrapper: {
-    minWidth: 200,
+    ...Platform.select({
+      default: {
+        width: '100%',
+      },
+      web: {
+        minWidth: 200,
+      },
+    }),
     position: 'relative',
   },
   dropdownButton: {
