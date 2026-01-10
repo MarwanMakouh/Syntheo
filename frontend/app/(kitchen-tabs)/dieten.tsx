@@ -412,9 +412,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
     minHeight: 60,
     backgroundColor: Colors.background,
-    ':hover': {
-      backgroundColor: Colors.backgroundSecondary,
-    },
   },
   tableCell: {
     justifyContent: 'center',
