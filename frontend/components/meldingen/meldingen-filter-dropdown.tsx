@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
   dropdownListWeb: {
     position: 'absolute' as any,
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+    zIndex: 10001,
   },
   scrollView: {
     maxHeight: 200,

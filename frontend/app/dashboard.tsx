@@ -11,29 +11,22 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
 import { StaffLayout } from '@/components';
-import { AnnouncementCreatePopup } from '@/components/announcements/announcement-create-popup';
 import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
 import { MeldingDetailsPopup } from '@/components/melding-details-popup';
 import { formatDate } from '@/utils/date';
-import { fetchResidents } from '@/Services/residentsApi';
+import { fetchResidents, fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
 import { fetchNotes, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { fetchRooms } from '@/Services/roomsApi';
 import { fetchChangeRequests } from '@/Services/changeRequestsApi';
-import { fetchMedicationRounds } from '@/Services/medicationRoundsApi';
+import { fetchMedicationRounds, fetchComplianceByDagdeel } from '@/Services/medicationRoundsApi';
 import { fetchUsers } from '@/Services/usersApi';
-import { createAnnouncement } from '@/Services/announcementsApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAnnouncements } from '@/contexts/AnnouncementsContext';
-import { API_BASE_URL, API_ENDPOINTS } from '@/constants';
 
 // component state (loaded from API)
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { currentUser } = useAuth();
-  const { refreshAnnouncements } = useAnnouncements();
-  const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
-  const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
   const [residentModalVisible, setResidentModalVisible] = useState(false);
   const [selectedResident, setSelectedResident] = useState<any>(null);
   const [meldingModalVisible, setMeldingModalVisible] = useState(false);
@@ -46,6 +39,12 @@ export default function DashboardScreen() {
   const [changeRequests, setChangeRequests] = useState<any[]>([]);
   const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [complianceByDagdeel, setComplianceByDagdeel] = useState<Array<{
+    dagdeel: string;
+    total: number;
+    completed: number;
+    percentage: number;
+  }>>([]);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -53,21 +52,15 @@ export default function DashboardScreen() {
     const attentionCount = notes.filter((n) => n.urgency === 'Matig' && !n.is_resolved).length;
     const stableCount = notes.filter((n) => n.urgency === 'Laag' && !n.is_resolved).length;
 
-    // Calculate medication compliance
-    const totalScheduled = medicationRounds.length;
-    const givenMeds = medicationRounds.filter((mr) => mr.status === 'Gegeven').length;
-    const compliance = totalScheduled > 0 ? Math.round((givenMeds / totalScheduled) * 100) : 0;
-
     const pendingChanges = changeRequests.filter((cr) => cr.status === 'In behandeling').length;
 
     return {
       urgent: urgentCount,
       attention: attentionCount,
       stable: stableCount,
-      compliance,
       pendingChanges,
     };
-  }, [notes, medicationRounds, changeRequests]);
+  }, [notes, changeRequests]);
 
   // Dynamic status cards with real data
   const dynamicStatusCards = useMemo(
@@ -94,40 +87,6 @@ export default function DashboardScreen() {
     [stats]
   );
 
-  // Dynamic action cards with real data
-  const actionCards = useMemo(
-    () => [
-      {
-        id: 1,
-        title: 'Wijzigingsverzoeken',
-        subtitle: `${stats.pendingChanges} in afwachting`,
-        icon: 'description',
-        color: Colors.primary,
-      },
-      {
-        id: 2,
-        title: 'Meldingen',
-        subtitle: `${stats.urgent + stats.attention} open meldingen`,
-        icon: 'notifications-active',
-        color: Colors.primary,
-      },
-      {
-        id: 3,
-        title: 'Aankondiging Maken',
-        subtitle: 'Bericht sturen naar personeel',
-        icon: 'campaign',
-        color: Colors.primary,
-      },
-      {
-        id: 4,
-        title: 'Kamerbeheer',
-        subtitle: 'Bewoners toewijzen',
-        icon: 'meeting-room',
-        color: Colors.primary,
-      },
-    ],
-    [stats.pendingChanges, stats.urgent, stats.attention]
-  );
 
   // Get urgent residents from data (one entry per resident, latest urgent note)
   const urgentResidents = useMemo(() => {
@@ -186,13 +145,14 @@ export default function DashboardScreen() {
       const today = new Date();
       const date = today.toISOString().split('T')[0];
 
-      const [residentsData, notesData, roomsData, changeReqsData, roundsData, usersData] = await Promise.all([
+      const [residentsData, notesData, roomsData, changeReqsData, roundsData, usersData, complianceData] = await Promise.all([
         fetchResidents(),
         fetchNotes(),
         fetchRooms(),
         fetchChangeRequests(),
         fetchMedicationRounds({ date_from: date, date_to: date }),
         fetchUsers(),
+        fetchComplianceByDagdeel(date),
       ]);
 
       setResidents(residentsData || []);
@@ -201,27 +161,15 @@ export default function DashboardScreen() {
       setChangeRequests(changeReqsData || []);
       setMedicationRounds(roundsData || []);
       setUsers(usersData || []);
+      setComplianceByDagdeel(complianceData || []);
 
-      // Debug: Log users to see what roles exist
-      console.log('Loaded users:', usersData);
-      console.log('User roles:', usersData.map((u: any) => ({ name: u.name, role: u.role })));
+      // Debug: Log compliance data
+      console.log('Loaded compliance by dagdeel:', complianceData);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     }
   };
 
-  const handleActionPress = (actionTitle: string) => {
-    console.log(`Action pressed: ${actionTitle}`);
-    if (actionTitle === 'Wijzigingsverzoeken') {
-      router.push('/wijzigingsverzoeken');
-    } else if (actionTitle === 'Meldingen') {
-      router.push('/meldingen');
-    } else if (actionTitle === 'Aankondiging Maken') {
-      setAnnouncementModalVisible(true);
-    } else if (actionTitle === 'Kamerbeheer') {
-      router.push('/kamerbeheer');
-    }
-  };
 
   const handleNotePress = (note: any) => {
     const resident = residents.find((r) => r.resident_id === note.resident_id);
@@ -275,132 +223,6 @@ export default function DashboardScreen() {
     }
   };
 
-  const handleSendAnnouncement = async (announcement: {
-    title: string;
-    message: string;
-    recipientCategory: string;
-    recipientDetails?: string | string[];
-  }) => {
-    if (!currentUser?.user_id) {
-      alert('Gebruiker niet ingelogd');
-      return;
-    }
-
-    setIsSendingAnnouncement(true);
-
-    try {
-      // Check if users are loaded
-      if (!users || users.length === 0) {
-        alert('Geen gebruikers geladen! Herlaad de pagina en probeer opnieuw.');
-        setIsSendingAnnouncement(false);
-        return;
-      }
-
-      // Determine recipient_type and recipient_ids based on category
-      let recipientType: 'all' | 'role' | 'floor' = 'all';
-      let recipientIds: number[] = [];
-      let floorId: number | null = null;
-
-      console.log('=== DEBUG ANNOUNCEMENT ===');
-      console.log('Category:', announcement.recipientCategory);
-      console.log('Details:', announcement.recipientDetails);
-      console.log('Total users:', users.length);
-      console.log('All users:', users.map(u => ({ name: u.name, role: u.role, floor_id: u.floor_id })));
-
-      if (announcement.recipientCategory === 'Iedereen') {
-        recipientType = 'all';
-        // All users get the announcement
-        recipientIds = users.map(user => user.user_id);
-        console.log('Iedereen selected - Recipients:', recipientIds);
-      } else if (announcement.recipientCategory === 'Verdieping') {
-        recipientType = 'floor';
-        // Extract floor number from "Verdieping X" string
-        const floorName = announcement.recipientDetails as string;
-        const floorNumber = parseInt(floorName.replace(/\D/g, ''));
-        floorId = floorNumber;
-        console.log('Floor selected:', floorNumber);
-        // Filter users by floor_id
-        recipientIds = users
-          .filter(user => user.floor_id === floorNumber)
-          .map(user => user.user_id);
-        console.log('Users on floor:', users.filter(user => user.floor_id === floorNumber));
-        console.log('Recipient IDs:', recipientIds);
-      } else if (announcement.recipientCategory === 'Afdeling') {
-        recipientType = 'role';
-        // Map department name to role(s) - flexible matching
-        const department = announcement.recipientDetails as string;
-
-        console.log('Department selected:', department);
-        console.log('All user roles:', users.map(u => u.role));
-
-        // Filter users by role using flexible matching
-        const matchedUsers = users.filter(user => {
-          const userRole = user.role.toLowerCase();
-
-          if (department === 'Keuken') {
-            // Match anything with "keuken" in the role name
-            return userRole.includes('keuken');
-          } else if (department === 'Verpleging') {
-            // Match anything with "verpleeg" or "verpleger" in the role name
-            return userRole.includes('verpleeg') || userRole.includes('verpleger') || userRole.includes('verpleegster');
-          } else if (department === 'Administratie') {
-            // Match anything with "admin" or "beheer" in the role name
-            return userRole.includes('admin') || userRole.includes('beheer');
-          }
-          return false;
-        });
-
-        console.log('Matched users:', matchedUsers);
-        recipientIds = matchedUsers.map(user => user.user_id);
-        console.log('Recipient IDs:', recipientIds);
-      } else if (announcement.recipientCategory === 'Individuele mensen') {
-        recipientType = 'role'; // Use 'role' as default for individual selection
-        // For now, we'll use names to match users (not ideal but works with current setup)
-        const selectedNames = announcement.recipientDetails as string[];
-        console.log('Individual people selected:', selectedNames);
-        recipientIds = users
-          .filter(user => selectedNames.includes(user.name))
-          .map(user => user.user_id);
-        console.log('Matched users:', users.filter(user => selectedNames.includes(user.name)));
-        console.log('Recipient IDs:', recipientIds);
-      }
-
-      // Ensure we have at least one recipient
-      if (recipientIds.length === 0) {
-        console.error('No recipients found!');
-        alert('Geen ontvangers gevonden voor deze selectie. Check de console voor details.');
-        setIsSendingAnnouncement(false);
-        return;
-      }
-
-      // Create the announcement via API
-      await createAnnouncement({
-        author_id: currentUser.user_id,
-        title: announcement.title,
-        message: announcement.message,
-        recipient_type: recipientType,
-        floor_id: floorId,
-        recipient_ids: recipientIds,
-      });
-
-      // Refresh announcements to show the new one
-      await refreshAnnouncements();
-
-      // Show success message
-      const recipientText = announcement.recipientDetails
-        ? `${announcement.recipientCategory} (${Array.isArray(announcement.recipientDetails) ? announcement.recipientDetails.join(', ') : announcement.recipientDetails})`
-        : announcement.recipientCategory;
-      alert(`Aankondiging "${announcement.title}" succesvol verzonden naar ${recipientText} (${recipientIds.length} ${recipientIds.length === 1 ? 'ontvanger' : 'ontvangers'})`);
-
-      // Close modal
-      setAnnouncementModalVisible(false);
-    } catch (error) {
-      console.error('Error sending announcement:', error);
-      alert('Fout bij het verzenden van aankondiging. Probeer opnieuw.');
-    } finally {
-      setIsSendingAnnouncement(false);
-    }
-  };
 
   const handleViewResident = (residentId: number) => {
     const resident = residents.find((r) => r.resident_id === residentId);
@@ -447,26 +269,37 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Action Cards */}
-        <View style={styles.actionCardsGrid}>
-          {actionCards.map((card) => (
-            <TouchableOpacity
-              key={card.id}
-              style={styles.actionCard}
-              onPress={() => handleActionPress(card.title)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.actionCardContent}>
-                <MaterialIcons
-                  name={card.icon as any}
-                  size={40}
-                  color={card.color}
-                />
-                <Text style={styles.actionTitle}>{card.title}</Text>
-                <Text style={styles.actionSubtitle}>{card.subtitle}</Text>
+        {/* Medication Compliance by Dagdeel */}
+        <View style={styles.complianceCard}>
+          <View style={styles.complianceHeader}>
+            <MaterialIcons name="medical-services" size={28} color={Colors.primary} />
+            <Text style={styles.complianceTitle}>Medicatie Compliance per Dagdeel</Text>
+          </View>
+          <View style={styles.dagdeelContainer}>
+            {complianceByDagdeel.map((item) => (
+              <View key={item.dagdeel} style={styles.dagdeelCard}>
+                <Text style={styles.dagdeelTitle}>{item.dagdeel}</Text>
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[
+                      styles.progressBar,
+                      {
+                        width: `${item.percentage}%`,
+                        backgroundColor:
+                          item.percentage >= 80 ? Colors.success :
+                          item.percentage >= 50 ? Colors.warningAlt :
+                          Colors.error
+                      }
+                    ]}
+                  />
+                </View>
+                <Text style={styles.dagdeelPercentage}>{item.percentage}%</Text>
+                <Text style={styles.dagdeelSubtitle}>
+                  {item.completed} van {item.total} medicaties
+                </Text>
               </View>
-            </TouchableOpacity>
-          ))}
+            ))}
+          </View>
         </View>
 
         {/* Urgent Residents */}
@@ -503,14 +336,6 @@ export default function DashboardScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Aankondiging Popup */}
-      <AnnouncementCreatePopup
-        visible={announcementModalVisible}
-        onClose={() => setAnnouncementModalVisible(false)}
-        onSend={handleSendAnnouncement}
-        isLoading={isSendingAnnouncement}
-      />
 
       {/* Resident Quick View Popup */}
       <ResidentQuickViewPopup
@@ -613,34 +438,85 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Action Cards
-  actionCardsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.lg,
-    marginBottom: Spacing['2xl'],
-  },
-  actionCard: {
-    flex: 1,
-    minWidth: 280,
+  // Compliance Card
+  complianceCard: {
     backgroundColor: Colors.background,
     padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
+    marginBottom: Spacing['2xl'],
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  actionCardContent: {
-    alignItems: 'flex-start',
+  complianceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
-  actionTitle: {
+  complianceTitle: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginLeft: Spacing.md,
+  },
+  complianceContent: {
+    alignItems: 'center',
+  },
+  compliancePercentage: {
+    fontSize: FontSize['4xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.primary,
+    marginBottom: Spacing.sm,
+  },
+  complianceSubtitle: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+
+  // Dagdeel Cards
+  dagdeelContainer: {
+    flexDirection: 'row',
+    gap: Spacing.lg,
+    ...Platform.select({
+      default: {
+        flexWrap: 'wrap',
+      },
+    }),
+  },
+  dagdeelCard: {
+    flex: 1,
+    minWidth: 140,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  dagdeelTitle: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
-    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  progressBarContainer: {
+    height: 12,
+    backgroundColor: Colors.border,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: BorderRadius.full,
+  },
+  dagdeelPercentage: {
+    fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
-  actionSubtitle: {
-    fontSize: FontSize.md,
+  dagdeelSubtitle: {
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
   },
 

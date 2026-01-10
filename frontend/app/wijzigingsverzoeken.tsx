@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight, Layout } from '@/constants';
-import { NavigationBar, RoleGuard } from '@/components';
+import { StaffLayout, RoleGuard } from '@/components';
 import { ChangeRequestPopup } from '@/components/change-request-popup';
 import { formatDate } from '@/utils/date';
 import { fetchChangeRequests, approveChangeRequest, rejectChangeRequest } from '@/Services/changeRequestsApi';
@@ -167,32 +167,33 @@ export default function WijzigingsverzookenScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <NavigationBar />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Laden...</Text>
-        </View>
-      </View>
+      <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+        <StaffLayout activeRoute="wijzigingsverzoeken">
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Laden...</Text>
+          </View>
+        </StaffLayout>
+      </RoleGuard>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <NavigationBar />
-        <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={48} color={Colors.error} />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </View>
+      <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
+        <StaffLayout activeRoute="wijzigingsverzoeken">
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="error-outline" size={48} color={Colors.error} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        </StaffLayout>
+      </RoleGuard>
     );
   }
 
   return (
     <RoleGuard allowedRoles={['Verpleegster', 'Hoofdverpleegster']}>
-      <View style={styles.container}>
-        <NavigationBar />
+      <StaffLayout activeRoute="wijzigingsverzoeken">
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -337,34 +338,30 @@ export default function WijzigingsverzookenScreen() {
               <Text style={styles.emptyText}>Geen wijzigingsverzoeken</Text>
             </View>
           )}
-      </ScrollView>
+        </ScrollView>
 
-      {/* Change Request Popup */}
-      <ChangeRequestPopup
-        visible={popupVisible}
-        onClose={() => {
-          setPopupVisible(false);
-          setSelectedRequest(null);
-        }}
-        request={selectedRequest}
-        resident={selectedRequest ? residents.find((r) => r.resident_id === selectedRequest.resident_id) : null}
-        requester={selectedRequest ? users.find((u) => u.user_id === selectedRequest.requester_id) : null}
-        reviewer={selectedRequest?.reviewer_id ? users.find((u) => u.user_id === selectedRequest.reviewer_id) : undefined}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        isApproving={isApproving}
-        isRejecting={isRejecting}
-      />
-      </View>
+        {/* Change Request Popup */}
+        <ChangeRequestPopup
+          visible={popupVisible}
+          onClose={() => {
+            setPopupVisible(false);
+            setSelectedRequest(null);
+          }}
+          request={selectedRequest}
+          resident={selectedRequest ? residents.find((r) => r.resident_id === selectedRequest.resident_id) : null}
+          requester={selectedRequest ? users.find((u) => u.user_id === selectedRequest.requester_id) : null}
+          reviewer={selectedRequest?.reviewer_id ? users.find((u) => u.user_id === selectedRequest.reviewer_id) : undefined}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          isApproving={isApproving}
+          isRejecting={isRejecting}
+        />
+      </StaffLayout>
     </RoleGuard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
-  },
   scrollContent: {
     padding: Layout.screenPaddingLarge,
     paddingBottom: Spacing['3xl'],
@@ -505,10 +502,11 @@ const styles = StyleSheet.create({
 
   // Loading State
   loadingContainer: {
-    flex: 1,
+    padding: Layout.screenPaddingLarge,
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.lg,
+    minHeight: 400,
   },
   loadingText: {
     fontSize: FontSize.lg,
@@ -517,11 +515,11 @@ const styles = StyleSheet.create({
 
   // Error State
   errorContainer: {
-    flex: 1,
+    padding: Layout.screenPaddingLarge,
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.lg,
-    padding: Spacing.xl,
+    minHeight: 400,
   },
   errorText: {
     fontSize: FontSize.lg,

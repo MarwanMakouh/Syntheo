@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { AdminLayout, RoleGuard } from '@/components';
+import { AdminLayout, RoleGuard } from '@/components/admin';
 import { AnnouncementCreateModal } from '@/components/announcements/announcement-create-modal';
 import { fetchAnnouncements, Announcement, createAnnouncement } from '@/Services/announcementsApi';
 import { fetchUsers } from '@/Services/usersApi';

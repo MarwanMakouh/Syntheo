@@ -13,7 +13,7 @@ class MedicationRoundController extends Controller
      */
     public function index(Request $request)
     {
-        $query = MedicationRound::with(['schedule', 'resMedication.medication', 'resident', 'givenBy']);
+        $query = MedicationRound::with(['schedule', 'resMedication.medication', 'resident.room', 'givenBy']);
 
         // Filter by resident
         if ($request->has('resident_id') && $request->resident_id) {
@@ -134,6 +134,55 @@ class MedicationRoundController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Medicatieronde succesvol verwijderd'
+        ]);
+    }
+
+    /**
+     * Get medication compliance statistics per dagdeel for a specific date
+     */
+    public function complianceByDagdeel(Request $request)
+    {
+        $date = $request->get('date', now()->toDateString());
+        $dagdelen = ['Ochtend', 'Middag', 'Avond', 'Nacht'];
+
+        $result = [];
+
+        foreach ($dagdelen as $dagdeel) {
+            // Get all active schedules for this dagdeel
+            $schedules = \App\Models\ResSchedule::where('time_of_day', $dagdeel)
+                ->whereHas('resMedication', function($query) {
+                    $query->where('is_active', true);
+                })
+                ->get();
+
+            $totalSchedules = $schedules->count();
+            $givenSchedules = 0;
+
+            // For each schedule, check if there's a 'given' round for today
+            foreach ($schedules as $schedule) {
+                $round = MedicationRound::where('schedule_id', $schedule->schedule_id)
+                    ->whereDate('given_at', $date)
+                    ->where('status', 'given')
+                    ->first();
+
+                if ($round) {
+                    $givenSchedules++;
+                }
+            }
+
+            $percentage = $totalSchedules > 0 ? round(($givenSchedules / $totalSchedules) * 100) : 0;
+
+            $result[] = [
+                'dagdeel' => $dagdeel,
+                'total' => $totalSchedules,
+                'completed' => $givenSchedules,
+                'percentage' => $percentage
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $result
         ]);
     }
 
