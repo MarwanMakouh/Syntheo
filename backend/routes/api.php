@@ -183,6 +183,7 @@ Route::prefix('res-schedules')->group(function () {
 // Medication Round Routes
 Route::prefix('medication-rounds')->group(function () {
     Route::get('/', [MedicationRoundController::class, 'index']);
+    Route::get('/compliance-by-dagdeel', [MedicationRoundController::class, 'complianceByDagdeel']);
     Route::get('/{id}', [MedicationRoundController::class, 'show']);
     Route::post('/', [MedicationRoundController::class, 'store']);
     Route::post('/bulk', [MedicationRoundController::class, 'bulkStore']);

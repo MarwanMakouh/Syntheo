@@ -200,3 +200,36 @@ export const saveMedicationRoundsBulk = async (data: {
     throw error;
   }
 };
+
+/**
+ * Get medication compliance statistics per dagdeel for a specific date
+ */
+export const fetchComplianceByDagdeel = async (date?: string): Promise<Array<{
+  dagdeel: string;
+  total: number;
+  completed: number;
+  percentage: number;
+}>> => {
+  try {
+    const params = new URLSearchParams();
+    if (date) params.append('date', date);
+
+    const url = `${API_BASE_URL}/medication-rounds/compliance-by-dagdeel${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<Array<{
+      dagdeel: string;
+      total: number;
+      completed: number;
+      percentage: number;
+    }>> = await response.json();
+    return result.data || [];
+  } catch (error) {
+    console.error('Error fetching compliance by dagdeel:', error);
+    throw error;
+  }
+};

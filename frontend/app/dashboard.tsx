@@ -18,7 +18,7 @@ import { fetchResidents, fetchResidentsWithMedicationForDagdeel } from '@/Servic
 import { fetchNotes, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { fetchRooms } from '@/Services/roomsApi';
 import { fetchChangeRequests } from '@/Services/changeRequestsApi';
-import { fetchMedicationRounds } from '@/Services/medicationRoundsApi';
+import { fetchMedicationRounds, fetchComplianceByDagdeel } from '@/Services/medicationRoundsApi';
 import { fetchUsers } from '@/Services/usersApi';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -39,6 +39,12 @@ export default function DashboardScreen() {
   const [changeRequests, setChangeRequests] = useState<any[]>([]);
   const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [complianceByDagdeel, setComplianceByDagdeel] = useState<Array<{
+    dagdeel: string;
+    total: number;
+    completed: number;
+    percentage: number;
+  }>>([]);
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -46,21 +52,15 @@ export default function DashboardScreen() {
     const attentionCount = notes.filter((n) => n.urgency === 'Matig' && !n.is_resolved).length;
     const stableCount = notes.filter((n) => n.urgency === 'Laag' && !n.is_resolved).length;
 
-    // Calculate medication compliance
-    const totalScheduled = medicationRounds.length;
-    const givenMeds = medicationRounds.filter((mr) => mr.status === 'Gegeven').length;
-    const compliance = totalScheduled > 0 ? Math.round((givenMeds / totalScheduled) * 100) : 0;
-
     const pendingChanges = changeRequests.filter((cr) => cr.status === 'In behandeling').length;
 
     return {
       urgent: urgentCount,
       attention: attentionCount,
       stable: stableCount,
-      compliance,
       pendingChanges,
     };
-  }, [notes, medicationRounds, changeRequests]);
+  }, [notes, changeRequests]);
 
   // Dynamic status cards with real data
   const dynamicStatusCards = useMemo(
@@ -145,13 +145,14 @@ export default function DashboardScreen() {
       const today = new Date();
       const date = today.toISOString().split('T')[0];
 
-      const [residentsData, notesData, roomsData, changeReqsData, roundsData, usersData] = await Promise.all([
+      const [residentsData, notesData, roomsData, changeReqsData, roundsData, usersData, complianceData] = await Promise.all([
         fetchResidents(),
         fetchNotes(),
         fetchRooms(),
         fetchChangeRequests(),
         fetchMedicationRounds({ date_from: date, date_to: date }),
         fetchUsers(),
+        fetchComplianceByDagdeel(date),
       ]);
 
       setResidents(residentsData || []);
@@ -160,10 +161,10 @@ export default function DashboardScreen() {
       setChangeRequests(changeReqsData || []);
       setMedicationRounds(roundsData || []);
       setUsers(usersData || []);
+      setComplianceByDagdeel(complianceData || []);
 
-      // Debug: Log users to see what roles exist
-      console.log('Loaded users:', usersData);
-      console.log('User roles:', usersData.map((u: any) => ({ name: u.name, role: u.role })));
+      // Debug: Log compliance data
+      console.log('Loaded compliance by dagdeel:', complianceData);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     }
@@ -268,17 +269,36 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Medication Compliance Card */}
+        {/* Medication Compliance by Dagdeel */}
         <View style={styles.complianceCard}>
           <View style={styles.complianceHeader}>
             <MaterialIcons name="medical-services" size={28} color={Colors.primary} />
-            <Text style={styles.complianceTitle}>Medicatie Compliance</Text>
+            <Text style={styles.complianceTitle}>Medicatie Compliance per Dagdeel</Text>
           </View>
-          <View style={styles.complianceContent}>
-            <Text style={styles.compliancePercentage}>{stats.compliance}%</Text>
-            <Text style={styles.complianceSubtitle}>
-              {medicationRounds.filter((mr) => mr.status === 'Gegeven').length} van {medicationRounds.length} medicatie rondes voltooid vandaag
-            </Text>
+          <View style={styles.dagdeelContainer}>
+            {complianceByDagdeel.map((item) => (
+              <View key={item.dagdeel} style={styles.dagdeelCard}>
+                <Text style={styles.dagdeelTitle}>{item.dagdeel}</Text>
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[
+                      styles.progressBar,
+                      {
+                        width: `${item.percentage}%`,
+                        backgroundColor:
+                          item.percentage >= 80 ? Colors.success :
+                          item.percentage >= 50 ? Colors.warningAlt :
+                          Colors.error
+                      }
+                    ]}
+                  />
+                </View>
+                <Text style={styles.dagdeelPercentage}>{item.percentage}%</Text>
+                <Text style={styles.dagdeelSubtitle}>
+                  {item.completed} van {item.total} medicaties
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -451,6 +471,53 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+
+  // Dagdeel Cards
+  dagdeelContainer: {
+    flexDirection: 'row',
+    gap: Spacing.lg,
+    ...Platform.select({
+      default: {
+        flexWrap: 'wrap',
+      },
+    }),
+  },
+  dagdeelCard: {
+    flex: 1,
+    minWidth: 140,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  dagdeelTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  progressBarContainer: {
+    height: 12,
+    backgroundColor: Colors.border,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: BorderRadius.full,
+  },
+  dagdeelPercentage: {
+    fontSize: FontSize['2xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  dagdeelSubtitle: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
   },
 
   // Urgent Residents
