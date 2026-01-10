@@ -86,9 +86,8 @@ class MedicationRoundSeeder extends Seeder
                 // Determine hour based on time_of_day
                 $hour = $timeMap[$schedule->time_of_day] ?? 8;
 
-                $timestamp = ($status === 'given')
-                    ? now()->subDays($day)->setTime($hour, rand(0, 59))
-                    : null;
+                // Always set timestamp, even for refused/missed (time when it was recorded)
+                $timestamp = now()->subDays($day)->setTime($hour, rand(0, 59));
 
                 $rounds[] = [
                     'round_id' => $id++,

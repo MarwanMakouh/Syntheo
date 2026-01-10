@@ -139,6 +139,7 @@ class MedicationRoundController extends Controller
 
     /**
      * Get medication compliance statistics per dagdeel for a specific date
+     * Based on residents who have received ALL their medication for a dagdeel
      */
     public function complianceByDagdeel(Request $request)
     {
@@ -153,30 +154,66 @@ class MedicationRoundController extends Controller
                 ->whereHas('resMedication', function($query) {
                     $query->where('is_active', true);
                 })
+                ->with('resMedication.resident')
                 ->get();
 
-            $totalSchedules = $schedules->count();
-            $givenSchedules = 0;
-
-            // For each schedule, check if there's a 'given' round for today
+            // Group schedules by resident
+            $residentSchedules = [];
             foreach ($schedules as $schedule) {
-                $round = MedicationRound::where('schedule_id', $schedule->schedule_id)
-                    ->whereDate('given_at', $date)
-                    ->where('status', 'given')
-                    ->first();
+                if ($schedule->resMedication && $schedule->resMedication->resident) {
+                    $residentId = $schedule->resMedication->resident_id;
 
-                if ($round) {
-                    $givenSchedules++;
+                    if (!isset($residentSchedules[$residentId])) {
+                        $residentSchedules[$residentId] = [
+                            'total' => 0,
+                            'given' => 0
+                        ];
+                    }
+
+                    $residentSchedules[$residentId]['total']++;
+
+                    // Check if this schedule has ANY round for today (given, refused, or missed)
+                    $round = MedicationRound::where('schedule_id', $schedule->schedule_id)
+                        ->whereDate('given_at', $date)
+                        ->whereIn('status', ['given', 'refused', 'missed'])
+                        ->first();
+
+                    if ($round) {
+                        $residentSchedules[$residentId]['given']++;
+                    }
                 }
             }
 
-            $percentage = $totalSchedules > 0 ? round(($givenSchedules / $totalSchedules) * 100) : 0;
+            // Count residents who have received ALL their medication
+            $totalResidents = count($residentSchedules);
+            $completedResidents = 0;
+            $residentDetails = [];
+
+            foreach ($residentSchedules as $residentId => $stats) {
+                $resident = \App\Models\Resident::find($residentId);
+                $isComplete = $stats['given'] === $stats['total'];
+
+                if ($isComplete) {
+                    $completedResidents++;
+                }
+
+                $residentDetails[] = [
+                    'resident_id' => $residentId,
+                    'name' => $resident ? $resident->name : 'Unknown',
+                    'total_schedules' => $stats['total'],
+                    'given_schedules' => $stats['given'],
+                    'is_complete' => $isComplete
+                ];
+            }
+
+            $percentage = $totalResidents > 0 ? round(($completedResidents / $totalResidents) * 100) : 0;
 
             $result[] = [
                 'dagdeel' => $dagdeel,
-                'total' => $totalSchedules,
-                'completed' => $givenSchedules,
-                'percentage' => $percentage
+                'total' => $totalResidents,
+                'completed' => $completedResidents,
+                'percentage' => $percentage,
+                'debug_residents' => $residentDetails
             ];
         }
 
