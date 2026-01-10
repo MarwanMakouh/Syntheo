@@ -9,9 +9,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { NavigationBar, RoleGuard } from '@/components';
+import { StaffLayout, RoleGuard } from '@/components';
 import { ConfirmationModal, AssignResidentModal, RoomsFilters } from '@/components/admin';
 import { RoomCard } from '@/components/admin/room-card';
 import { WarningBanner } from '@/components/admin/warning-banner';
@@ -169,10 +168,8 @@ export default function KamerBeheerScreen() {
 
   return (
     <RoleGuard allowedRoles={['Hoofdverpleegster']}>
-      <SafeAreaView style={styles.safeArea}>
-        <NavigationBar />
-        <ScrollView style={styles.container}>
-        <View style={styles.content}>
+      <StaffLayout activeRoute="kamerbeheer">
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.pageTitle}>Kamerbeheer</Text>
@@ -251,56 +248,48 @@ export default function KamerBeheerScreen() {
               )}
             </>
           )}
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Unlink Confirmation Modal */}
-      <ConfirmationModal
-        visible={showUnlinkModal}
-        onClose={() => {
-          setShowUnlinkModal(false);
-          setSelectedRoom(null);
-        }}
-        onConfirm={confirmUnlinkResident}
-        title="Bewoner Loskoppelen"
-        message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_number}? Deze actie kan later ongedaan worden gemaakt.`}
-        confirmText="Loskoppelen"
-        cancelText="Annuleren"
-        isLoading={isProcessing}
-        type="warning"
-      />
+        {/* Unlink Confirmation Modal */}
+        <ConfirmationModal
+          visible={showUnlinkModal}
+          onClose={() => {
+            setShowUnlinkModal(false);
+            setSelectedRoom(null);
+          }}
+          onConfirm={confirmUnlinkResident}
+          title="Bewoner Loskoppelen"
+          message={`Weet je zeker dat je ${selectedResidentName} wilt loskoppelen van kamer ${selectedRoom?.room_number}? Deze actie kan later ongedaan worden gemaakt.`}
+          confirmText="Loskoppelen"
+          cancelText="Annuleren"
+          isLoading={isProcessing}
+          type="warning"
+        />
 
-      {/* Assign Resident Modal */}
-      <AssignResidentModal
-        visible={showAssignModal}
-        onClose={() => {
-          setShowAssignModal(false);
-          setSelectedRoom(null);
-          setSelectedResidentId(null);
-        }}
-        onConfirm={confirmAssignResident}
-        roomNumber={selectedRoom?.room_number || ''}
-        availableResidents={residentsWithoutRooms}
-        selectedResidentId={selectedResidentId}
-        onSelectResident={handleSelectResident}
-        isLoading={isProcessing}
-      />
-      </SafeAreaView>
+        {/* Assign Resident Modal */}
+        <AssignResidentModal
+          visible={showAssignModal}
+          onClose={() => {
+            setShowAssignModal(false);
+            setSelectedRoom(null);
+            setSelectedResidentId(null);
+          }}
+          onConfirm={confirmAssignResident}
+          roomNumber={selectedRoom?.room_number || ''}
+          availableResidents={residentsWithoutRooms}
+          selectedResidentId={selectedResidentId}
+          onSelectResident={handleSelectResident}
+          isLoading={isProcessing}
+        />
+      </StaffLayout>
     </RoleGuard>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
-  },
   content: {
     padding: Layout.screenPaddingLarge,
+    paddingBottom: Spacing['3xl'],
     ...Platform.select({
       web: {
         maxWidth: 1400,
@@ -333,7 +322,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   loadingContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing['4xl'],
@@ -345,7 +333,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   errorContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing['4xl'],

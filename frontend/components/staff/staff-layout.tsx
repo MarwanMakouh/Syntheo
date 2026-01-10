@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BaseSidebarLayout } from '@/components/shared/base-sidebar-layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/contexts/RoleContext';
 
 interface StaffLayoutProps {
   children: React.ReactNode;
@@ -19,13 +20,17 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function StaffLayout({ 
-  children, 
-  activeRoute, 
+export function StaffLayout({
+  children,
+  activeRoute,
 }: StaffLayoutProps) {
   const { currentUser } = useAuth();
-  
-  const isHoofdverpleegster = currentUser?.role === 'Hoofdverpleegster';
+  const { selectedRole } = useRole();
+
+  // Check both currentUser.role and selectedRole
+  const isHoofdverpleegster =
+    currentUser?.role === 'Hoofdverpleegster' ||
+    selectedRole === 'Hoofdverpleegster';
 
   const navSections: NavSection[] = [
     // Dashboard section (only for Hoofdverpleegster)
@@ -44,6 +49,15 @@ export function StaffLayout({
         { id: 'meldingen', label: 'Meldingen', icon: 'notifications', route: '/(tabs)/meldingen' },
       ],
     },
+    // Management section (only for Hoofdverpleegster)
+    ...(isHoofdverpleegster ? [{
+      title: 'BEHEER',
+      items: [
+        { id: 'wijzigingsverzoeken', label: 'Wijzigingsverzoeken', icon: 'description' as const, route: '/wijzigingsverzoeken' },
+        { id: 'kamerbeheer', label: 'Kamerbeheer', icon: 'meeting-room' as const, route: '/kamerbeheer' },
+        { id: 'aankondigingen', label: 'Aankondigingen', icon: 'campaign' as const, route: '/aankondigingen' },
+      ],
+    }] : []),
   ];
 
   const profileRole = isHoofdverpleegster ? 'Hoofdverpleegster' : 'Verpleegster';

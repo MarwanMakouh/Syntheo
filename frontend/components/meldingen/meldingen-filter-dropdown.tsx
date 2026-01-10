@@ -210,11 +210,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     ...Shadows.dropdown,
     maxHeight: 200,
-    zIndex: 1,
+    zIndex: 10001,
+    elevation: 10,
   },
   dropdownListWeb: {
     position: 'absolute' as any,
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+    zIndex: 10001,
   },
   scrollView: {
     maxHeight: 200,

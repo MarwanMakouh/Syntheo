@@ -138,3 +138,55 @@ export const markAnnouncementAsRead = async (
     throw error;
   }
 };
+
+/**
+ * Update an existing announcement
+ */
+export const updateAnnouncement = async (
+  announcementId: number,
+  data: Partial<CreateAnnouncementData>
+): Promise<Announcement> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/announcements/${announcementId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result: ApiResponse<Announcement> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(`Error updating announcement ${announcementId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an announcement
+ */
+export const deleteAnnouncement = async (announcementId: number): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/announcements/${announcementId}`, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error deleting announcement ${announcementId}:`, error);
+    throw error;
+  }
+};

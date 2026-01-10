@@ -312,12 +312,22 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     marginBottom: Spacing.xl,
+    zIndex: 100,
+    ...Platform.select({
+      web: {
+        zIndex: 100,
+      },
+      default: {
+        zIndex: 100,
+      },
+    }),
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+    zIndex: 1,
   },
   emptyText: {
     marginTop: Spacing.lg,
@@ -326,5 +336,6 @@ const styles = StyleSheet.create({
   },
   meldingenList: {
     gap: Spacing.md,
+    zIndex: 1,
   },
 });

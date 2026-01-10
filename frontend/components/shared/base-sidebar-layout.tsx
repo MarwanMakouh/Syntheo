@@ -18,6 +18,7 @@ import { useRouter, usePathname } from 'expo-router';
 import { AnnouncementsDropdown } from '@/components/announcements/announcements-dropdown';
 import { useAnnouncements } from '@/contexts/AnnouncementsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/contexts/RoleContext';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '@/constants';
 
 interface BaseSidebarLayoutProps {
@@ -50,7 +51,8 @@ export function BaseSidebarLayout({
   const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { unreadCount } = useAnnouncements();
-  const { currentUser, setCurrentUser } = useAuth();
+  const { currentUser } = useAuth();
+  const { clearRole } = useRole();
 
   // Auto-detect active route if not provided
   const getActiveRoute = () => {
@@ -79,7 +81,7 @@ export function BaseSidebarLayout({
 
   const handleLogoutConfirm = () => {
     setShowLogoutConfirm(false);
-    setCurrentUser(null);
+    clearRole();
     router.replace('/role-selection');
   };
 
