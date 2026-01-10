@@ -34,9 +34,9 @@ export function NavigationBar() {
     setShowLogoutConfirm(true);
   };
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     setShowLogoutConfirm(false);
-    clearRole();
+    await clearRole();
     router.replace('/role-selection');
   };
 

@@ -243,16 +243,37 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
+    ...Platform.select({
+      default: {
+        justifyContent: 'flex-end',
+        alignItems: 'stretch',
+        padding: 0,
+      },
+      web: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Spacing.xl,
+      },
+    }),
   },
   popup: {
     backgroundColor: Colors.background,
-    borderRadius: BorderRadius.xl,
     width: '100%',
-    maxWidth: 600,
-    maxHeight: '85%',
+    ...Platform.select({
+      default: {
+        borderTopLeftRadius: BorderRadius.xl,
+        borderTopRightRadius: BorderRadius.xl,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        maxHeight: '90%',
+        minHeight: '80%',
+      },
+      web: {
+        borderRadius: BorderRadius.xl,
+        maxWidth: 600,
+        maxHeight: '85%',
+      },
+    }),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -266,17 +287,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing['2xl'],
-    paddingTop: Spacing.xl,
+    ...Platform.select({
+      default: {
+        padding: Spacing.lg,
+        paddingTop: Spacing.md,
+      },
+      web: {
+        padding: Spacing['2xl'],
+        paddingTop: Spacing.xl,
+      },
+    }),
   },
   title: {
     fontSize: FontSize['2xl'],
     fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
-    marginBottom: Spacing['3xl'],
+    ...Platform.select({
+      default: {
+        marginBottom: Spacing.xl,
+      },
+      web: {
+        marginBottom: Spacing['3xl'],
+      },
+    }),
   },
   fieldContainer: {
-    marginBottom: Spacing['3xl'],
+    ...Platform.select({
+      default: {
+        marginBottom: Spacing.xl,
+      },
+      web: {
+        marginBottom: Spacing['3xl'],
+      },
+    }),
   },
   label: {
     fontSize: FontSize.md,
@@ -286,10 +329,26 @@ const styles = StyleSheet.create({
   },
   typeContainer: {
     flexDirection: 'row',
-    gap: Spacing.lg,
+    ...Platform.select({
+      default: {
+        gap: Spacing.sm,
+        flexWrap: 'wrap',
+      },
+      web: {
+        gap: Spacing.lg,
+      },
+    }),
   },
   typeButton: {
-    flex: 1,
+    ...Platform.select({
+      default: {
+        minWidth: '30%',
+        flex: 1,
+      },
+      web: {
+        flex: 1,
+      },
+    }),
     paddingVertical: Spacing.lg,
     borderWidth: 2,
     borderColor: Colors.border,
@@ -328,10 +387,26 @@ const styles = StyleSheet.create({
   },
   urgencyContainer: {
     flexDirection: 'row',
-    gap: Spacing.lg,
+    ...Platform.select({
+      default: {
+        gap: Spacing.sm,
+        flexWrap: 'wrap',
+      },
+      web: {
+        gap: Spacing.lg,
+      },
+    }),
   },
   urgencyButton: {
-    flex: 1,
+    ...Platform.select({
+      default: {
+        minWidth: '30%',
+        flex: 1,
+      },
+      web: {
+        flex: 1,
+      },
+    }),
     paddingVertical: Spacing.lg,
     borderWidth: 2,
     borderColor: Colors.border,
@@ -354,8 +429,16 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     flexDirection: 'row',
-    padding: Spacing['2xl'],
-    paddingBottom: Platform.OS === 'ios' ? 40 : Spacing['2xl'],
+    ...Platform.select({
+      default: {
+        padding: Spacing.lg,
+        paddingBottom: Platform.OS === 'ios' ? 32 : Spacing.lg,
+      },
+      web: {
+        padding: Spacing['2xl'],
+        paddingBottom: Spacing['2xl'],
+      },
+    }),
     gap: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: Colors.border,

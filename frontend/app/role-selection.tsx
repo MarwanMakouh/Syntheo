@@ -46,8 +46,8 @@ export default function RoleSelectionScreen() {
   const { setSelectedRole } = useRole();
   const { allUsers, setCurrentUser } = useAuth();
 
-  const handleRoleSelect = (role: UserRole) => {
-    setSelectedRole(role);
+  const handleRoleSelect = async (role: UserRole) => {
+    await setSelectedRole(role);
 
     // Find a user with this role and set as current user
     const userWithRole = allUsers.find(user => {
@@ -68,7 +68,7 @@ export default function RoleSelectionScreen() {
     });
 
     if (userWithRole) {
-      setCurrentUser(userWithRole);
+      await setCurrentUser(userWithRole);
       console.log('Selected user:', userWithRole);
     } else {
       console.warn('No user found with role:', role);
