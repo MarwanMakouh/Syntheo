@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
 import { Colors, Spacing, FontSize, FontWeight, LineHeight, BorderRadius } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/contexts/RoleContext';
 import { useAnnouncements } from '@/contexts/AnnouncementsContext';
 import { AnnouncementsDropdown } from '@/components/announcements/announcements-dropdown';
 import { useState } from 'react';
@@ -11,7 +12,8 @@ import { useState } from 'react';
 export function NavigationBar() {
   const router = useRouter();
   const segments = useSegments();
-  const { currentUser, setCurrentUser } = useAuth();
+  const { currentUser } = useAuth();
+  const { clearRole } = useRole();
   const { unreadCount } = useAnnouncements();
   const [announcementsModalVisible, setAnnouncementsModalVisible] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -32,9 +34,9 @@ export function NavigationBar() {
     setShowLogoutConfirm(true);
   };
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     setShowLogoutConfirm(false);
-    setCurrentUser(null);
+    await clearRole();
     router.replace('/role-selection');
   };
 

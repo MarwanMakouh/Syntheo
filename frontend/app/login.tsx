@@ -13,11 +13,14 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, Shadows, BorderRadius, FontSize, FontWeight } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/contexts/RoleContext';
 import { login as loginApi } from '@/Services/usersApi';
+import type { UserRole } from '@/types/user';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { setCurrentUser } = useAuth();
+  const { setSelectedRole } = useRole();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -46,7 +49,7 @@ export default function LoginScreen() {
       const user = await loginApi(email.trim(), password);
 
       // Set current user in context
-      setCurrentUser(user);
+      await setCurrentUser(user);
 
       // Check if this is first login - redirect to change password
       if (user.first_login) {
@@ -54,19 +57,30 @@ export default function LoginScreen() {
         return;
       }
 
-      // Navigate based on user role
+      // Map user role to UserRole type and save to context
       const role = user.role.toLowerCase();
+      let selectedRole: UserRole;
 
       if (role.includes('beheerder') || role.includes('admin')) {
+        selectedRole = 'Beheerder';
+        await setSelectedRole(selectedRole);
         router.replace('/admin/dashboard-home');
       } else if (role.includes('hoofdverpleegster') || role.includes('hoofd')) {
+        selectedRole = 'Hoofdverpleegster';
+        await setSelectedRole(selectedRole);
         router.replace('/dashboard');
       } else if (role.includes('keuken')) {
+        selectedRole = 'Keukenpersoneel';
+        await setSelectedRole(selectedRole);
         router.replace('/(kitchen-tabs)/allergieen');
       } else if (role.includes('verpleegster') || role.includes('verpleger')) {
+        selectedRole = 'Verpleegster';
+        await setSelectedRole(selectedRole);
         router.replace('/(tabs)/bewoners');
       } else {
         // Default fallback
+        selectedRole = 'Verpleegster';
+        await setSelectedRole(selectedRole);
         router.replace('/(tabs)/bewoners');
       }
     } catch (err) {
