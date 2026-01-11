@@ -106,54 +106,21 @@ export default function DashboardAuditLogsScreen() {
               </View>
             ) : (
               <>
+                {/* Filters */}
+                <AuditLogsFilters
+                  actionFilter={actionFilter}
+                  typeFilter={typeFilter}
+                  dateFilter={dateFilter}
+                  onActionFilterChange={setActionFilter}
+                  onTypeFilterChange={setTypeFilter}
+                  onDateFilterChange={setDateFilter}
+                />
 
                 {/* Audit Logs Table */}
                 <AuditLogsTable logs={filteredLogs} />
-
-                {/* Pagination controls */}
-
-
-                {/* No pagination controls */}
               </>
             )}
           </View>
-
-          {/* Loading State */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Audit logs laden...</Text>
-            </View>
-          ) : error ? (
-            /* Error State */
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={64} color={Colors.error} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-                <Text style={styles.retryButtonText}>Opnieuw proberen</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              {/* Filters */}
-              <AuditLogsFilters
-                actionFilter={actionFilter}
-                typeFilter={typeFilter}
-                dateFilter={dateFilter}
-                onActionFilterChange={setActionFilter}
-                onTypeFilterChange={setTypeFilter}
-                onDateFilterChange={setDateFilter}
-              />
-
-              {/* Audit Logs Table */}
-              <AuditLogsTable logs={filteredLogs} />
-
-              {/* Pagination controls */}
-
-
-              {/* No pagination controls */}
-            </>
-          )}
         </ScrollView>
       </AdminLayout>
     </RoleGuard>
