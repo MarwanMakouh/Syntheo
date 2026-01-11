@@ -26,6 +26,20 @@ const mapNoteFromBackend = (note: any): Note => {
 };
 
 /**
+ * Get acknowledged note IDs from localStorage
+ */
+const getAcknowledgedNoteIds = (): number[] => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return JSON.parse(localStorage.getItem('acknowledgedNotes') || '[]');
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
  * Fetch all notes from the backend
  */
 export const fetchNotes = async (): Promise<Note[]> => {
@@ -37,7 +51,21 @@ export const fetchNotes = async (): Promise<Note[]> => {
     }
 
     const result: ApiResponse<any[]> = await response.json();
-    return (result.data || []).map(mapNoteFromBackend);
+    const notes = (result.data || []).map(mapNoteFromBackend);
+
+    // Merge with localStorage acknowledged notes
+    const acknowledgedIds = getAcknowledgedNoteIds();
+    return notes.map(note => {
+      if (acknowledgedIds.includes(note.note_id)) {
+        return {
+          ...note,
+          is_acknowledged: true,
+          acknowledged_at: note.acknowledged_at || new Date().toISOString(),
+          acknowledged_by: note.acknowledged_by || 1,
+        };
+      }
+      return note;
+    });
   } catch (error) {
     console.error('Error fetching notes:', error);
     throw error;
@@ -227,5 +255,45 @@ export const deleteNote = async (noteId: number): Promise<void> => {
   } catch (error) {
     console.error(`Error deleting note ${noteId}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Acknowledge a note (mark as viewed/bekeken on dashboard)
+ * Uses localStorage with quick backend attempt (with timeout)
+ */
+export const acknowledgeNote = async (noteId: number, acknowledgerId?: number): Promise<void> => {
+  // Use localStorage immediately for instant feedback
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const acknowledgedNotes = JSON.parse(localStorage.getItem('acknowledgedNotes') || '[]');
+    if (!acknowledgedNotes.includes(noteId)) {
+      acknowledgedNotes.push(noteId);
+      localStorage.setItem('acknowledgedNotes', JSON.stringify(acknowledgedNotes));
+    }
+  }
+
+  // Try backend in background with short timeout (don't wait for it)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout
+
+  try {
+    await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.acknowledgeNote(noteId)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          acknowledged_by: acknowledgerId || 1,
+        }),
+        signal: controller.signal,
+      }
+    );
+  } catch (error) {
+    // Silently fail - localStorage is already updated
+  } finally {
+    clearTimeout(timeoutId);
   }
 };

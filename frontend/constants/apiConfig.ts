@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
   notesByResident: (residentId: number) => `/notes/resident/${residentId}`,
   resolveNote: (id: number) => `/notes/${id}/resolve`,
   unresolveNote: (id: number) => `/notes/${id}/unresolve`,
+  acknowledgeNote: (id: number) => `/notes/${id}/acknowledge`,
 
   // Residents
   residents: '/residents',
