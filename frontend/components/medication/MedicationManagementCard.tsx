@@ -4,11 +4,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { ResMedication, MedicationLibrary, ResSchedule } from '@/types/medication';
 import { Colors, FontSize, Spacing, BorderRadius, FontWeight, Shadows } from '@/constants';
+import { ConfirmationModal } from '@/components/admin/confirmation-modal';
 
 interface Props {
   resMedication: ResMedication & {
@@ -21,27 +21,21 @@ interface Props {
 
 export function MedicationManagementCard({ resMedication, onStatusChange, onDelete }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleStatusChange = () => {
     console.log('[MedicationManagementCard] handleStatusChange called', {
       resMedicationId: resMedication.res_medication_id,
       currentStatus: resMedication.is_active
     });
-    const action = resMedication.is_active ? 'deactiveren' : 'activeren';
-    Alert.alert(
-      'Bevestiging',
-      `Weet u zeker dat u deze medicatie wilt ${action}?`,
-      [
-        { text: 'Annuleren', style: 'cancel' },
-        {
-          text: 'Bevestigen',
-          onPress: () => {
-            console.log('[MedicationManagementCard] User confirmed, calling parent onStatusChange');
-            onStatusChange(resMedication.res_medication_id, !resMedication.is_active);
-          },
-        },
-      ]
-    );
+    setShowStatusModal(true);
+  };
+
+  const confirmStatusChange = () => {
+    console.log('[MedicationManagementCard] User confirmed, calling parent onStatusChange');
+    onStatusChange(resMedication.res_medication_id, !resMedication.is_active);
+    setShowStatusModal(false);
   };
 
   const handleDelete = () => {
@@ -49,22 +43,16 @@ export function MedicationManagementCard({ resMedication, onStatusChange, onDele
       resMedicationId: resMedication.res_medication_id
     });
     if (onDelete) {
-      Alert.alert(
-        'Verwijderen',
-        `Weet u zeker dat u ${resMedication.medication.name} wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`,
-        [
-          { text: 'Annuleren', style: 'cancel' },
-          {
-            text: 'Verwijderen',
-            style: 'destructive',
-            onPress: () => {
-              console.log('[MedicationManagementCard] User confirmed delete, calling parent onDelete');
-              onDelete(resMedication.res_medication_id);
-            },
-          },
-        ]
-      );
+      setShowDeleteModal(true);
     }
+  };
+
+  const confirmDelete = () => {
+    console.log('[MedicationManagementCard] User confirmed delete, calling parent onDelete');
+    if (onDelete) {
+      onDelete(resMedication.res_medication_id);
+    }
+    setShowDeleteModal(false);
   };
 
   return (
@@ -176,6 +164,30 @@ export function MedicationManagementCard({ resMedication, onStatusChange, onDele
           </View>
         </View>
       )}
+
+      {/* Status Change Confirmation Modal */}
+      <ConfirmationModal
+        visible={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onConfirm={confirmStatusChange}
+        title={resMedication.is_active ? 'Medicatie Deactiveren' : 'Medicatie Activeren'}
+        message={`Weet u zeker dat u deze medicatie wilt ${resMedication.is_active ? 'deactiveren' : 'activeren'}?`}
+        confirmText="Bevestigen"
+        cancelText="Annuleren"
+        type={resMedication.is_active ? 'warning' : 'info'}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Medicatie Verwijderen"
+        message={`Weet u zeker dat u ${resMedication.medication.name} wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`}
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
     </View>
   );
 }
