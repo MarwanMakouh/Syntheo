@@ -9,4 +9,7 @@ export interface Note {
   created_at: string;
   resolved_at: string | null;
   resolved_by: number | null;
+  is_acknowledged: boolean;
+  acknowledged_at: string | null;
+  acknowledged_by: number | null;
 }
