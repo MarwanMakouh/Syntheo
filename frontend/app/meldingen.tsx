@@ -35,17 +35,19 @@ export default function HoofdverplegerMeldingenScreen() {
   const { currentUser } = useAuth();
   const { selectedRole } = useRole();
 
-  // Redirect verpleegsters to the tab version (with sidebar)
-  // Check both currentUser.role and selectedRole
+  // Redirect staff (verpleegster and hoofdverpleegster) to the tab version (with sidebar)
+  // This page is only for mobile or other specific use cases
   useEffect(() => {
-    const isVerpleegster =
-      currentUser?.role === 'Verpleegster' ||
-      selectedRole === 'Verpleegster';
+    if (Platform.OS === 'web' && currentUser) {
+      // On web, always redirect to the tab version with sidebar
+      // Use setTimeout to ensure navigation happens after mount
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)/meldingen' as any);
+      }, 0);
 
-    if (isVerpleegster) {
-      router.replace('/(tabs)/meldingen' as any);
+      return () => clearTimeout(timer);
     }
-  }, [currentUser, selectedRole]);
+  }, [currentUser]);
 
   useEffect(() => {
     loadData();
