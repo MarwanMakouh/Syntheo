@@ -97,26 +97,29 @@ export const updateResMedication = async (
  * Deactivate a resident medication
  */
 export const deactivateResMedication = async (resMedicationId: number): Promise<ResMedication> => {
+  const url = `${API_BASE_URL}/res-medications/${resMedicationId}/deactivate`;
+  console.log('[deactivateResMedication] Starting...', { resMedicationId, url });
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/res-medications/${resMedicationId}/deactivate`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
 
+    console.log('[deactivateResMedication] Response status:', response.status);
     if (!response.ok) {
+      const errorText = await response.text();
+      console.log('[deactivateResMedication] Error response:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const result: ApiResponse<ResMedication> = await response.json();
+    console.log('[deactivateResMedication] Success:', result);
     return result.data;
   } catch (error) {
-    console.error(`Error deactivating resident medication ${resMedicationId}:`, error);
+    console.error(`[deactivateResMedication] Error:`, error);
     throw error;
   }
 };
@@ -125,26 +128,29 @@ export const deactivateResMedication = async (resMedicationId: number): Promise<
  * Activate a resident medication
  */
 export const activateResMedication = async (resMedicationId: number): Promise<ResMedication> => {
+  const url = `${API_BASE_URL}/res-medications/${resMedicationId}/activate`;
+  console.log('[activateResMedication] Starting...', { resMedicationId, url });
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/res-medications/${resMedicationId}/activate`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
 
+    console.log('[activateResMedication] Response status:', response.status);
     if (!response.ok) {
+      const errorText = await response.text();
+      console.log('[activateResMedication] Error response:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const result: ApiResponse<ResMedication> = await response.json();
+    console.log('[activateResMedication] Success:', result);
     return result.data;
   } catch (error) {
-    console.error(`Error activating resident medication ${resMedicationId}:`, error);
+    console.error(`[activateResMedication] Error:`, error);
     throw error;
   }
 };

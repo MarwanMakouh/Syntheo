@@ -51,7 +51,7 @@ class ResScheduleController extends Controller
             'res_medication_id' => 'required|exists:res_medication,res_medication_id',
             'dosage' => 'required|string|max:255',
             'instructions' => 'nullable|string',
-            'time_of_day' => 'required|date_format:H:i',
+            'time_of_day' => 'required|string|in:Ochtend,Middag,Avond,Nacht',
             'day_of_week' => 'required|string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday,daily',
         ]);
 
@@ -81,7 +81,7 @@ class ResScheduleController extends Controller
         $validated = $request->validate([
             'dosage' => 'sometimes|string|max:255',
             'instructions' => 'nullable|string',
-            'time_of_day' => 'sometimes|date_format:H:i',
+            'time_of_day' => 'sometimes|string|in:Ochtend,Middag,Avond,Nacht',
             'day_of_week' => 'sometimes|string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday,daily',
         ]);
 

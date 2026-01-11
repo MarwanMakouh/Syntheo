@@ -143,6 +143,9 @@ export const Colors = {
   warningMediumBackground: palette.orange200,
   infoBackground: palette.green100,
 
+  // Error variants (for forms/modals)
+  errorBackground: palette.red100,
+
   // Tab bar
   tabActive: palette.green600,
   tabInactive: palette.gray500,

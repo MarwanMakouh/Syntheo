@@ -29,6 +29,7 @@ export function AdminLayout({ children, activeRoute = 'dashboard' }: AdminLayout
     {
       title: 'BEHEER',
       items: [
+        { id: 'medicatie-beheer', label: 'Medicatie Beheer', icon: 'medication', route: '/(medication-management-tabs)' },
         { id: 'gebruikers', label: 'Personeel', icon: 'group', route: '/admin/dashboard-gebruikers' },
         { id: 'bewoners', label: 'Bewoners', icon: 'people', route: '/admin/dashboard-bewoners' },
         { id: 'kamers', label: 'Kamers', icon: 'meeting-room', route: '/admin/dashboard-kamers' },
