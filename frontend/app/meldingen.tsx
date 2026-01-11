@@ -9,6 +9,7 @@ import { fetchNotes, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { fetchResidents } from '@/Services/residentsApi';
 import { fetchUsers } from '@/Services/usersApi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/contexts/RoleContext';
 import { formatDate } from '@/utils/date';
 import type { Note } from '@/types/note';
 import type { Resident } from '@/types/resident';
@@ -32,6 +33,19 @@ export default function HoofdverplegerMeldingenScreen() {
   const [isResolving, setIsResolving] = useState(false);
 
   const { currentUser } = useAuth();
+  const { selectedRole } = useRole();
+
+  // Redirect verpleegsters to the tab version (with sidebar)
+  // Check both currentUser.role and selectedRole
+  useEffect(() => {
+    const isVerpleegster =
+      currentUser?.role === 'Verpleegster' ||
+      selectedRole === 'Verpleegster';
+
+    if (isVerpleegster) {
+      router.replace('/(tabs)/meldingen' as any);
+    }
+  }, [currentUser, selectedRole]);
 
   useEffect(() => {
     loadData();
