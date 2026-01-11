@@ -39,3 +39,18 @@ export interface MedicationRound {
   status: string;
   notes: string | null;
 }
+
+export interface CreateResMedicationData {
+  medication_id: number;
+  resident_id: number;
+  is_active?: boolean;
+  end_date?: string | null;
+}
+
+export interface CreateScheduleData {
+  res_medication_id: number;
+  dosage: string;
+  instructions?: string;
+  time_of_day: 'Ochtend' | 'Middag' | 'Avond' | 'Nacht';
+  day_of_week: 'daily' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+}

@@ -116,7 +116,7 @@ class ResMedicationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Medicatie succesvol gedeactiveerd',
-            'data' => $resMedication->load(['medication', 'resident'])
+            'data' => $resMedication->load(['medication', 'resident', 'schedules'])
         ]);
     }
 
@@ -142,7 +142,7 @@ class ResMedicationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Medicatie succesvol geactiveerd',
-            'data' => $resMedication->load(['medication', 'resident'])
+            'data' => $resMedication->load(['medication', 'resident', 'schedules'])
         ]);
     }
 

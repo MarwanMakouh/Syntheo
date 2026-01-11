@@ -53,6 +53,7 @@ export function StaffLayout({
     ...(isHoofdverpleegster ? [{
       title: 'BEHEER',
       items: [
+        { id: 'medicatie-beheer', label: 'Medicatie Beheer', icon: 'medication' as const, route: '/(medication-management-tabs)' },
         { id: 'wijzigingsverzoeken', label: 'Wijzigingsverzoeken', icon: 'description' as const, route: '/wijzigingsverzoeken' },
         { id: 'kamerbeheer', label: 'Kamerbeheer', icon: 'meeting-room' as const, route: '/kamerbeheer' },
         { id: 'aankondigingen', label: 'Aankondigingen', icon: 'campaign' as const, route: '/aankondigingen' },

@@ -42,6 +42,15 @@ export const API_ENDPOINTS = {
   resMedications: '/res-medications',
   resMedicationsByResident: (residentId: number) => `/res-medications/resident/${residentId}`,
 
+  // Medication Library
+  medicationLibrary: '/medication-library',
+  medicationLibraryById: (id: number) => `/medication-library/${id}`,
+
+  // Res Schedules
+  resSchedules: '/res-schedules',
+  resSchedulesByResMedication: (resMedicationId: number) => `/res-schedules/res-medication/${resMedicationId}`,
+  resScheduleById: (id: number) => `/res-schedules/${id}`,
+
   // Rooms
   rooms: '/rooms',
   roomById: (id: number) => `/rooms/${id}`,
