@@ -162,33 +162,6 @@ export default function DashboardScreen() {
       setMedicationRounds(roundsData || []);
       setUsers(usersData || []);
       setComplianceByDagdeel(complianceData || []);
-
-      // Debug: Log compliance data
-      console.log('Loaded compliance by dagdeel:', complianceData);
-
-      // Debug: Show detailed resident information
-      if (complianceData && complianceData.length > 0) {
-        complianceData.forEach((dagdeel: any) => {
-          console.log(`\n=== ${dagdeel.dagdeel} ===`);
-          console.log(`Total: ${dagdeel.completed}/${dagdeel.total} bewoners (${dagdeel.percentage}%)`);
-
-          if (dagdeel.debug_residents) {
-            console.log('Complete bewoners:');
-            dagdeel.debug_residents
-              .filter((r: any) => r.is_complete)
-              .forEach((r: any) => {
-                console.log(`  ✓ ${r.name} (${r.given_schedules}/${r.total_schedules})`);
-              });
-
-            console.log('Incomplete bewoners:');
-            dagdeel.debug_residents
-              .filter((r: any) => !r.is_complete)
-              .forEach((r: any) => {
-                console.log(`  ✗ ${r.name} (${r.given_schedules}/${r.total_schedules})`);
-              });
-          }
-        });
-      }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     }
