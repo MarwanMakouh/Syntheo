@@ -37,6 +37,14 @@ class AuditLogger
                 $userId = auth()->id();
             }
 
+            // Debug logging
+            \Log::info('AuditLogger called', [
+                'action' => $action,
+                'user_id' => $userId,
+                'model_type' => $model ? get_class($model) : null,
+                'message' => $meta['message'] ?? null
+            ]);
+
             $auditableType = null;
             $auditableId = null;
 
@@ -52,81 +60,67 @@ class AuditLogger
                 }
             }
 
-            // Build payload only for columns that actually exist in DB
+            // Build payload - use standard column names from migration
             $data = [];
-            if (Schema::hasColumn('audit_logs', 'user_id')) {
-                $data['user_id'] = $userId;
-            }
-            if (Schema::hasColumn('audit_logs', 'action')) {
-                // ensure action is stored in Dutch
-                $map = [
-                    'created' => 'toegevoegd',
-                    'updated' => 'bewerkt',
-                    'deleted' => 'verwijderd',
-                    'approved' => 'goedgekeurd',
-                    'rejected' => 'afgekeurd',
-                    'restored' => 'hersteld',
-                    'force_deleted' => 'permanent verwijderd',
-                ];
-                $key = mb_strtolower((string) $action);
-                $data['action'] = $map[$key] ?? $action;
-            }
-            if (Schema::hasColumn('audit_logs', 'auditable_type')) {
-                $data['auditable_type'] = $auditableType;
-            } elseif (Schema::hasColumn('audit_logs', 'entity_type')) {
-                $data['entity_type'] = $auditableType;
-            }
-            if (Schema::hasColumn('audit_logs', 'auditable_id')) {
-                $data['auditable_id'] = $auditableId;
-            } elseif (Schema::hasColumn('audit_logs', 'entity_id')) {
-                $data['entity_id'] = $auditableId;
-            }
-            if (Schema::hasColumn('audit_logs', 'details')) {
-                // Prefer explicit message in meta
-                if (isset($meta['message']) && $meta['message'] !== null) {
-                    $data['details'] = json_encode(['message' => (string) $meta['message']], JSON_UNESCAPED_UNICODE);
-                } elseif (isset($meta['details'])) {
-                    $d = $meta['details'];
-                    if (is_array($d)) {
-                        if (isset($d['message'])) {
-                            $data['details'] = json_encode($d, JSON_UNESCAPED_UNICODE);
-                        } else {
-                            $data['details'] = json_encode(['message' => json_encode($d, JSON_UNESCAPED_UNICODE)], JSON_UNESCAPED_UNICODE);
-                        }
+            $data['user_id'] = $userId;
+
+            // ensure action is stored in Dutch
+            $map = [
+                'created' => 'toegevoegd',
+                'updated' => 'bewerkt',
+                'deleted' => 'verwijderd',
+                'approved' => 'goedgekeurd',
+                'rejected' => 'afgekeurd',
+                'restored' => 'hersteld',
+                'force_deleted' => 'permanent verwijderd',
+            ];
+            $key = mb_strtolower((string) $action);
+            $data['action'] = $map[$key] ?? $action;
+
+            // Use entity_type/entity_id (from older migration that's actually in DB)
+            $data['entity_type'] = $auditableType;
+            $data['entity_id'] = $auditableId;
+            // Prefer explicit message in meta
+            if (isset($meta['message']) && $meta['message'] !== null) {
+                // Store as array directly (will be cast to JSON by model)
+                $data['details'] = ['message' => (string) $meta['message']];
+            } elseif (isset($meta['details'])) {
+                $d = $meta['details'];
+                if (is_array($d)) {
+                    if (isset($d['message'])) {
+                        $data['details'] = $d;
                     } else {
-                        // string or other -> wrap as message
-                        $data['details'] = json_encode(['message' => (string) $d], JSON_UNESCAPED_UNICODE);
+                        $data['details'] = ['message' => json_encode($d, JSON_UNESCAPED_UNICODE)];
                     }
                 } else {
-                    // Build a fallback message like "Bewerkt: Resident #123" or "Toegevoegd: Notitie"
-                    $act = $data['action'] ?? $action;
-                    $entity = $auditableType ?? 'item';
-                    $idpart = $auditableId ? ' #' . $auditableId : '';
-                    $fallback = sprintf('%s: %s%s', ucfirst((string)$act), $entity, $idpart);
-                    $data['details'] = json_encode(['message' => $fallback], JSON_UNESCAPED_UNICODE);
+                    // string or other -> wrap as message
+                    $data['details'] = ['message' => (string) $d];
                 }
+            } else {
+                // Build a fallback message like "Bewerkt: Resident #123" or "Toegevoegd: Notitie"
+                $act = $data['action'] ?? $action;
+                $entity = $auditableType ?? 'item';
+                $idpart = $auditableId ? ' #' . $auditableId : '';
+                $fallback = sprintf('%s: %s%s', ucfirst((string)$act), $entity, $idpart);
+                $data['details'] = ['message' => $fallback];
             }
-            if (Schema::hasColumn('audit_logs', 'old_values')) {
-                $data['old_values'] = $old;
-            }
-            if (Schema::hasColumn('audit_logs', 'new_values')) {
-                $data['new_values'] = $new;
-            }
-            if (Schema::hasColumn('audit_logs', 'timestamp')) {
-                $data['timestamp'] = $meta['timestamp'] ?? now();
-            }
-            if (Schema::hasColumn('audit_logs', 'ip_address')) {
-                $data['ip_address'] = Request::ip();
-            }
-            if (Schema::hasColumn('audit_logs', 'user_agent')) {
-                $data['user_agent'] = Request::header('User-Agent');
-            }
+
+            // Only include columns that exist in the actual table (2025_12_11 migration)
+            // old_values, new_values, ip_address, user_agent don't exist in that migration
+            $data['timestamp'] = $meta['timestamp'] ?? now();
 
             $entry = AuditLog::create($data);
 
+            \Log::info('Audit log created successfully', ['id' => $entry->id ?? null]);
+
             return $entry;
         } catch (\Throwable $e) {
-            // Avoid throwing from logger; fail silently
+            // Log the error instead of failing silently
+            \Log::error('AuditLogger failed to create log', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $data ?? null
+            ]);
             return null;
         }
     }

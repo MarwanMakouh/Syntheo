@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -73,6 +74,16 @@ class UserController extends Controller
             'first_login' => true,
         ]);
 
+        // Create audit log
+        AuditLogger::log(
+            'toegevoegd',
+            $user,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Nieuwe verpleegkundige toegevoegd: ' . $user->name]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Gebruiker succesvol aangemaakt',
@@ -128,6 +139,16 @@ class UserController extends Controller
         }
 
         $user->update($validated);
+
+        // Create audit log
+        AuditLogger::log(
+            'bewerkt',
+            $user,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Gebruiker bijgewerkt: ' . $user->name]
+        );
 
         return response()->json([
             'success' => true,

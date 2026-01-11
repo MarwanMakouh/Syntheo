@@ -11,13 +11,12 @@ class AuditLog extends Model
 
     protected $guarded = [];
 
+    // Disable timestamps since the table doesn't have created_at/updated_at
+    public $timestamps = false;
+
     protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
         'details' => 'array',
         'timestamp' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     public function user()
