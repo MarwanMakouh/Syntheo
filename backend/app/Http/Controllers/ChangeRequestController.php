@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChangeRequest;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 
 class ChangeRequestController extends Controller
@@ -122,6 +123,23 @@ class ChangeRequestController extends Controller
             'reviewer_id' => $validated['reviewer_id'],
             'reviewed_at' => now(),
         ]);
+
+        // Create audit log for approved change request
+        $resident = $changeRequest->resident;
+        $changesDescription = $this->formatChangesDescription($changeRequest);
+
+        try {
+            AuditLogger::log(
+                'goedgekeurd',
+                $changeRequest,
+                $validated['reviewer_id'],
+                null,
+                null,
+                ['message' => $changesDescription . ': ' . ($resident ? $resident->name : 'Bewoner #' . $changeRequest->resident_id)]
+            );
+        } catch (\Exception $e) {
+            \Log::error('Audit log failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -309,6 +327,19 @@ class ChangeRequestController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        // Create audit log for rejected change request
+        $resident = $changeRequest->resident;
+        $changesDescription = $this->formatChangesDescription($changeRequest);
+
+        AuditLogger::log(
+            'afgekeurd',
+            $changeRequest,
+            $validated['reviewer_id'],
+            null,
+            null,
+            ['message' => $changesDescription . ' afgewezen: ' . ($resident ? $resident->name : 'Bewoner #' . $changeRequest->resident_id)]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Wijzigingsverzoek afgewezen',
@@ -336,5 +367,39 @@ class ChangeRequestController extends Controller
             'success' => true,
             'message' => 'Wijzigingsverzoek succesvol verwijderd'
         ]);
+    }
+
+    /**
+     * Format changes description for audit log
+     */
+    private function formatChangesDescription(ChangeRequest $changeRequest)
+    {
+        $fields = $changeRequest->changeFields;
+
+        if ($fields->isEmpty()) {
+            return 'Wijzigingsverzoek';
+        }
+
+        $fieldNames = $fields->pluck('field_name')->unique();
+
+        // Map field names to readable Dutch names
+        $fieldMap = [
+            'diet_type' => 'Dieet wijziging',
+            'medication_dosage' => 'Medicatie wijziging',
+            'medication_frequency' => 'Medicatie wijziging',
+            'room_number' => 'Kamer wijziging',
+            'contact_phone' => 'Contact wijziging',
+            'allergy' => 'Allergie wijziging',
+            'allergies' => 'Allergie wijziging',
+            'preferences.likes' => 'Dieet wijziging',
+            'preferences.dislikes' => 'Dieet wijziging',
+        ];
+
+        $descriptions = [];
+        foreach ($fieldNames as $fieldName) {
+            $descriptions[] = $fieldMap[$fieldName] ?? ucfirst($fieldName);
+        }
+
+        return implode(', ', array_unique($descriptions));
     }
 }

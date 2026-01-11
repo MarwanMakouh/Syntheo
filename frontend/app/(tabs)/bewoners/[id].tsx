@@ -17,7 +17,7 @@ import {
   ContactCard,
   BewonerDetailHeader,
   BewonerTabs,
-  MeldingCard,
+  BewonerMeldingCard,
   NieuweMeldingModal,
   MedicatieSchema,
   MedicatieHistoriek,
@@ -346,7 +346,7 @@ export default function BewonerInfoScreen() {
               notes.map((note) => {
                 const author = users.find((u: any) => u.user_id === note.author_id);
                 return (
-                  <MeldingCard
+                  <BewonerMeldingCard
                     key={note.note_id}
                     note={note}
                     authorName={author?.name || 'Onbekend'}

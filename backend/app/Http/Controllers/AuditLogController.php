@@ -14,7 +14,9 @@ class AuditLogController extends Controller
         'ChangeRequest' => 'Wijzigingsverzoek',
         'Note' => 'Notitie',
         'Medication' => 'Medicatie',
+        'ResMedication' => 'Medicatie',
         'Alert' => 'Melding',
+        'Melding' => 'Melding',
         'User' => 'Gebruiker',
         'MedicationRound' => 'Medicatie Ronde',
     ];
@@ -69,50 +71,40 @@ class AuditLogController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        // accept either auditable_type or entity_type
+        // Use entity_type column (from 2025_12_11 migration)
         if ($request->filled('auditable_type')) {
-            $query->where('auditable_type', $request->auditable_type);
+            $query->where('entity_type', $request->auditable_type);
         } elseif ($request->filled('entity_type')) {
-            $query->where('auditable_type', $request->entity_type);
+            $query->where('entity_type', $request->entity_type);
         }
 
         if ($request->filled('auditable_id')) {
-            $query->where('auditable_id', $request->auditable_id);
+            $query->where('entity_id', $request->auditable_id);
         } elseif ($request->filled('entity_id')) {
-            $query->where('auditable_id', $request->entity_id);
+            $query->where('entity_id', $request->entity_id);
         }
 
         if ($request->filled('date_from')) {
-            $query->where('created_at', '>=', $request->date_from);
+            $query->where('timestamp', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to);
+            $query->where('timestamp', '<=', $request->date_to);
         }
 
         $perPage = (int) $request->get('per_page', 25);
 
-        // choose an existing column to order by (legacy tables may not have created_at)
-        if (Schema::hasColumn('audit_logs', 'created_at')) {
-            $orderCol = 'created_at';
-        } elseif (Schema::hasColumn('audit_logs', 'timestamp')) {
-            $orderCol = 'timestamp';
-        } elseif (Schema::hasColumn('audit_logs', 'log_id')) {
-            $orderCol = 'log_id';
-        } else {
-            $orderCol = 'id';
-        }
-
-        $paginator = $query->orderBy($orderCol, 'desc')->paginate($perPage);
+        // Use timestamp column for ordering (from 2025_12_11 migration)
+        $paginator = $query->orderBy('timestamp', 'desc')->paginate($perPage);
 
         // Normalize each item so frontend can rely on consistent fields
         $displayMap = $this->displayMap;
         $paginator->getCollection()->transform(function ($item) use ($displayMap) {
-            // id handling (support either id or log_id)
+            // id handling (use log_id from 2025_12_11 migration)
             $id = $item->log_id ?? $item->id ?? null;
 
-            // timestamp / created_at -> format to 'YYYY-MM-DD HH:MM' for frontend
-            $createdAtRaw = $item->timestamp ?? ($item->created_at ?? null);
+            // timestamp -> format to 'YYYY-MM-DD HH:MM' for frontend
+            $createdAtRaw = $item->timestamp ?? null;
             $createdAt = null;
             if ($createdAtRaw) {
                 if ($createdAtRaw instanceof \DateTimeInterface) {
@@ -135,8 +127,8 @@ class AuditLogController extends Controller
                 $userName = $item->user_name ?? null;
             }
 
-            // entity type / auditable_type (raw)
-            $entityType = $item->entity_type ?? $item->auditable_type ?? null;
+            // entity type (from 2025_12_11 migration uses entity_type column)
+            $entityType = $item->entity_type ?? null;
             if ($entityType && strpos($entityType, '\\') !== false) {
                 $parts = explode('\\', $entityType);
                 $entityType = end($parts);
@@ -145,8 +137,8 @@ class AuditLogController extends Controller
             // localized display name for entity type
             $entityDisplay = $displayMap[$entityType] ?? $entityType;
 
-            // entity id / auditable_id
-            $entityId = $item->entity_id ?? $item->auditable_id ?? null;
+            // entity id (from 2025_12_11 migration uses entity_id column)
+            $entityId = $item->entity_id ?? null;
 
             // details: prefer `details` column, try to extract friendly message
             $details = null;
@@ -173,10 +165,6 @@ class AuditLogController extends Controller
                 } else {
                     $details = (string) $raw;
                 }
-            } elseif (isset($item->new_values) && $item->new_values) {
-                $details = json_encode($item->new_values, JSON_UNESCAPED_UNICODE);
-            } elseif (isset($item->old_values) && $item->old_values) {
-                $details = json_encode($item->old_values, JSON_UNESCAPED_UNICODE);
             }
 
             return [
@@ -191,8 +179,6 @@ class AuditLogController extends Controller
                 'auditable_id' => $entityId,
                 'entity_id' => $entityId,
                 'details' => $details,
-                'old_values' => $item->old_values ?? null,
-                'new_values' => $item->new_values ?? null,
                 'created_at' => $createdAt,
                 'timestamp' => $createdAt,
             ];
@@ -209,9 +195,9 @@ class AuditLogController extends Controller
 
     public function getEntityLogs($entityType, $entityId)
     {
-        $logs = AuditLog::where('auditable_type', $entityType)
-            ->where('auditable_id', $entityId)
-            ->orderBy('created_at', 'desc')
+        $logs = AuditLog::where('entity_type', $entityType)
+            ->where('entity_id', $entityId)
+            ->orderBy('timestamp', 'desc')
             ->get();
 
         return response()->json($logs);
@@ -221,10 +207,8 @@ class AuditLogController extends Controller
     {
         $data = $request->validate([
             'action' => 'required|string',
-            'auditable_type' => 'nullable|string',
-            'auditable_id' => 'nullable|integer',
-            'old_values' => 'nullable|array',
-            'new_values' => 'nullable|array',
+            'entity_type' => 'nullable|string',
+            'entity_id' => 'nullable|integer',
             'user_id' => 'nullable|integer',
             'message' => 'nullable|string',
         ]);
@@ -245,17 +229,14 @@ class AuditLogController extends Controller
         $createData = [
             'user_id' => $data['user_id'] ?? (auth()->check() ? auth()->id() : null),
             'action' => $storedAction,
-            'auditable_type' => $data['auditable_type'] ?? null,
-            'auditable_id' => $data['auditable_id'] ?? null,
-            'old_values' => $data['old_values'] ?? null,
-            'new_values' => $data['new_values'] ?? null,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->header('User-Agent'),
+            'entity_type' => $data['entity_type'] ?? null,
+            'entity_id' => $data['entity_id'] ?? null,
+            'timestamp' => now(),
         ];
 
-        // If a plain message was provided, prefer storing it in `details` as JSON
-        if (!empty($data['message']) && \Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'details')) {
-            $createData['details'] = json_encode(['message' => $data['message']], JSON_UNESCAPED_UNICODE);
+        // If a plain message was provided, store it in details
+        if (!empty($data['message'])) {
+            $createData['details'] = ['message' => $data['message']];
         }
 
         $log = AuditLog::create($createData);

@@ -36,7 +36,7 @@ export * from './bewoners/bewoner-card';
 export * from './bewoners/contact-card';
 export * from './bewoners/bewoner-detail-header';
 export * from './bewoners/bewoner-tabs';
-export * from './bewoners/melding-card';
+export { BewonerMeldingCard } from './bewoners/melding-card';
 export * from './bewoners/nieuwe-melding-modal';
 export * from './bewoners/medicatie-schema';
 export * from './bewoners/medicatie-historiek';

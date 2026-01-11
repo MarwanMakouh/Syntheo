@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resident;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 
 class ResidentController extends Controller
@@ -124,6 +125,16 @@ class ResidentController extends Controller
             }
         }
 
+        // Create audit log
+        AuditLogger::log(
+            'toegevoegd',
+            $resident,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Nieuwe bewoner geregistreerd: ' . $resident->name]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Bewoner succesvol aangemaakt',
@@ -176,6 +187,24 @@ class ResidentController extends Controller
             }
         }
 
+        // Create audit log
+        $changes = array_keys(array_filter([
+            'name' => $validated['name'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'allergies' => array_key_exists('allergies', $validated) ? true : null,
+        ]));
+
+        if (!empty($changes)) {
+            AuditLogger::log(
+                'bewerkt',
+                $resident,
+                auth()->id(),
+                null,
+                null,
+                ['message' => 'Bewoner bijgewerkt: ' . $resident->name]
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Bewoner succesvol bijgewerkt',
@@ -198,6 +227,17 @@ class ResidentController extends Controller
         }
 
         $residentName = $resident->name;
+
+        // Create audit log before deleting
+        AuditLogger::log(
+            'verwijderd',
+            $resident,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Bewoner verwijderd: ' . $residentName]
+        );
+
         $resident->delete();
 
         return response()->json([

@@ -11,6 +11,10 @@ export default function Index() {
     return null;
   }
 
+  // DEVELOPMENT: Always go to role-selection (comment out for production)
+  // Uncomment this line to always start at role-selection when using Expo Go
+  return <Redirect href="/role-selection" />;
+
   // If not logged in, redirect to login
   if (!currentUser) {
     return <Redirect href="/login" />;

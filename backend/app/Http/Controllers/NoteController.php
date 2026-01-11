@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Note;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 
 class NoteController extends Controller
@@ -75,6 +76,17 @@ class NoteController extends Controller
         $validated['created_at'] = now();
 
         $note = Note::create($validated);
+
+        // Create audit log
+        $resident = $note->resident;
+        AuditLogger::log(
+            'toegevoegd',
+            $note,
+            $validated['author_id'],
+            null,
+            null,
+            ['message' => 'Nieuwe notitie voor ' . ($resident ? $resident->name : 'Bewoner #' . $note->resident_id)]
+        );
 
         return response()->json([
             'success' => true,
@@ -183,6 +195,17 @@ class NoteController extends Controller
                 'message' => 'Notitie niet gevonden'
             ], 404);
         }
+
+        // Create audit log before deleting
+        $resident = $note->resident;
+        AuditLogger::log(
+            'verwijderd',
+            $note,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Oude notitie verwijderd voor ' . ($resident ? $resident->name : 'Bewoner #' . $note->resident_id)]
+        );
 
         $note->delete();
 

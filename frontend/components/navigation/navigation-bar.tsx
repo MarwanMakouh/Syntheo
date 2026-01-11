@@ -13,10 +13,15 @@ export function NavigationBar() {
   const router = useRouter();
   const segments = useSegments();
   const { currentUser } = useAuth();
-  const { clearRole } = useRole();
+  const { clearRole, selectedRole } = useRole();
   const { unreadCount } = useAnnouncements();
   const [announcementsModalVisible, setAnnouncementsModalVisible] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Check if user is Hoofdverpleegster
+  const isHoofdverpleegster =
+    currentUser?.role === 'Hoofdverpleegster' ||
+    selectedRole === 'Hoofdverpleegster';
 
   // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
   const isDetailPage =
@@ -25,6 +30,9 @@ export function NavigationBar() {
     (segments as string[]).includes('wijzigingsverzoek-detail') ||
     (segments as string[]).includes('kamerbeheer') ||
     (segments as string[]).includes('meldingen');
+
+  // Only show back button for Hoofdverpleegster
+  const showBackButton = isDetailPage && isHoofdverpleegster;
 
   const handleNotifications = () => {
     setAnnouncementsModalVisible(true);
@@ -66,7 +74,7 @@ export function NavigationBar() {
   return (
     <View style={styles.container}>
       {/* Back button or Logo */}
-      {isDetailPage ? (
+      {showBackButton ? (
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color={Colors.navAccent} />
           <Text style={styles.backText}>Terug</Text>

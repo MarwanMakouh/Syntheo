@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ResMedication;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 
 class ResMedicationController extends Controller
@@ -59,6 +60,18 @@ class ResMedicationController extends Controller
 
         $resMedication = ResMedication::create($validated);
 
+        // Create audit log
+        $resident = $resMedication->resident;
+        $medication = $resMedication->medication;
+        AuditLogger::log(
+            'bewerkt',
+            $resMedication,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Medicatieschema bijgewerkt: ' . ($resident ? $resident->name : 'Bewoner #' . $resMedication->resident_id)]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Medicatie succesvol toegewezen aan bewoner',
@@ -86,6 +99,17 @@ class ResMedicationController extends Controller
         ]);
 
         $resMedication->update($validated);
+
+        // Create audit log
+        $resident = $resMedication->resident;
+        AuditLogger::log(
+            'bewerkt',
+            $resMedication,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Medicatie wijziging: ' . ($resident ? $resident->name : 'Bewoner #' . $resMedication->resident_id)]
+        );
 
         return response()->json([
             'success' => true,
@@ -159,6 +183,17 @@ class ResMedicationController extends Controller
                 'message' => 'Medicatie niet gevonden'
             ], 404);
         }
+
+        // Create audit log before deleting
+        $resident = $resMedication->resident;
+        AuditLogger::log(
+            'verwijderd',
+            $resMedication,
+            auth()->id(),
+            null,
+            null,
+            ['message' => 'Dosering aangepast: ' . ($resident ? $resident->name : 'Bewoner #' . $resMedication->resident_id)]
+        );
 
         $resMedication->delete();
 
