@@ -15,7 +15,7 @@ import { ResidentQuickViewPopup } from '@/components/resident-quick-view-popup';
 import { MeldingDetailsPopup } from '@/components/melding-details-popup';
 import { formatDate } from '@/utils/date';
 import { fetchResidents, fetchResidentsWithMedicationForDagdeel } from '@/Services/residentsApi';
-import { fetchNotes, resolveNote, unresolveNote } from '@/Services/notesApi';
+import { fetchNotes, resolveNote, unresolveNote, acknowledgeNote } from '@/Services/notesApi';
 import { fetchRooms } from '@/Services/roomsApi';
 import { fetchChangeRequests } from '@/Services/changeRequestsApi';
 import { fetchMedicationRounds, fetchComplianceByDagdeel } from '@/Services/medicationRoundsApi';
@@ -45,6 +45,7 @@ export default function DashboardScreen() {
     completed: number;
     percentage: number;
   }>>([]);
+
 
   // Calculate statistics from real data
   const stats = useMemo(() => {
@@ -90,10 +91,10 @@ export default function DashboardScreen() {
 
   // Get urgent residents from data (one entry per resident, latest urgent note)
   const urgentResidents = useMemo(() => {
-    // ONLY filter notes with urgency 'Hoog' (urgent) and not resolved
+    // ONLY filter notes with urgency 'Hoog' (urgent), not resolved, and not acknowledged
     const urgentNotes = notes.filter((note) => {
-      // Strict check: only 'Hoog' urgency, case-sensitive
-      return note.urgency === 'Hoog' && !note.is_resolved;
+      // Strict check: only 'Hoog' urgency, case-sensitive, not resolved, not acknowledged
+      return note.urgency === 'Hoog' && !note.is_resolved && !note.is_acknowledged;
     });
 
     // Group by resident_id and pick latest note per resident
@@ -112,15 +113,15 @@ export default function DashboardScreen() {
     const result: Array<any> = [];
     byResident.forEach((note, residentId) => {
       // Double-check that the note is still urgent before adding to result
-      if (note.urgency !== 'Hoog' || note.is_resolved) {
-        return; // Skip this resident if note is not urgent or is resolved
+      if (note.urgency !== 'Hoog' || note.is_resolved || note.is_acknowledged) {
+        return; // Skip this resident if note is not urgent, is resolved, or is acknowledged
       }
 
       const resident = residents.find((r) => r.resident_id === residentId);
       const room = rooms.find((r) => r.resident_id === residentId);
-      // Count only URGENT unresolved notes for this resident
+      // Count only URGENT unresolved unacknowledged notes for this resident
       const urgentResidentNotes = notes.filter(
-        (n) => n.resident_id === residentId && n.urgency === 'Hoog' && !n.is_resolved
+        (n) => n.resident_id === residentId && n.urgency === 'Hoog' && !n.is_resolved && !n.is_acknowledged
       );
 
       result.push({
@@ -129,6 +130,7 @@ export default function DashboardScreen() {
         name: resident?.name || 'Onbekend',
         incident: `${note.category} - ${formatDate(note.created_at, 'dd-MM, HH:mm')}`,
         openNotes: urgentResidentNotes.length, // Show only count of urgent notes
+        latestNoteId: note.note_id, // Add note_id for acknowledgment
       });
     });
 
@@ -217,6 +219,21 @@ export default function DashboardScreen() {
       alert('Kon melding niet heropenen');
     } finally {
       setIsResolving(false);
+    }
+  };
+
+  const handleAcknowledge = async (noteId: number) => {
+    if (!currentUser) return;
+
+    try {
+      // Update localStorage (fast)
+      await acknowledgeNote(noteId, currentUser.user_id);
+      // Only reload notes, not all dashboard data (faster)
+      const updatedNotes = await fetchNotes();
+      setNotes(updatedNotes || []);
+    } catch (err) {
+      console.error('Failed to acknowledge note:', err);
+      alert('Kon notitie niet als bekeken markeren');
     }
   };
 
@@ -315,12 +332,24 @@ export default function DashboardScreen() {
                   <Text style={styles.residentName}>
                     Kamer {resident.room} - {resident.name}
                   </Text>
-                  <Text style={styles.residentIncident}>{resident.incident}</Text>
+                  <Text style={styles.residentIncident}>
+                    {resident.incident}
+                  </Text>
                   <Text style={styles.residentNotes}>
                     {resident.openNotes} open notities
                   </Text>
                 </View>
                 <View style={styles.residentActions}>
+                  <TouchableOpacity
+                    style={styles.acknowledgeButton}
+                    onPress={() => handleAcknowledge(resident.latestNoteId)}
+                  >
+                    <MaterialIcons
+                      name="visibility"
+                      size={20}
+                      color={Colors.primary}
+                    />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => handleViewResident(resident.id)}
@@ -586,5 +615,14 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: FontWeight.medium,
     color: Colors.textPrimary,
+  },
+  acknowledgeButton: {
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
