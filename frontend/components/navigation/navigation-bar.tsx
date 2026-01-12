@@ -23,16 +23,19 @@ export function NavigationBar() {
     currentUser?.role === 'Hoofdverpleegster' ||
     selectedRole === 'Hoofdverpleegster';
 
-  // Check if we're on a detail page (e.g., /bewoners/[id]) or wijzigingsverzoeken pages
-  const isDetailPage =
-    (segments.length > 2 && segments[segments.length - 1].startsWith('[')) ||
-    (segments as string[]).includes('wijzigingsverzoeken') ||
-    (segments as string[]).includes('wijzigingsverzoek-detail') ||
-    (segments as string[]).includes('kamerbeheer') ||
-    (segments as string[]).includes('meldingen');
+  // Check if we're on a detail page (e.g., /bewoners/[id]) or special hoofdverpleegster pages
+  const currentSegments = segments as string[];
+  const isDetailPage = segments.length > 2 && segments[segments.length - 1].startsWith('[');
+  const isHoofdverpleegsterPage =
+    currentSegments.includes('wijzigingsverzoeken') ||
+    currentSegments.includes('wijzigingsverzoek-detail') ||
+    currentSegments.includes('kamerbeheer') ||
+    currentSegments.includes('aankondigingen') ||
+    currentSegments.includes('dashboard') ||
+    currentSegments.includes('medication-management-tabs');
 
-  // Only show back button for Hoofdverpleegster
-  const showBackButton = isDetailPage && isHoofdverpleegster;
+  // Show back button on detail pages for all users, or on hoofdverpleegster pages
+  const showBackButton = isDetailPage || (isHoofdverpleegsterPage && isHoofdverpleegster && Platform.OS !== 'web');
 
   const handleNotifications = () => {
     setAnnouncementsModalVisible(true);
@@ -56,15 +59,28 @@ export function NavigationBar() {
     // Check if we're on specific pages that need custom back navigation
     const currentSegments = segments as string[];
 
-    if (currentSegments.includes('meldingen')) {
-      // From meldingen, go back to hoofdverpleger dashboard
-      router.push('/dashboard');
-    } else if (currentSegments.includes('wijzigingsverzoeken') || currentSegments.includes('kamerbeheer')) {
-      // From wijzigingsverzoeken or kamerbeheer, go back to hoofdverpleger dashboard
-      router.push('/dashboard');
-    } else if (currentSegments.includes('wijzigingsverzoek-detail')) {
+    if (currentSegments.includes('wijzigingsverzoek-detail')) {
       // From detail page, go back to wijzigingsverzoeken
       router.push('/wijzigingsverzoeken');
+    } else if (
+      currentSegments.includes('wijzigingsverzoeken') ||
+      currentSegments.includes('kamerbeheer') ||
+      currentSegments.includes('aankondigingen') ||
+      currentSegments.includes('medication-management-tabs')
+    ) {
+      // From hoofdverpleegster pages, go back to menu on mobile, dashboard on web
+      if (Platform.OS === 'web') {
+        router.push('/dashboard');
+      } else {
+        router.push('/(tabs)/menu');
+      }
+    } else if (currentSegments.includes('dashboard')) {
+      // From dashboard on mobile, go back to menu
+      if (Platform.OS !== 'web') {
+        router.push('/(tabs)/menu');
+      } else {
+        router.back();
+      }
     } else {
       // Default back behavior
       router.back();

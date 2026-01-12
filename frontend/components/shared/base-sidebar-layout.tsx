@@ -89,9 +89,13 @@ export function BaseSidebarLayout({
     setShowLogoutConfirm(false);
   };
 
-  // Mobile: just render children (let existing tab layout handle navigation)
+  // Mobile: render with proper background
   if (Platform.OS !== 'web') {
-    return <>{children}</>;
+    return (
+      <View style={styles.mobileContainer}>
+        {children}
+      </View>
+    );
   }
 
   return (
@@ -237,6 +241,7 @@ export function BaseSidebarLayout({
 
 interface Styles {
   container: ViewStyle;
+  mobileContainer: ViewStyle;
   sidebar: ViewStyle;
   logoContainer: ViewStyle;
   logoCircle: ViewStyle;
@@ -278,6 +283,10 @@ const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
     flexDirection: 'row',
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  mobileContainer: {
+    flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
   sidebar: {

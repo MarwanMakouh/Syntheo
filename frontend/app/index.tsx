@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { Platform } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 
@@ -29,7 +30,12 @@ export default function Index() {
   if (selectedRole === 'Beheerder') {
     return <Redirect href="/admin/dashboard-home" />;
   } else if (selectedRole === 'Hoofdverpleegster') {
-    return <Redirect href="/dashboard" />;
+    // On mobile, go to tabs; on web, go to dashboard
+    if (Platform.OS === 'web') {
+      return <Redirect href="/dashboard" />;
+    } else {
+      return <Redirect href="/(tabs)/bewoners" />;
+    }
   } else if (selectedRole === 'Keukenpersoneel') {
     return <Redirect href="/(kitchen-tabs)/allergieen" />;
   } else if (selectedRole === 'Verpleegster') {

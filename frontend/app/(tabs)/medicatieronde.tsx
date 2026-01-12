@@ -492,6 +492,9 @@ const styles = StyleSheet.create({
       web: {
         paddingTop: Spacing['3xl'],
       },
+      default: {
+        paddingBottom: Platform.OS === 'ios' ? 88 : 65, // Add padding for tab bar
+      },
     }),
   },
   header: {
