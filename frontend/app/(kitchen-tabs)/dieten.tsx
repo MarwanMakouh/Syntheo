@@ -32,21 +32,40 @@ interface DietGroup {
 
 export default function DietenScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [dietGroups, setDietGroups] = useState<DietGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // Voor eerste keer laden
+  const [dataLoading, setDataLoading] = useState(false); // Voor alleen data refreshen
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
+  // Debounce search query - wacht 500ms voordat je zoekt
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Load diets alleen als debounced search verandert
   useEffect(() => {
     loadDiets();
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   const loadDiets = async () => {
     try {
-      setLoading(true);
+      // Als het de eerste keer laden is, toon full page loading
+      // Anders alleen data loading (list refresht)
+      if (initialLoading) {
+        setInitialLoading(true);
+      } else {
+        setDataLoading(true);
+      }
+
       setError(null);
       const params: any = {};
-      if (searchQuery) params.search = searchQuery;
+      if (debouncedSearchQuery) params.search = debouncedSearchQuery;
 
       const data = await fetchKitchenDietOverview(params);
       setDietGroups(data);
@@ -54,7 +73,8 @@ export default function DietenScreen() {
       console.error('Failed to load diets:', err);
       setError('Kon diëten niet laden. Probeer het opnieuw.');
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -98,7 +118,8 @@ export default function DietenScreen() {
     }
   };
 
-  if (loading) {
+  // Alleen full page loading bij eerste keer
+  if (initialLoading) {
     return (
       <KitchenLayout activeRoute="dieten">
         <LoadingState message="Diëten laden..." />
@@ -106,7 +127,8 @@ export default function DietenScreen() {
     );
   }
 
-  if (error) {
+  // Error state - maar toon wel de zoekbar
+  if (error && !dietGroups.length) {
     return (
       <KitchenLayout activeRoute="dieten">
         <ErrorState message={error} onRetry={loadDiets} />
@@ -131,7 +153,11 @@ export default function DietenScreen() {
       </View>
 
       {/* Diet Groups */}
-      {dietGroups.length === 0 ? (
+      {dataLoading ? (
+        <View style={styles.dataLoadingContainer}>
+          <LoadingState message="Data vernieuwen..." />
+        </View>
+      ) : dietGroups.length === 0 ? (
         <View style={styles.emptyContainer}>
           <MaterialIcons name="restaurant-menu" size={64} color={Colors.iconMuted} />
           <Text style={styles.emptyText}>Geen diëten gevonden</Text>
@@ -578,5 +604,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     fontWeight: FontWeight.medium,
+  },
+  dataLoadingContainer: {
+    paddingVertical: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

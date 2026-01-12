@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -50,26 +50,45 @@ interface ResidentWithAllergies {
 
 export default function AllergieenOverzichtScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedFloor, setSelectedFloor] = useState<number>(0);
   const [selectedAllergy, setSelectedAllergy] = useState<string>('');
   const [residents, setResidents] = useState<ResidentWithAllergies[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // Voor eerste keer laden
+  const [dataLoading, setDataLoading] = useState(false); // Voor alleen data refreshen
   const [error, setError] = useState<string | null>(null);
   const [floorDropdownOpen, setFloorDropdownOpen] = useState(false);
   const [allergyDropdownOpen, setAllergyDropdownOpen] = useState(false);
 
+  // Debounce search query - wacht 500ms voordat je zoekt
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Load residents alleen als debounced search, floor of allergy verandert
   useEffect(() => {
     loadResidents();
-  }, [selectedFloor, selectedAllergy, searchQuery]);
+  }, [selectedFloor, selectedAllergy, debouncedSearchQuery]);
 
   const loadResidents = async () => {
     try {
-      setLoading(true);
+      // Als het de eerste keer laden is, toon full page loading
+      // Anders alleen data loading (list refresht)
+      if (initialLoading) {
+        setInitialLoading(true);
+      } else {
+        setDataLoading(true);
+      }
+
       setError(null);
       const params: any = {};
       if (selectedFloor > 0) params.floor = selectedFloor;
       if (selectedAllergy) params.allergyType = selectedAllergy;
-      if (searchQuery) params.search = searchQuery;
+      if (debouncedSearchQuery) params.search = debouncedSearchQuery;
 
       const data = await fetchKitchenAllergyOverview(params);
       setResidents(data);
@@ -77,7 +96,8 @@ export default function AllergieenOverzichtScreen() {
       console.error('Failed to load residents:', err);
       setError('Kon bewoners niet laden. Probeer het opnieuw.');
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -233,8 +253,12 @@ export default function AllergieenOverzichtScreen() {
         <Text style={[styles.tableHeaderText, styles.colExtraInfo]}>Extra Info</Text>
       </View>
 
-      {/* Table Rows */}
-      {residents.length === 0 ? (
+      {/* Loading indicator voor data refresh */}
+      {dataLoading ? (
+        <View style={styles.dataLoadingContainer}>
+          <LoadingState message="Data vernieuwen..." />
+        </View>
+      ) : residents.length === 0 ? (
         <View style={styles.emptyContainer}>
           <MaterialIcons name="person-off" size={48} color={Colors.iconMuted} />
           <Text style={styles.emptyText}>Geen bewoners gevonden</Text>
@@ -309,7 +333,8 @@ export default function AllergieenOverzichtScreen() {
     </View>
   );
 
-  if (loading) {
+  // Alleen full page loading bij eerste keer
+  if (initialLoading) {
     return (
       <KitchenLayout activeRoute="allergieen">
         <LoadingState message="Allergieën laden..." />
@@ -317,7 +342,8 @@ export default function AllergieenOverzichtScreen() {
     );
   }
 
-  if (error) {
+  // Error state - maar toon wel de filters
+  if (error && !residents.length) {
     return (
       <KitchenLayout activeRoute="allergieen">
         <ErrorState message={error} onRetry={loadResidents} />
@@ -458,6 +484,10 @@ export default function AllergieenOverzichtScreen() {
         {/* Content - Web Table or Mobile List */}
         {Platform.OS === 'web' ? (
           renderTableLayout()
+        ) : dataLoading ? (
+          <View style={styles.dataLoadingContainer}>
+            <LoadingState message="Data vernieuwen..." />
+          </View>
         ) : (
           <FlatList
             data={residents}
@@ -821,5 +851,10 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: Layout.screenPadding,
     marginBottom: Layout.screenPadding,
+  },
+  dataLoadingContainer: {
+    paddingVertical: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
