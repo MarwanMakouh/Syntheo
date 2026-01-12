@@ -6,7 +6,7 @@ import { MeldingCard } from '@/components/meldingen/melding-card';
 import { MeldingDetailsModal } from '@/components/meldingen/melding-details-modal';
 import { NieuweMeldingModal } from '@/components';
 import { StaffLayout } from '@/components/staff';
-import { PageHeader, LoadingState, ErrorState } from '@/components/ui';
+import { PageHeader, LoadingState, ErrorState, Toast } from '@/components/ui';
 import { fetchNotes, createNote, resolveNote, unresolveNote } from '@/Services/notesApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchResidents } from '@/Services/residentsApi';
@@ -77,6 +77,7 @@ export default function MeldingenScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [showNewMeldingModal, setShowNewMeldingModal] = useState(false);
   const [filters, setFilters] = useState({ urgentie: 'all', status: 'all' });
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
 
   const { currentUser, allUsers } = useAuth();
 
@@ -137,9 +138,20 @@ export default function MeldingenScreen() {
       setShowNewMeldingModal(false);
       // Refresh the notes list
       await loadData();
+      // Show success toast
+      setToast({
+        visible: true,
+        message: 'Melding succesvol aangemaakt',
+        type: 'success',
+      });
     } catch (err) {
       console.error('Failed to create note:', err);
-      alert('Fout bij opslaan van melding. Probeer opnieuw.');
+      // Show error toast
+      setToast({
+        visible: true,
+        message: 'Fout bij opslaan van melding. Probeer opnieuw.',
+        type: 'error',
+      });
     }
   };
 
@@ -289,6 +301,14 @@ export default function MeldingenScreen() {
         onClose={() => setShowNewMeldingModal(false)}
         onSave={handleSaveNewMelding}
         residents={residents}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
       />
     </StaffLayout>
   );

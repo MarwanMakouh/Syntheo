@@ -7,12 +7,11 @@ import {
   TouchableOpacity,
   Platform,
   Linking,
-  Alert,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StaffLayout } from '@/components/staff';
-import { LoadingState, ErrorState } from '@/components/ui';
+import { LoadingState, ErrorState, Toast } from '@/components/ui';
 import {
   ContactCard,
   BewonerDetailHeader,
@@ -57,6 +56,7 @@ export default function BewonerInfoScreen() {
   const [loadingResident, setLoadingResident] = useState(false);
   const [medicationRounds, setMedicationRounds] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
 
   const contacts = resident?.contacts || [];
 
@@ -260,10 +260,20 @@ export default function BewonerInfoScreen() {
       // Refresh notes list
       await loadNotes();
 
-      Alert.alert('Succes', 'Melding succesvol opgeslagen!');
+      // Show success toast
+      setToast({
+        visible: true,
+        message: 'Melding succesvol opgeslagen',
+        type: 'success',
+      });
     } catch (error) {
       console.error('Failed to create note:', error);
-      Alert.alert('Fout', 'Kon melding niet opslaan. Probeer opnieuw.');
+      // Show error toast
+      setToast({
+        visible: true,
+        message: 'Kon melding niet opslaan. Probeer opnieuw.',
+        type: 'error',
+      });
     }
   };
 
@@ -414,6 +424,14 @@ export default function BewonerInfoScreen() {
         onClose={() => setShowNewNoteModal(false)}
         onSave={handleSaveNote}
         residentId={Number(id)}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
       />
     </StaffLayout>
   );
