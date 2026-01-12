@@ -33,6 +33,13 @@ export default function DashboardScreen() {
   const [selectedMelding, setSelectedMelding] = useState<any>(null);
   const [isResolving, setIsResolving] = useState(false);
 
+  // On mobile, redirect to tabs instead of showing desktop dashboard
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      router.replace('/(tabs)/bewoners');
+    }
+  }, []);
+
   const [residents, setResidents] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
