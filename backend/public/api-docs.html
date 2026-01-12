@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syntheo API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #000000;
+            background: #F5F5F5;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1E4D2B;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #34C759;
+            font-weight: 700;
+        }
+
+        .sidebar .version {
+            font-size: 12px;
+            color: #95A5A6;
+            margin-bottom: 30px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar nav a {
+            color: #FFFFFF;
+            text-decoration: none;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .sidebar nav a:hover {
+            background: #34C759;
+            color: #FFFFFF;
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            color: #000000;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #666666;
+        }
+
+        .base-url {
+            background: #34C759;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .section h2 {
+            font-size: 28px;
+            color: #000000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #34C759;
+            font-weight: 700;
+        }
+
+        .endpoint {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #F9FAFB;
+            border-radius: 8px;
+            border-left: 4px solid #34C759;
+            border: 1px solid #E5E7EB;
+            border-left: 4px solid #34C759;
+        }
+
+        .endpoint h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .method.get { background: #10B981; color: white; }
+        .method.post { background: #34C759; color: white; }
+        .method.put { background: #F97316; color: white; }
+        .method.delete { background: #EF4444; color: white; }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .params, .request-body, .response {
+            margin-top: 15px;
+        }
+
+        .params h4, .request-body h4, .response h4 {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        pre {
+            background: #1E4D2B;
+            color: #FFFFFF;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid #e0e0e0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+        }
+
+        .param-item {
+            padding: 12px 16px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid #34C759;
+            border: 1px solid #E5E7EB;
+            border-left: 3px solid #34C759;
+        }
+
+        .param-name {
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .param-type {
+            color: #34C759;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+
+        .param-required {
+            color: #EF4444;
+            font-size: 11px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .param-desc {
+            color: #666666;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: #1E4D2B;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #E5E7EB;
+            background: white;
+        }
+
+        .table tr:hover td {
+            background: #F9FAFB;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.required { background: #EF4444; color: white; }
+        .badge.optional { background: #6B7280; color: white; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h1>Syntheo API</h1>
+            <div class="version">Version 1.0.0</div>
+
+            <nav>
+                <ul>
+                    <li><a href="#overview">Overview</a></li>
+                    <li><a href="#authentication">Authentication</a></li>
+                    <li><a href="#residents">Residents</a></li>
+                    <li><a href="#notes">Notes</a></li>
+                    <li><a href="#rooms">Rooms</a></li>
+                    <li><a href="#users">Users</a></li>
+                    <li><a href="#allergies">Allergies</a></li>
+                    <li><a href="#diets">Diets</a></li>
+                    <li><a href="#medication-library">Medication Library</a></li>
+                    <li><a href="#res-medications">Resident Medications</a></li>
+                    <li><a href="#res-schedules">Medication Schedules</a></li>
+                    <li><a href="#medication-rounds">Medication Rounds</a></li>
+                    <li><a href="#change-requests">Change Requests</a></li>
+                    <li><a href="#announcements">Announcements</a></li>
+                    <li><a href="#audit-logs">Audit Logs</a></li>
+                    <li><a href="#contacts">Contacts</a></li>
+                    <li><a href="#floors">Floors</a></li>
+                    <li><a href="#errors">Error Responses</a></li>
+                    <li><a href="#mappings">Value Mappings</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Overview -->
+            <section id="overview" class="header">
+                <h1>Syntheo API Documentation</h1>
+                <p>Complete REST API documentatie voor het Syntheo zorgsysteem</p>
+
+                <div class="base-url">
+                    <strong>Base URL:</strong> http://localhost:8000/api
+                </div>
+
+                <div class="section">
+                    <h2>Response Format</h2>
+                    <p>Alle API responses volgen dit standaard formaat:</p>
+                    <pre><code>{
+  "success": true|false,
+  "message": "Optional message",
+  "data": {} | []
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Authentication -->
+            <section id="authentication" class="section">
+                <h2>Authentication</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/login</span>
+                    </h3>
+                    <p>Authenticeer een gebruiker en verkrijg gebruikersgegevens.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">email</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                            <div class="param-desc">Email adres van de gebruiker</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">password</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                            <div class="param-desc">Wachtwoord van de gebruiker</div>
+                        </div>
+                    </div>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": {
+    "user_id": 1,
+    "name": "Jan Jansen",
+    "email": "jan@example.com",
+    "role": "Verpleegster"
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/change-password</span>
+                    </h3>
+                    <p>Wijzig het wachtwoord van een gebruiker.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">user_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="param-required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">current_password</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">new_password</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">new_password_confirmation</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Residents -->
+            <section id="residents" class="section">
+                <h2>Residents</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/residents</span>
+                    </h3>
+                    <p>Haal alle bewoners op met optionele filters.</p>
+
+                    <div class="params">
+                        <h4>Query Parameters</h4>
+                        <div class="param-item">
+                            <span class="param-name">search</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Zoek op naam</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">room</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Filter op kamernummer</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">allergy</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Filter op allergie</div>
+                        </div>
+                    </div>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "resident_id": 1,
+      "name": "Piet Bakker",
+      "birthdate": "1940-05-15",
+      "gender": "M",
+      "profile_image": null,
+      "room": {
+        "room_id": 101,
+        "room_number": "101"
+      }
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/residents/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke bewoner op inclusief alle details.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/residents/medication-dagdeel</span>
+                    </h3>
+                    <p>Haal bewoners op met hun medicatie voor een specifiek dagdeel.</p>
+
+                    <div class="params">
+                        <h4>Query Parameters</h4>
+                        <div class="param-item">
+                            <span class="param-name">dagdeel</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Dagdeel: "ochtend", "middag", of "avond"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">date</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Datum in formaat YYYY-MM-DD (default: vandaag)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/residents</span>
+                    </h3>
+                    <p>Maak een nieuwe bewoner aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">name</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">birthdate</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Formaat: YYYY-MM-DD</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">gender</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "M", "V", of "X"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/residents/{id}</span>
+                    </h3>
+                    <p>Update een bestaande bewoner.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/residents/{id}</span>
+                    </h3>
+                    <p>Verwijder een bewoner.</p>
+                </div>
+            </section>
+
+            <!-- Notes -->
+            <section id="notes" class="section">
+                <h2>Notes</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/notes</span>
+                    </h3>
+                    <p>Haal alle notities op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "note_id": 1,
+      "resident_id": 1,
+      "author_id": 2,
+      "category": "health",
+      "urgency": "Hoog",
+      "content": "Patient heeft koorts",
+      "is_resolved": false,
+      "is_acknowledged": false,
+      "created_at": "2026-01-12T10:30:00.000000Z",
+      "resolved_at": null,
+      "resolved_by": null,
+      "acknowledged_at": null,
+      "acknowledged_by": null
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/notes/resident/{residentId}</span>
+                    </h3>
+                    <p>Haal alle notities voor een specifieke bewoner op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/notes/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke notitie op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/notes</span>
+                    </h3>
+                    <p>Maak een nieuwe notitie aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">author_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">category</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "general", "health", "behavior", "medication", "social"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">urgency</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "low", "medium", "high"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">content</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Minimaal 10 karakters</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/notes/{id}</span>
+                    </h3>
+                    <p>Update een notitie.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/notes/{id}/resolve</span>
+                    </h3>
+                    <p>Markeer een notitie als opgelost.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resolved_by</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">User ID van degene die de notitie oplost</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/notes/{id}/unresolve</span>
+                    </h3>
+                    <p>Heropen een opgeloste notitie.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/notes/{id}/acknowledge</span>
+                    </h3>
+                    <p>Markeer een notitie als bekeken.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">acknowledged_by</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">User ID van degene die de notitie bekijkt</div>
+                        </div>
+                    </div>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "message": "Notitie gemarkeerd als bekeken",
+  "data": {
+    "note_id": 1,
+    "is_acknowledged": true,
+    "acknowledged_at": "2026-01-12T10:30:00.000000Z",
+    "acknowledged_by": 1
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/notes/{id}</span>
+                    </h3>
+                    <p>Verwijder een notitie.</p>
+                </div>
+            </section>
+
+            <!-- Rooms -->
+            <section id="rooms" class="section">
+                <h2>Rooms</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/rooms</span>
+                    </h3>
+                    <p>Haal alle kamers op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/rooms/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke kamer op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/rooms/{id}/link-resident</span>
+                    </h3>
+                    <p>Koppel een bewoner aan een kamer.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/rooms/{id}/unlink-resident</span>
+                    </h3>
+                    <p>Ontkoppel een bewoner van een kamer.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/rooms/{id}</span>
+                    </h3>
+                    <p>Update kamer informatie.</p>
+                </div>
+            </section>
+
+            <!-- Users -->
+            <section id="users" class="section">
+                <h2>Users</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/users</span>
+                    </h3>
+                    <p>Haal alle gebruikers op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/users/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke gebruiker op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/users</span>
+                    </h3>
+                    <p>Maak een nieuwe gebruiker aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">name</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">email</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">password</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">role</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "Beheerder", "Hoofdverpleegster", "Verpleegster", "Keuken"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/users/{id}</span>
+                    </h3>
+                    <p>Update een gebruiker.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/users/{id}</span>
+                    </h3>
+                    <p>Verwijder een gebruiker.</p>
+                </div>
+            </section>
+
+            <!-- Allergies -->
+            <section id="allergies" class="section">
+                <h2>Allergies</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/allergies/kitchen-overview</span>
+                    </h3>
+                    <p>Haal een overzicht op van alle bewoners met hun allergieën voor de keuken.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "resident_id": 1,
+      "resident_name": "Piet Bakker",
+      "room_number": "101",
+      "allergies": [
+        {
+          "allergy_id": 1,
+          "symptom": "Pinda",
+          "severity": "Hoog"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/allergies/resident/{residentId}</span>
+                    </h3>
+                    <p>Haal alle allergieën van een specifieke bewoner op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/allergies/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke allergie op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/allergies</span>
+                    </h3>
+                    <p>Maak een nieuwe allergie aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">symptom</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Naam van de allergie</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">severity</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "Laag", "Matig", "Hoog"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/allergies/{id}</span>
+                    </h3>
+                    <p>Update een allergie.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/allergies/{id}</span>
+                    </h3>
+                    <p>Verwijder een allergie.</p>
+                </div>
+            </section>
+
+            <!-- Diets -->
+            <section id="diets" class="section">
+                <h2>Diets</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/diets/kitchen-overview</span>
+                    </h3>
+                    <p>Haal een overzicht op van alle bewoners met hun diëten voor de keuken.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "resident_id": 1,
+      "resident_name": "Piet Bakker",
+      "room_number": "101",
+      "diet": {
+        "diet_id": 1,
+        "diet_type": "Vegetarisch",
+        "special_instructions": "Geen noten"
+      }
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/diets/resident/{residentId}</span>
+                    </h3>
+                    <p>Haal het dieet van een specifieke bewoner op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/diets</span>
+                    </h3>
+                    <p>Maak een nieuw dieet aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">diet_type</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Type dieet (bijv. "Vegetarisch", "Diabetisch")</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">special_instructions</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Extra instructies voor de keuken</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/diets/{id}</span>
+                    </h3>
+                    <p>Update een dieet.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/diets/{id}</span>
+                    </h3>
+                    <p>Verwijder een dieet.</p>
+                </div>
+            </section>
+
+            <!-- Medication Library -->
+            <section id="medication-library" class="section">
+                <h2>Medication Library</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/medication-library</span>
+                    </h3>
+                    <p>Haal alle medicijnen uit de bibliotheek op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "medication_id": 1,
+      "name": "Paracetamol",
+      "description": "Pijnstiller",
+      "default_dosage": "500mg"
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/medication-library/{id}</span>
+                    </h3>
+                    <p>Haal een specifiek medicijn op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/medication-library</span>
+                    </h3>
+                    <p>Voeg een nieuw medicijn toe aan de bibliotheek.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">name</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">description</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">default_dosage</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/medication-library/{id}</span>
+                    </h3>
+                    <p>Update een medicijn.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/medication-library/{id}</span>
+                    </h3>
+                    <p>Verwijder een medicijn uit de bibliotheek.</p>
+                </div>
+            </section>
+
+            <!-- Resident Medications -->
+            <section id="res-medications" class="section">
+                <h2>Resident Medications</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/res-medications/resident/{residentId}</span>
+                    </h3>
+                    <p>Haal alle medicatie van een specifieke bewoner op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "res_medication_id": 1,
+      "resident_id": 1,
+      "medication_id": 5,
+      "dosage": "500mg",
+      "frequency": "2x per dag",
+      "is_active": true,
+      "start_date": "2026-01-01",
+      "end_date": null,
+      "medication": {
+        "medication_id": 5,
+        "name": "Paracetamol"
+      },
+      "schedules": [
+        {
+          "res_schedule_id": 1,
+          "dagdeel": "ochtend",
+          "time": "08:00"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/res-medications/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke bewoner medicatie op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/res-medications</span>
+                    </h3>
+                    <p>Koppel medicatie aan een bewoner.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">medication_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">dosage</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">frequency</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">start_date</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Formaat: YYYY-MM-DD</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">end_date</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Formaat: YYYY-MM-DD</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/res-medications/{id}</span>
+                    </h3>
+                    <p>Update bewoner medicatie.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/res-medications/{id}/activate</span>
+                    </h3>
+                    <p>Activeer medicatie voor een bewoner.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/res-medications/{id}/deactivate</span>
+                    </h3>
+                    <p>Deactiveer medicatie voor een bewoner.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/res-medications/{id}</span>
+                    </h3>
+                    <p>Verwijder medicatie van een bewoner.</p>
+                </div>
+            </section>
+
+            <!-- Medication Schedules -->
+            <section id="res-schedules" class="section">
+                <h2>Medication Schedules</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/res-schedules/res-medication/{resMedicationId}</span>
+                    </h3>
+                    <p>Haal alle schema's op voor een specifieke bewoner medicatie.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "res_schedule_id": 1,
+      "res_medication_id": 1,
+      "dagdeel": "ochtend",
+      "time": "08:00"
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/res-schedules/{id}</span>
+                    </h3>
+                    <p>Haal een specifiek schema op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/res-schedules</span>
+                    </h3>
+                    <p>Maak een nieuw medicatie schema aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">res_medication_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">dagdeel</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "ochtend", "middag", "avond"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">time</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Formaat: HH:MM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/res-schedules/{id}</span>
+                    </h3>
+                    <p>Update een medicatie schema.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/res-schedules/{id}</span>
+                    </h3>
+                    <p>Verwijder een medicatie schema.</p>
+                </div>
+            </section>
+
+            <!-- Medication Rounds -->
+            <section id="medication-rounds" class="section">
+                <h2>Medication Rounds</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/medication-rounds</span>
+                    </h3>
+                    <p>Haal medicatie rondes op met optionele filters.</p>
+
+                    <div class="params">
+                        <h4>Query Parameters</h4>
+                        <div class="param-item">
+                            <span class="param-name">date_from</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Vanaf datum (YYYY-MM-DD)</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">date_to</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Tot datum (YYYY-MM-DD)</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Filter op bewoner</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/medication-rounds/compliance-by-dagdeel</span>
+                    </h3>
+                    <p>Haal medicatie compliance per dagdeel op.</p>
+
+                    <div class="params">
+                        <h4>Query Parameters</h4>
+                        <div class="param-item">
+                            <span class="param-name">date</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Datum (YYYY-MM-DD), default: vandaag</div>
+                        </div>
+                    </div>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "dagdeel": "ochtend",
+      "total": 15,
+      "completed": 12,
+      "percentage": 80
+    },
+    {
+      "dagdeel": "middag",
+      "total": 15,
+      "completed": 10,
+      "percentage": 67
+    },
+    {
+      "dagdeel": "avond",
+      "total": 15,
+      "completed": 0,
+      "percentage": 0
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/medication-rounds/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke medicatie ronde op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/medication-rounds</span>
+                    </h3>
+                    <p>Registreer een medicatie ronde.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">res_medication_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">res_schedule_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">given_by</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">given_at</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Formaat: YYYY-MM-DD HH:MM:SS (default: now)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/medication-rounds/bulk</span>
+                    </h3>
+                    <p>Registreer meerdere medicatie rondes tegelijk.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+  "rounds": [
+    {
+      "resident_id": 1,
+      "res_medication_id": 1,
+      "res_schedule_id": 1,
+      "given_by": 2
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/medication-rounds/{id}</span>
+                    </h3>
+                    <p>Update een medicatie ronde.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/medication-rounds/{id}</span>
+                    </h3>
+                    <p>Verwijder een medicatie ronde.</p>
+                </div>
+            </section>
+
+            <!-- Change Requests -->
+            <section id="change-requests" class="section">
+                <h2>Change Requests</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/change-requests</span>
+                    </h3>
+                    <p>Haal alle wijzigingsverzoeken op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "change_request_id": 1,
+      "entity_type": "diet",
+      "entity_id": 5,
+      "requested_by": 3,
+      "status": "In behandeling",
+      "requested_changes": {
+        "diet_type": "Vegetarisch",
+        "special_instructions": "Lactosevrij"
+      },
+      "created_at": "2026-01-12T10:00:00.000000Z",
+      "requester": {
+        "user_id": 3,
+        "name": "Marie Jansen"
+      }
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/change-requests/{id}</span>
+                    </h3>
+                    <p>Haal een specifiek wijzigingsverzoek op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/change-requests</span>
+                    </h3>
+                    <p>Maak een nieuw wijzigingsverzoek aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">entity_type</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "diet", "allergy", "res_medication"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">entity_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">requested_by</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">requested_changes</span>
+                            <span class="param-type">object</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Object met veldnamen en nieuwe waardes</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">reason</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/change-requests/{id}/approve</span>
+                    </h3>
+                    <p>Keur een wijzigingsverzoek goed.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">approved_by</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/change-requests/{id}/reject</span>
+                    </h3>
+                    <p>Wijs een wijzigingsverzoek af.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">rejected_by</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">rejection_reason</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/change-requests/{id}</span>
+                    </h3>
+                    <p>Verwijder een wijzigingsverzoek.</p>
+                </div>
+            </section>
+
+            <!-- Announcements -->
+            <section id="announcements" class="section">
+                <h2>Announcements</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/announcements</span>
+                    </h3>
+                    <p>Haal alle aankondigingen op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "announcement_id": 1,
+      "author_id": 1,
+      "title": "Belangrijke mededeling",
+      "message": "Vergadering om 14:00",
+      "recipient_type": "all",
+      "created_at": "2026-01-12T09:00:00.000000Z",
+      "author": {
+        "user_id": 1,
+        "name": "Admin"
+      }
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/announcements/user/{userId}</span>
+                    </h3>
+                    <p>Haal aankondigingen voor een specifieke gebruiker op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/announcements/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke aankondiging op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/announcements</span>
+                    </h3>
+                    <p>Maak een nieuwe aankondiging aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">author_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">title</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">message</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">recipient_type</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                            <div class="param-desc">Waarden: "all", "role", "specific"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">recipient_ids</span>
+                            <span class="param-type">array</span>
+                            <span class="badge optional">optional</span>
+                            <div class="param-desc">Array van user IDs voor specifieke ontvangers</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/announcements/{id}/mark-read</span>
+                    </h3>
+                    <p>Markeer een aankondiging als gelezen.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">user_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/announcements/{id}</span>
+                    </h3>
+                    <p>Verwijder een aankondiging.</p>
+                </div>
+            </section>
+
+            <!-- Audit Logs -->
+            <section id="audit-logs" class="section">
+                <h2>Audit Logs</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/audit-logs</span>
+                    </h3>
+                    <p>Haal alle audit logs op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "audit_log_id": 1,
+      "entity_type": "resident",
+      "entity_id": 5,
+      "action_type": "toegevoegd",
+      "changed_by": 2,
+      "old_value": null,
+      "new_value": {"name": "Piet Bakker"},
+      "additional_info": {"message": "Nieuwe bewoner toegevoegd"},
+      "created_at": "2026-01-12T10:00:00.000000Z",
+      "user": {
+        "user_id": 2,
+        "name": "Jan Jansen"
+      }
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/audit-logs/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke audit log op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/audit-logs/entity/{entityType}/{entityId}</span>
+                    </h3>
+                    <p>Haal alle audit logs voor een specifieke entiteit op.</p>
+
+                    <div class="params">
+                        <h4>URL Parameters</h4>
+                        <div class="param-item">
+                            <span class="param-name">entityType</span>
+                            <span class="param-type">string</span>
+                            <div class="param-desc">Bijv: "resident", "note", "diet", "allergy"</div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">entityId</span>
+                            <span class="param-type">integer</span>
+                            <div class="param-desc">ID van de entiteit</div>
+                        </div>
+                    </div>
+
+                    <div class="response">
+                        <h4>Voorbeeld</h4>
+                        <pre><code>GET /api/audit-logs/entity/resident/5</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/audit-logs</span>
+                    </h3>
+                    <p>Maak een nieuwe audit log entry aan.</p>
+                </div>
+            </section>
+
+            <!-- Contacts -->
+            <section id="contacts" class="section">
+                <h2>Contacts</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/contacts/resident/{residentId}</span>
+                    </h3>
+                    <p>Haal alle contactpersonen van een bewoner op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "contact_id": 1,
+      "resident_id": 1,
+      "name": "Jan Bakker",
+      "relation": "Zoon",
+      "phone_number": "0612345678",
+      "email": "jan@example.com"
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/contacts/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke contactpersoon op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/contacts</span>
+                    </h3>
+                    <p>Voeg een nieuwe contactpersoon toe.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">resident_id</span>
+                            <span class="param-type">integer</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">name</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">relation</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">phone_number</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-name">email</span>
+                            <span class="param-type">string</span>
+                            <span class="badge optional">optional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/contacts/{id}</span>
+                    </h3>
+                    <p>Update een contactpersoon.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/contacts/{id}</span>
+                    </h3>
+                    <p>Verwijder een contactpersoon.</p>
+                </div>
+            </section>
+
+            <!-- Floors -->
+            <section id="floors" class="section">
+                <h2>Floors</h2>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/floors</span>
+                    </h3>
+                    <p>Haal alle verdiepingen op.</p>
+
+                    <div class="response">
+                        <h4>Response</h4>
+                        <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "floor_id": 1,
+      "floor_name": "Begane grond"
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/floors/{id}</span>
+                    </h3>
+                    <p>Haal een specifieke verdieping op.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/floors</span>
+                    </h3>
+                    <p>Maak een nieuwe verdieping aan.</p>
+
+                    <div class="request-body">
+                        <h4>Request Body</h4>
+                        <div class="param-item">
+                            <span class="param-name">floor_name</span>
+                            <span class="param-type">string</span>
+                            <span class="badge required">required</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/floors/{id}</span>
+                    </h3>
+                    <p>Update een verdieping.</p>
+                </div>
+
+                <div class="endpoint">
+                    <h3>
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/floors/{id}</span>
+                    </h3>
+                    <p>Verwijder een verdieping.</p>
+                </div>
+            </section>
+
+            <!-- Error Responses -->
+            <section id="errors" class="section">
+                <h2>Error Responses</h2>
+
+                <p>Alle error responses volgen deze formaten:</p>
+
+                <h3 style="margin-top: 20px;">400 Bad Request</h3>
+                <pre><code>{
+  "success": false,
+  "message": "Validation error",
+  "errors": {
+    "field_name": ["Error message"]
+  }
+}</code></pre>
+
+                <h3 style="margin-top: 20px;">404 Not Found</h3>
+                <pre><code>{
+  "success": false,
+  "message": "Resource not found"
+}</code></pre>
+
+                <h3 style="margin-top: 20px;">500 Internal Server Error</h3>
+                <pre><code>{
+  "success": false,
+  "message": "An error occurred",
+  "exception": "Exception details (in development)"
+}</code></pre>
+            </section>
+
+            <!-- Value Mappings -->
+            <section id="mappings" class="section">
+                <h2>Value Mappings</h2>
+
+                <h3>Category Mapping (Notes)</h3>
+                <p>Frontend (Nederlands) → Backend (Engels):</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Frontend</th>
+                            <th>Backend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Gezondheid</td><td>health</td></tr>
+                        <tr><td>Gedrag</td><td>behavior</td></tr>
+                        <tr><td>Vallen</td><td>general</td></tr>
+                        <tr><td>Medicatie</td><td>medication</td></tr>
+                        <tr><td>Familie</td><td>social</td></tr>
+                        <tr><td>Voeding</td><td>general</td></tr>
+                        <tr><td>Algemeen</td><td>general</td></tr>
+                        <tr><td>Medisch</td><td>health</td></tr>
+                        <tr><td>Incident</td><td>general</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 30px;">Urgency Mapping (Notes)</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Frontend</th>
+                            <th>Backend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Laag</td><td>low</td></tr>
+                        <tr><td>Matig</td><td>medium</td></tr>
+                        <tr><td>Hoog</td><td>high</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 30px;">Dagdeel (Medication)</h3>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>ochtend (morning)</li>
+                    <li>middag (afternoon)</li>
+                    <li>avond (evening)</li>
+                </ul>
+
+                <h3 style="margin-top: 30px;">User Roles</h3>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Beheerder</strong> - Administrator</li>
+                    <li><strong>Hoofdverpleegster</strong> - Head Nurse</li>
+                    <li><strong>Verpleegster</strong> - Nurse</li>
+                    <li><strong>Keuken</strong> - Kitchen Staff</li>
+                </ul>
+            </section>
+
+            <!-- Notes Section -->
+            <section class="section">
+                <h2>Belangrijke Opmerkingen</h2>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>Alle timestamps zijn in UTC formaat: <code>YYYY-MM-DDTHH:MM:SS.000000Z</code></li>
+                    <li>Alle datums gebruiken het formaat: <code>YYYY-MM-DD</code></li>
+                    <li>De API handelt automatisch Nederlands ↔ Engels mapping voor urgency en category velden in notes</li>
+                    <li>Boolean waarden worden teruggegeven als <code>true</code> of <code>false</code> (niet 1/0)</li>
+                    <li>Foreign key constraints worden afgedwongen - het verwijderen van een parent record kan child records cascade deleten</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight active section in sidebar
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section, .header');
+            const navLinks = document.querySelectorAll('.sidebar nav a');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 100)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.style.background = '';
+                link.style.color = '';
+                if (link.getAttribute('href') === '#' + current) {
+                    link.style.background = '#34C759';
+                    link.style.color = '#FFFFFF';
+                    link.style.fontWeight = '600';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
