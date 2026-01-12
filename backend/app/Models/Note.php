@@ -21,6 +21,7 @@ class Note extends Model
         'urgency',
         'content',
         'is_resolved',
+        'created_at',
         'resolved_at',
         'resolved_by',
     ];

@@ -73,7 +73,7 @@ class NoteController extends Controller
         ]);
 
         $validated['is_resolved'] = false;
-        $validated['created_at'] = now();
+        $validated['created_at'] = now()->format('Y-m-d H:i:s');
 
         $note = Note::create($validated);
 
