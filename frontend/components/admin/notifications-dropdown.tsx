@@ -4,11 +4,15 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Shadows } from '@/constants';
 import type { Note } from '@/types/note';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface NotificationsDropdownProps {
   visible: boolean;
@@ -80,8 +84,8 @@ export function NotificationsDropdown({
       <View style={styles.dropdown}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Recente Meldingen</Text>
-          <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={20} color={Colors.textSecondary} />
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <MaterialIcons name="close" size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -107,7 +111,7 @@ export function NotificationsDropdown({
                         { backgroundColor: getUrgencyColor(note.urgency) },
                       ]}
                     />
-                    <Text style={styles.residentName}>
+                    <Text style={styles.residentName} numberOfLines={1}>
                       {getResidentName(note.resident_id)}
                     </Text>
                   </View>
@@ -149,16 +153,28 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: 60,
-    right: 20,
-    width: 400,
-    maxHeight: 500,
     backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     ...Shadows.dropdown,
     zIndex: 10000,
+    ...Platform.select({
+      web: {
+        top: 60,
+        right: 20,
+        width: 400,
+        maxHeight: 500,
+        borderRadius: BorderRadius.lg,
+      },
+      default: {
+        // Mobile: volledig scherm met wat padding
+        top: 60,
+        left: Spacing.md,
+        right: Spacing.md,
+        maxHeight: '80%',
+        borderRadius: BorderRadius.xl,
+      },
+    }),
   },
   header: {
     flexDirection: 'row',
@@ -168,14 +184,37 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    ...Platform.select({
+      default: {
+        // Mobile: extra padding voor betere touch targets
+        paddingHorizontal: Spacing.lg,
+        paddingVertical: Spacing.md,
+      },
+      web: {},
+    }),
   },
   headerTitle: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
+    ...Platform.select({
+      default: {
+        // Mobile: iets grotere tekst
+        fontSize: FontSize.xl,
+      },
+      web: {},
+    }),
   },
   scrollView: {
-    maxHeight: 400,
+    ...Platform.select({
+      web: {
+        maxHeight: 400,
+      },
+      default: {
+        // Mobile: flexible height
+        flexGrow: 1,
+      },
+    }),
   },
   emptyState: {
     padding: Spacing['4xl'],
@@ -191,59 +230,126 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    ...Platform.select({
+      default: {
+        // Mobile: extra padding
+        padding: Spacing.xl,
+      },
+      web: {},
+    }),
   },
   noteHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
   noteLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    minWidth: 0, // Voor text truncation
   },
   urgencyDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     marginRight: Spacing.sm,
+    flexShrink: 0,
+    ...Platform.select({
+      default: {
+        // Mobile: iets groter
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+      },
+      web: {},
+    }),
   },
   residentName: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.textPrimary,
+    flex: 1,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere tekst
+        fontSize: FontSize.lg,
+      },
+      web: {},
+    }),
   },
   timeAgo: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
+    flexShrink: 0,
+    ...Platform.select({
+      default: {
+        // Mobile: iets groter
+        fontSize: FontSize.sm,
+      },
+      web: {},
+    }),
   },
   noteContent: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     lineHeight: 18,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere tekst en line height
+        fontSize: FontSize.md,
+        lineHeight: 22,
+      },
+      web: {},
+    }),
   },
   noteFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: Spacing.sm,
+    flexWrap: 'wrap',
   },
   categoryBadge: {
     backgroundColor: Colors.backgroundSecondary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.sm,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere badge
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xs,
+      },
+      web: {},
+    }),
   },
   categoryText: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: FontWeight.medium,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere tekst
+        fontSize: FontSize.sm,
+      },
+      web: {},
+    }),
   },
   urgencyText: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: FontWeight.medium,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere tekst
+        fontSize: FontSize.sm,
+      },
+      web: {},
+    }),
   },
   viewAllButton: {
     flexDirection: 'row',
@@ -253,10 +359,24 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere touch target
+        paddingVertical: Spacing.xl,
+      },
+      web: {},
+    }),
   },
   viewAllText: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.primary,
+    ...Platform.select({
+      default: {
+        // Mobile: grotere tekst
+        fontSize: FontSize.lg,
+      },
+      web: {},
+    }),
   },
 });
